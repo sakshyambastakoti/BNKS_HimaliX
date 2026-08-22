@@ -21,3 +21,4 @@
 [2026-08-22 11:54:57] Commit #21: feat(settings): configure biometric FaceID/Fingerprint authorization switch
 [2026-08-22 11:57:06] Commit #22: feat(settings): add developer telemetry trace and diagnostic logs shortcut
 [2026-08-22 11:59:14] Commit #23: feat(send): implement dual-engine transfer mode indicator
+[2026-08-22 12:01:23] Commit #24: feat(send): add quick NPR denomination chips (+100, +500, +1000, MAX)
