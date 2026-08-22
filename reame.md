@@ -1,1 +1,0 @@
-off pay is a offline off grid payments system that allowa one user to do digital payment wihtout using internet it a dull of girid mesh system that makes evey one easier to do connect an dmake the system more rabvile a f
