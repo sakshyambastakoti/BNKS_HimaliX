@@ -1,10 +1,10 @@
 /**
- * BankingHeader Component — Exactly matching the Reference Mobile Banking Header
+ * BankingHeader Component — Vector SVG & Light/Dark Mode Switcher
  * Features:
- * - Circular User Avatar on Left
- * - Greeting ("Morning, [Name]!") + Live Date/Time Subtitle
- * - Red Accent Square QR Scanner Button (回)
- * - Network Status Badge & Notification Bell with dot
+ * - User Avatar on Left + "Morning, [Name]!" + Live Date/Time
+ * - Interactive Light / Dark Mode Toggle Button (SVG Sun/Moon)
+ * - Red Square QR Scanner Button (SVG Scan-Pay)
+ * - Network Status Badge & Notification Bell (SVG Bell with badge)
  */
 
 import React from 'react';
@@ -12,12 +12,14 @@ import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { NetworkStatusBadge } from '@/components/NetworkStatusBadge';
-import { useTheme } from '@/hooks/use-theme';
+import { SvgIcon } from '@/components/SvgIcons';
+import { useTheme, useThemeMode } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
 
 export function BankingHeader() {
   const theme = useTheme();
+  const { isDark, toggleTheme } = useThemeMode();
   const router = useRouter();
   const { user } = useAppStore();
 
@@ -47,7 +49,7 @@ export function BankingHeader() {
         </View>
       </Pressable>
 
-      {/* Right: Red Scan Button + Network Badge + Notification */}
+      {/* Right: Red Scan Button + Theme Toggle + Network Badge + Notification */}
       <View style={styles.rightActions}>
         {/* Red Square QR Scanner Button (Matching Reference) */}
         <Pressable
@@ -61,7 +63,22 @@ export function BankingHeader() {
             },
           ]}
         >
-          <ThemedText style={styles.redScanIcon}>⚲</ThemedText>
+          <SvgIcon name="scan-pay" size={16} color="#FFFFFF" />
+        </Pressable>
+
+        {/* Dynamic Light / Dark Mode Toggle Button */}
+        <Pressable
+          onPress={toggleTheme}
+          style={({ pressed }) => [
+            styles.iconButton,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+              opacity: pressed ? 0.75 : 1,
+            },
+          ]}
+        >
+          <SvgIcon name={isDark ? 'sun' : 'moon'} size={16} color={isDark ? '#F59E0B' : '#0F4A3C'} />
         </Pressable>
 
         {/* Network Status Badge */}
@@ -71,7 +88,7 @@ export function BankingHeader() {
         <Pressable
           onPress={() => router.push('/logs')}
           style={({ pressed }) => [
-            styles.bellButton,
+            styles.iconButton,
             {
               backgroundColor: theme.card,
               borderColor: theme.border,
@@ -79,7 +96,7 @@ export function BankingHeader() {
             },
           ]}
         >
-          <ThemedText style={[styles.bellIcon, { color: theme.textSecondary }]}>🔔</ThemedText>
+          <SvgIcon name="bell" size={16} color={theme.textSecondary} />
           <View style={styles.unreadDot} />
         </Pressable>
       </View>
@@ -137,12 +154,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  redScanIcon: {
-    color: '#FFFFFF',
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.black,
-  },
-  bellButton: {
+  iconButton: {
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -150,9 +162,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  },
-  bellIcon: {
-    fontSize: FontSize.sm,
   },
   unreadDot: {
     position: 'absolute',

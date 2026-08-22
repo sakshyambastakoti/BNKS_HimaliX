@@ -1,18 +1,13 @@
 /**
- * BalanceCard — Exactly inspired by the Mobile Banking Reference Design
- * Features:
- * - Clean, pure white rounded banking card with soft shadow
- * - Account Name + Eye toggle (👁) + Account Number
- * - "Primary" mint badge
- * - Bank / Vault icon on right
- * - "Available Balance" label + bold balance ($2,749.00 / NPR 25,000.00)
- * - Horizontal carousel / tab toggle to view Offline Bond Vault & Virtual Card
+ * BalanceCard — Vector SVG Mobile Banking Card
+ * Displays Account Name, Primary badge, Bank SVG Icon, eye toggle SVG, and available balance.
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { OffPayLogo } from '@/components/OffPayLogo';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { BorderRadius, Spacing, FontSize, FontWeight, Shadows } from '@/constants/theme';
 import { formatNPR } from '@/constants/mock-data';
@@ -45,7 +40,7 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
         }}
         scrollEventThrottle={16}
       >
-        {/* Card 1: Primary Online Account Card (Matching Reference Screen 1 & 2) */}
+        {/* Card 1: Primary Online Account Card (Matching Reference) */}
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
           <View style={styles.cardHeader}>
             <View style={styles.accountInfoLeft}>
@@ -54,9 +49,7 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
                   Account Name
                 </ThemedText>
                 <Pressable onPress={() => setIsBalanceHidden(!isBalanceHidden)} style={styles.eyeBtn}>
-                  <ThemedText style={[styles.eyeIcon, { color: theme.textSecondary }]}>
-                    {isBalanceHidden ? '👁‍🗨' : '👁'}
-                  </ThemedText>
+                  <SvgIcon name={isBalanceHidden ? 'eye-off' : 'eye'} size={15} color={theme.textSecondary} />
                 </Pressable>
               </View>
               <ThemedText style={[styles.accountNumber, { color: theme.textSecondary }]}>
@@ -69,10 +62,10 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
               </View>
             </View>
 
-            {/* Right: Bank Building Icon */}
+            {/* Right: Bank Building SVG Icon */}
             <View style={styles.accountInfoRight}>
-              <View style={[styles.bankIconContainer, { backgroundColor: '#E6F6EE' }]}>
-                <ThemedText style={[styles.bankIcon, { color: '#0F4A3C' }]}>🏛</ThemedText>
+              <View style={[styles.bankIconContainer, { backgroundColor: theme.successBg }]}>
+                <SvgIcon name="bank" size={20} color={theme.primary} />
               </View>
               <View style={styles.balanceGroup}>
                 <ThemedText style={[styles.availableLabel, { color: theme.textSecondary }]}>
@@ -86,7 +79,7 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
           </View>
         </View>
 
-        {/* Card 2: Offline Bond Vault Card (Matching Reference Screen 3 "Saving Account") */}
+        {/* Card 2: Offline Bond Vault Card */}
         <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
           <View style={styles.cardHeader}>
             <View style={styles.accountInfoLeft}>
@@ -95,9 +88,7 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
                   Offline Bond Vault
                 </ThemedText>
                 <Pressable onPress={() => setIsBalanceHidden(!isBalanceHidden)} style={styles.eyeBtn}>
-                  <ThemedText style={[styles.eyeIcon, { color: theme.textSecondary }]}>
-                    {isBalanceHidden ? '👁‍🗨' : '👁'}
-                  </ThemedText>
+                  <SvgIcon name={isBalanceHidden ? 'eye-off' : 'eye'} size={15} color={theme.textSecondary} />
                 </Pressable>
               </View>
               <ThemedText style={[styles.accountNumber, { color: theme.textSecondary }]}>
@@ -110,10 +101,10 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
               </View>
             </View>
 
-            {/* Right: Vault Safe Icon */}
+            {/* Right: Vault Safe SVG Icon */}
             <View style={styles.accountInfoRight}>
               <View style={[styles.bankIconContainer, { backgroundColor: '#E0F2FE' }]}>
-                <ThemedText style={[styles.bankIcon, { color: '#0284C7' }]}>🔒</ThemedText>
+                <SvgIcon name="lock" size={18} color="#0284C7" />
               </View>
               <View style={styles.balanceGroup}>
                 <ThemedText style={[styles.availableLabel, { color: theme.textSecondary }]}>
@@ -127,11 +118,11 @@ export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: Bal
           </View>
         </View>
 
-        {/* Card 3: Virtual World Card (Matching Reference Screen 4 "Cards") */}
+        {/* Card 3: Virtual World Card */}
         <View style={[styles.card, styles.debitCard, { backgroundColor: '#1A2234' }]}>
           <View style={styles.debitTopRow}>
             <ThemedText style={styles.debitWorldText}>world</ThemedText>
-            <ThemedText style={styles.debitContactless}>)))</ThemedText>
+            <SvgIcon name="wifi" size={16} color="#94A3B8" />
           </View>
 
           <View style={styles.chipRow}>
@@ -206,9 +197,6 @@ const styles = StyleSheet.create({
   eyeBtn: {
     padding: 2,
   },
-  eyeIcon: {
-    fontSize: FontSize.xs,
-  },
   accountNumber: {
     fontSize: FontSize.xxs + 1,
     fontWeight: FontWeight.medium,
@@ -234,9 +222,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xs,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bankIcon: {
-    fontSize: FontSize.lg,
   },
   balanceGroup: {
     alignItems: 'flex-end',
@@ -265,11 +250,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
     letterSpacing: 0.5,
-  },
-  debitContactless: {
-    color: '#94A3B8',
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
   },
   chipRow: {
     flexDirection: 'row',

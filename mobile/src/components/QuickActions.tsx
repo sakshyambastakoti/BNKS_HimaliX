@@ -1,17 +1,18 @@
 /**
- * ServicesGrid (QuickActions) — Exactly matching the "Services" grid from the Reference Design
- * 2x3 Grid of clean white cards with minimalist line icons + pagination dots
+ * ServicesGrid (QuickActions) — Vector SVG Services Grid
+ * 2x3 Grid of clean tiles with crisp SVG vector icons and pagination bar.
  */
 
-import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Platform } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
+import { SvgIcon, type IconName } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { BorderRadius, Spacing, FontSize, FontWeight, Shadows } from '@/constants/theme';
 
 export interface ServiceItem {
   id: string;
-  icon: string;
+  iconName: IconName;
   label: string;
   badge?: string;
   onPress: () => void;
@@ -24,7 +25,6 @@ interface ServicesGridProps {
 
 export function QuickActions({ services, onGridToggle }: ServicesGridProps) {
   const theme = useTheme();
-  const [currentPage, setCurrentPage] = useState(0);
 
   return (
     <View style={styles.container}>
@@ -34,9 +34,7 @@ export function QuickActions({ services, onGridToggle }: ServicesGridProps) {
           Services
         </ThemedText>
         <Pressable onPress={onGridToggle} style={styles.gridToggleBtn}>
-          <ThemedText style={[styles.gridToggleIcon, { color: theme.textSecondary }]}>
-            ⋮⋮
-          </ThemedText>
+          <SvgIcon name="more" size={16} color={theme.textSecondary} />
         </Pressable>
       </View>
 
@@ -57,11 +55,9 @@ export function QuickActions({ services, onGridToggle }: ServicesGridProps) {
               },
             ]}
           >
-            {/* Minimalist Icon Bubble */}
-            <View style={[styles.iconContainer, { backgroundColor: '#E6F6EE' }]}>
-              <ThemedText style={[styles.icon, { color: '#0F4A3C' }]}>
-                {item.icon}
-              </ThemedText>
+            {/* Minimalist Vector Icon Container */}
+            <View style={[styles.iconContainer, { backgroundColor: theme.successBg }]}>
+              <SvgIcon name={item.iconName} size={20} color={theme.primary} />
             </View>
 
             {/* Label */}
@@ -79,7 +75,7 @@ export function QuickActions({ services, onGridToggle }: ServicesGridProps) {
         ))}
       </View>
 
-      {/* Pagination Bar (Matching Reference ● ━━ ●) */}
+      {/* Pagination Bar */}
       <View style={styles.paginationRow}>
         <View style={[styles.dot, styles.activeDot, { backgroundColor: theme.primary }]} />
         <View style={[styles.dot, styles.dash, { backgroundColor: '#CBD5E1' }]} />
@@ -107,10 +103,6 @@ const styles = StyleSheet.create({
   gridToggleBtn: {
     padding: Spacing.one,
   },
-  gridToggleIcon: {
-    fontSize: FontSize.md,
-    letterSpacing: 1,
-  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -134,10 +126,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
   },
   label: {
     fontSize: FontSize.xs,

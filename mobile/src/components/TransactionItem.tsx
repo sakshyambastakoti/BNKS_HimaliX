@@ -1,11 +1,12 @@
 /**
- * TransactionItem — Matching the Reference Design Transaction Row
- * Displays circular merchant badge, description, timestamp, and bold color-coded amount.
+ * TransactionItem — Vector SVG Transaction Row
+ * Displays circular merchant badge with vector SVG icons, description, timestamp, and bold amount.
  */
 
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
+import { SvgIcon, type IconName } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
 import { type MockTransaction, formatNPR, formatTime } from '@/constants/mock-data';
@@ -15,19 +16,19 @@ interface TransactionItemProps {
   onPress?: () => void;
 }
 
-const merchantColors: Record<string, { bg: string; text: string; icon: string }> = {
-  sent: { bg: '#FEE2E2', text: '#FF5B5B', icon: '🛒' },
-  received: { bg: '#E6F6EE', text: '#00A859', icon: '💰' },
-  topup: { bg: '#E0F2FE', text: '#0284C7', icon: '🏦' },
-  bond_load: { bg: '#FEF3C7', text: '#D97706', icon: '⚡' },
-  bond_reverse: { bg: '#FCE7F3', text: '#DB2777', icon: '↩' },
-  sync: { bg: '#E6F6EE', text: '#00A859', icon: '✓' },
+const merchantConfig: Record<string, { bg: string; color: string; iconName: IconName }> = {
+  sent: { bg: '#FEE2E2', color: '#FF5B5B', iconName: 'arrow-up-right' },
+  received: { bg: '#E6F6EE', color: '#00A859', iconName: 'arrow-down-left' },
+  topup: { bg: '#E0F2FE', color: '#0284C7', iconName: 'bank' },
+  bond_load: { bg: '#FEF3C7', color: '#D97706', iconName: 'withdraw' },
+  bond_reverse: { bg: '#FCE7F3', color: '#DB2777', iconName: 'sync' },
+  sync: { bg: '#E6F6EE', color: '#00A859', iconName: 'check' },
 };
 
 export function TransactionItem({ transaction, onPress }: TransactionItemProps) {
   const theme = useTheme();
   const isReceived = transaction.type === 'received' || transaction.type === 'topup' || transaction.type === 'bond_reverse';
-  const badgeInfo = merchantColors[transaction.type] ?? merchantColors.sent;
+  const config = merchantConfig[transaction.type] ?? merchantConfig.sent;
 
   return (
     <Pressable
@@ -39,9 +40,9 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
         },
       ]}
     >
-      {/* Circular Merchant Badge (Matching Reference) */}
-      <View style={[styles.merchantBadge, { backgroundColor: badgeInfo.bg }]}>
-        <ThemedText style={styles.merchantIcon}>{badgeInfo.icon}</ThemedText>
+      {/* Circular Merchant Badge with Vector SVG */}
+      <View style={[styles.merchantBadge, { backgroundColor: config.bg }]}>
+        <SvgIcon name={config.iconName} size={20} color={config.color} />
       </View>
 
       {/* Center Details */}
@@ -88,9 +89,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  merchantIcon: {
-    fontSize: FontSize.lg,
   },
   details: {
     flex: 1,

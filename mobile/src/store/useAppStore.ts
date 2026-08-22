@@ -1,6 +1,6 @@
 /**
  * OffPay Application Store (Zustand)
- * Holds JWT, user profile, cached balances, and network status.
+ * Holds JWT, user profile, cached balances, network status, and theme mode (light/dark/system).
  * Interacts with the local PC backend server when online.
  */
 
@@ -9,6 +9,7 @@ import { MOCK_USER, MOCK_BALANCES, type MockUser } from '@/constants/mock-data';
 import { api } from '@/services/api';
 
 type NetworkStatus = 'online' | 'offline' | 'wifi-only';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 interface AppState {
   // Auth
@@ -22,8 +23,9 @@ interface AppState {
   offlineBalance: number;
   totalBalance: number;
 
-  // Network
+  // Network & Theme
   networkStatus: NetworkStatus;
+  themeMode: ThemeMode;
 
   // Actions
   setAuthenticated: (value: boolean) => void;
@@ -33,6 +35,8 @@ interface AppState {
   setOnlineBalance: (amount: number) => void;
   setOfflineBalance: (amount: number) => void;
   setNetworkStatus: (status: NetworkStatus) => void;
+  setThemeMode: (mode: ThemeMode) => void;
+  toggleTheme: () => void;
   login: (user: MockUser, jwt: string) => void;
   logout: () => void;
   fetchLiveBalance: () => Promise<void>;
@@ -52,6 +56,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   totalBalance: MOCK_BALANCES.total,
 
   networkStatus: 'online',
+  themeMode: 'light', // Default to clean modern white banking theme
 
   setAuthenticated: (value) => set({ isAuthenticated: value }),
   setJwt: (jwt) => {
@@ -74,6 +79,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       totalBalance: state.onlineBalance + amount,
     })),
   setNetworkStatus: (status) => set({ networkStatus: status }),
+  setThemeMode: (mode) => set({ themeMode: mode }),
+  toggleTheme: () =>
+    set((state) => ({
+      themeMode: state.themeMode === 'dark' ? 'light' : 'dark',
+    })),
   login: (user, jwt) => {
     api.setToken(jwt);
     set({
@@ -116,7 +126,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         totalBalance: res.newOnlineBalance + state.offlineBalance,
       }));
     } catch (err: any) {
-      // Fallback to local state update if offline
       get().setOnlineBalance(get().onlineBalance + amount);
     }
   },
@@ -131,7 +140,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       }));
       return res.bonds;
     } catch (err) {
-      // Fallback local update
       get().setOnlineBalance(Math.max(0, get().onlineBalance - amount));
       get().setOfflineBalance(get().offlineBalance + amount);
       return [];
