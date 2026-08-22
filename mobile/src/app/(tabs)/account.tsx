@@ -2,7 +2,7 @@
  * OffPay Account Screen — "All Accounts & Summary" (Matching Reference Screen 3)
  * Displays:
  * - Summary Header with dual overlapping card illustration
- * - Total Available Balance ($2,799.00 / NPR 30,000.00)
+ * - Total Available Balance (NPR 30,000.00)
  * - "All Accounts" Card List (Primary Account, Saving Account, Offline Bond Vault)
  * - Prominent "Create Account / Load Bond" primary button
  */
@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BankingHeader } from '@/components/BankingHeader';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
@@ -86,7 +87,7 @@ export default function AccountScreen() {
 
               <View style={styles.accountCardRight}>
                 <View style={[styles.accountIconBox, { backgroundColor: '#E6F6EE' }]}>
-                  <ThemedText style={[styles.accountIcon, { color: '#0F4A3C' }]}>🏛</ThemedText>
+                  <SvgIcon name="bank" size={18} color="#0F4A3C" />
                 </View>
                 <ThemedText style={[styles.accountBalanceLabel, { color: theme.textSecondary }]}>
                   Available Balance
@@ -110,7 +111,7 @@ export default function AccountScreen() {
 
               <View style={styles.accountCardRight}>
                 <View style={[styles.accountIconBox, { backgroundColor: '#E0F2FE' }]}>
-                  <ThemedText style={[styles.accountIcon, { color: '#0284C7' }]}>💼</ThemedText>
+                  <SvgIcon name="accounts" size={18} color="#0284C7" />
                 </View>
                 <ThemedText style={[styles.accountBalanceLabel, { color: theme.textSecondary }]}>
                   Available Balance
@@ -137,7 +138,7 @@ export default function AccountScreen() {
 
               <View style={styles.accountCardRight}>
                 <View style={[styles.accountIconBox, { backgroundColor: '#FEF3C7' }]}>
-                  <ThemedText style={[styles.accountIcon, { color: '#D97706' }]}>🔒</ThemedText>
+                  <SvgIcon name="lock" size={18} color="#D97706" />
                 </View>
                 <ThemedText style={[styles.accountBalanceLabel, { color: theme.textSecondary }]}>
                   Offline Capacity
@@ -149,13 +150,13 @@ export default function AccountScreen() {
             </View>
           </View>
 
-          {/* Prominent "Create Account / Load Bond" Button (Matching Reference Screen 3) */}
+          {/* Prominent "Create Account / Load Bond" Button */}
           <Pressable
             onPress={() => Alert.alert('Create Account / Load Bond', 'Select bank account to link or allocate new offline bond vouchers.')}
             style={({ pressed }) => [
               styles.createAccountButton,
               {
-                backgroundColor: '#0F4A3C',
+                backgroundColor: theme.primaryDark,
                 opacity: pressed ? 0.88 : 1,
                 transform: [{ scale: pressed ? 0.98 : 1 }],
               },
@@ -282,9 +283,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
-  },
-  accountIcon: {
-    fontSize: FontSize.md,
   },
   accountBalanceLabel: {
     fontSize: 9,
