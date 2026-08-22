@@ -1,14 +1,14 @@
 @echo off
-title BondPay UI Local Server
+title OffPay UI Local Server
 echo ==============================================
-echo   BondPay Terminal UI Local Web Server
+echo   OffPay Terminal UI Local Web Server
 echo ==============================================
 echo.
 echo Trying to start server using Node.js (npx)...
 where node >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     echo Node.js found. Starting server on http://localhost:8080
-    echo Please open: http://localhost:8080/bondpay-ui.html
+    echo Please open: http://localhost:8080/off-pay.html
     echo.
     npx -y http-server -p 8080
     goto end
@@ -18,7 +18,7 @@ echo Node.js not found. Trying Python...
 where python >nul 2>nul
 if %ERRORLEVEL% equ 0 (
     echo Python found. Starting server on http://localhost:8000
-    echo Please open: http://localhost:8000/bondpay-ui.html
+    echo Please open: http://localhost:8000/off-pay.html
     echo.
     python -m http.server 8000
     goto end

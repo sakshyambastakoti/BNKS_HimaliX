@@ -1,4 +1,4 @@
-# 📟 BondPay Terminal: Offline RFID Hardware System
+# 📟 OffPay Terminal: Offline RFID Hardware System
 
 > The official offline merchant terminal for the **OffPay (HimaliX)** digital payment ecosystem.
 
@@ -7,10 +7,10 @@
 ## ⚡ Quick Start
 
 ### 1. Run the Web Management Interface
-Double-click [`start_ui_server.bat`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/start_ui_server.bat) or open [`bondpay-ui.html`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/bondpay-ui.html) directly in any modern web browser.
+Double-click [`start_ui_server.bat`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/start_ui_server.bat) or open [`off-pay.html`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/off-pay.html) directly in any modern web browser.
 
 ### 2. Multi-Device Cloud Sync
-1. Open [`bondpay-ui.html`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/bondpay-ui.html).
+1. Open [`off-pay.html`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/off-pay.html).
 2. Click **Pair** in the top header.
 3. Scan the generated **QR Code** on your mobile phone or copy the direct pairing link.
 4. Payments, card updates, and live balance deductions will synchronize instantaneously over MQTT.
@@ -21,7 +21,7 @@ Double-click [`start_ui_server.bat`](file:///d:/BNKS_HimaliX/Bond_Pay_Terminal/s
 
 ```
 Bond_Pay_Terminal/
-├── bondpay-ui.html       # Single-file Web Management Interface (MQTT + LAN)
+├── off-pay.html          # Single-file Web Management Interface (MQTT + LAN)
 ├── start_ui_server.bat   # 1-Click local HTTP server launcher
 ├── README.md             # This document
 └── main/                 # Embedded Arduino firmware

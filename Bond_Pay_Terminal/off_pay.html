@@ -1534,7 +1534,7 @@
             <div class="mode-pill" id="header-mode-badge" onclick="switchTab('set')" title="Click to configure MQTT / LAN">
                 <span id="header-mode-icon">🌐</span>
                 <span id="header-mode-label">MQTT Cloud</span>
-                <span class="channel-tag" id="header-channel-tag">bp-station-01</span>
+                <span class="channel-tag" id="header-channel-tag">op-station-01</span>
             </div>
             <!-- Pair Button -->
             <button class="pair-btn" id="header-pair-btn" onclick="openPairModal()" title="Pair Another Phone / Device">
@@ -1639,7 +1639,7 @@
             <!-- ═══ DASHBOARD / OVERVIEW ═══ -->
             <div id="p-dash" class="panel active">
                 <div class="panel-header">
-                    <h1 class="panel-title" id="station-name">BondPay Station</h1>
+                    <h1 class="panel-title" id="station-name">OffPay Station</h1>
                     <p class="panel-subtitle">Terminal management overview</p>
                 </div>
 
@@ -1776,7 +1776,7 @@
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Station / Pairing Channel ID</label>
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" class="form-input mono" id="mqtt-channel-input" value="bp-station-01" placeholder="e.g. bp-store-01">
+                                <input type="text" class="form-input mono" id="mqtt-channel-input" value="op-station-01" placeholder="e.g. op-store-01">
                                 <button class="btn btn-outline" type="button" onclick="generateRandomChannel()" title="Generate Random ID">🎲 Random</button>
                             </div>
                         </div>
@@ -1802,7 +1802,7 @@
                             </div>
                             <div class="diag-item">
                                 <span class="diag-lbl">Active Channel</span>
-                                <span class="diag-val mono" id="diag-mqtt-channel">bp-station-01</span>
+                                <span class="diag-val mono" id="diag-mqtt-channel">op-station-01</span>
                             </div>
                             <div class="diag-item">
                                 <span class="diag-lbl">Roundtrip Latency</span>
@@ -1835,7 +1835,7 @@
                         <form onsubmit="saveSettings(event)">
                             <div class="form-group">
                                 <label class="form-label">Station Name</label>
-                                <input type="text" class="form-input" id="setting-name" required value="BondPay Station 1">
+                                <input type="text" class="form-input" id="setting-name" required value="OffPay Station 1">
                             </div>
                             <button type="submit" class="btn btn-black">Save Settings</button>
                         </form>
@@ -1923,7 +1923,7 @@
 
         <!-- IP Entry State (visible when no IP is saved/configured in LAN mode) -->
         <div id="sync-ip-form-container" style="display:none; flex-direction:column; align-items:center; width:100%; max-width:320px; text-align:center;">
-            <p class="sync-sub-text" style="margin-bottom:20px; font-size:0.85rem; padding:0 16px;">Enter the IP address of your BondPay Terminal to connect. Make sure both devices are on the same WiFi network.</p>
+            <p class="sync-sub-text" style="margin-bottom:20px; font-size:0.85rem; padding:0 16px;">Enter the IP address of your OffPay Terminal to connect. Make sure both devices are on the same WiFi network.</p>
             <div class="form-group" style="width:100%; margin-bottom:16px; padding:0 16px;">
                 <input type="text" class="form-input" id="sync-esp-ip" placeholder="e.g. 192.168.1.100" style="text-align:center; font-size:1.1rem; height:45px; width:100%;">
             </div>
@@ -2000,11 +2000,11 @@
         // ══════════════════════════════════════════════════════════════
         // ── STATE & CONFIGURATION ────────────────────────────────────
         // ══════════════════════════════════════════════════════════════
-        let connMode = localStorage.getItem('bondpay_conn_mode') || 'mqtt'; // 'mqtt' or 'lan'
-        let mqttBroker = localStorage.getItem('bondpay_mqtt_broker') || 'wss://broker.emqx.io:8084/mqtt';
-        let mqttChannel = localStorage.getItem('bondpay_mqtt_channel') || 'bp-station-01';
-        let deviceRole = localStorage.getItem('bondpay_device_role') || 'Terminal POS';
-        let clientId = 'bp-web-' + Math.random().toString(36).substring(2, 9);
+        let connMode = localStorage.getItem('offpay_conn_mode') || localStorage.getItem('bondpay_conn_mode') || 'mqtt'; // 'mqtt' or 'lan'
+        let mqttBroker = localStorage.getItem('offpay_mqtt_broker') || localStorage.getItem('bondpay_mqtt_broker') || 'wss://broker.emqx.io:8084/mqtt';
+        let mqttChannel = localStorage.getItem('offpay_mqtt_channel') || localStorage.getItem('bondpay_mqtt_channel') || 'op-station-01';
+        let deviceRole = localStorage.getItem('offpay_device_role') || localStorage.getItem('bondpay_device_role') || 'Terminal POS';
+        let clientId = 'op-web-' + Math.random().toString(36).substring(2, 9);
 
         let API_BASE = '';
         let connected = false;
@@ -2050,12 +2050,12 @@
 
         // Load saved state if present
         try {
-            const savedCards = localStorage.getItem('bondpay_db_cards');
+            const savedCards = localStorage.getItem('offpay_db_cards') || localStorage.getItem('bondpay_db_cards');
             if (savedCards) allCards = JSON.parse(savedCards);
-            const savedTxns = localStorage.getItem('bondpay_db_txns');
+            const savedTxns = localStorage.getItem('offpay_db_txns') || localStorage.getItem('bondpay_db_txns');
             if (savedTxns) allTransactions = JSON.parse(savedTxns);
         } catch (e) {
-            console.warn('[BondPay] Failed reading saved cache:', e);
+            console.warn('[OffPay] Failed reading saved cache:', e);
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -2073,18 +2073,18 @@
 
             if (channelParam) {
                 mqttChannel = channelParam.trim();
-                localStorage.setItem('bondpay_mqtt_channel', mqttChannel);
-                console.log('[BondPay] Joined channel from URL:', mqttChannel);
+                localStorage.setItem('offpay_mqtt_channel', mqttChannel);
+                console.log('[OffPay] Joined channel from URL:', mqttChannel);
             }
 
             if (modeParam === 'mqtt' || modeParam === 'lan') {
                 connMode = modeParam;
-                localStorage.setItem('bondpay_conn_mode', connMode);
+                localStorage.setItem('offpay_conn_mode', connMode);
             }
 
             if (brokerParam) {
                 mqttBroker = decodeURIComponent(brokerParam);
-                localStorage.setItem('bondpay_mqtt_broker', mqttBroker);
+                localStorage.setItem('offpay_mqtt_broker', mqttBroker);
             }
 
             // Update UI fields
@@ -2112,7 +2112,7 @@
                 if (connMode === 'mqtt') {
                     connectMQTT(false);
                 } else {
-                    const savedIP = localStorage.getItem('bondpay_esp_ip');
+                    const savedIP = localStorage.getItem('offpay_esp_ip') || localStorage.getItem('bondpay_esp_ip');
                     if (savedIP) {
                         document.getElementById('esp-ip').value = savedIP;
                         attemptConnectLAN(false);
@@ -2187,7 +2187,7 @@
             document.getElementById('conn-text').style.color = 'var(--text-muted)';
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
 
-            console.log('[BondPay] Connecting to MQTT broker: ' + mqttBroker + ' on channel: ' + mqttChannel);
+            console.log('[OffPay] Connecting to MQTT broker: ' + mqttBroker + ' on channel: ' + mqttChannel);
 
             const options = {
                 clientId: clientId,
@@ -2200,7 +2200,7 @@
             try {
                 mqttClient = mqtt.connect(mqttBroker, options);
             } catch (err) {
-                console.error('[BondPay] MQTT connection init failed:', err);
+                console.error('[OffPay] MQTT connection init failed:', err);
                 handleMQTTError(err, silent);
                 return;
             }
@@ -2218,15 +2218,16 @@
                 setSyncStep('step-time', 'active');
                 setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
 
-                // Topics to subscribe
+                // Topics to subscribe (supporting both offpay and bondpay for compatibility)
                 const topics = [
-                    `bondpay/${mqttChannel}/status`,
-                    `bondpay/${mqttChannel}/events`,
-                    `bondpay/${mqttChannel}/cards`,
-                    `bondpay/${mqttChannel}/txns`,
-                    `bondpay/${mqttChannel}/cmd`,
-                    `bondpay/${mqttChannel}/presence`,
-                    `bondpay/${mqttChannel}/ping`
+                    `offpay/${mqttChannel}/status`,
+                    `offpay/${mqttChannel}/events`,
+                    `offpay/${mqttChannel}/cards`,
+                    `offpay/${mqttChannel}/txns`,
+                    `offpay/${mqttChannel}/cmd`,
+                    `offpay/${mqttChannel}/presence`,
+                    `offpay/${mqttChannel}/ping`,
+                    `bondpay/${mqttChannel}/#`
                 ];
 
                 mqttClient.subscribe(topics, { qos: 1 }, function (err) {
@@ -2390,7 +2391,7 @@
 
         function handleRemoteEvent(ev) {
             if (!ev) return;
-            console.log('[BondPay] Received Remote Event:', ev);
+            console.log('[OffPay] Received Remote Event:', ev);
             
             // Put terminal in processing state, then display result
             currentModalState = 'PROCESSING';
@@ -2421,7 +2422,7 @@
         function handleRemoteCards(cards) {
             if (Array.isArray(cards)) {
                 allCards = cards;
-                localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
+                localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
             }
@@ -2430,7 +2431,7 @@
         function handleRemoteTxns(txns) {
             if (Array.isArray(txns)) {
                 allTransactions = txns;
-                localStorage.setItem('bondpay_db_txns', JSON.stringify(allTransactions));
+                localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
                 renderTransactions(allTransactions);
                 renderRecent(allTransactions);
                 updateStatsCounters();
@@ -2439,7 +2440,7 @@
 
         function handleRemoteCmd(cmd) {
             const action = cmd.action;
-            console.log('[BondPay] Handling Remote Command:', action, cmd);
+            console.log('[OffPay] Handling Remote Command:', action, cmd);
 
             if (action === 'start_payment') {
                 const amt = parseFloat(cmd.amount);
@@ -2460,13 +2461,13 @@
                 const idx = allCards.findIndex(c => c.uid.toLowerCase() === cmd.uid.toLowerCase());
                 if (idx !== -1) {
                     allCards[idx].balance = parseFloat(cmd.balance);
-                    localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
+                    localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                     renderCardsSidebar(allCards);
                     updateStatsCounters();
                 }
             } else if (action === 'delete_card') {
                 allCards = allCards.filter(c => c.uid.toLowerCase() !== cmd.uid.toLowerCase());
-                localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
+                localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
             } else if (action === 'request_sync') {
@@ -2509,7 +2510,7 @@
         // ── MQTT Publishing Helpers ──────────────────────────────────
         function mqttPublish(subTopic, obj, retain = false) {
             if (!mqttClient || !connected) return;
-            const topic = `bondpay/${mqttChannel}/${subTopic}`;
+            const topic = `offpay/${mqttChannel}/${subTopic}`;
             const message = JSON.stringify(obj);
             mqttClient.publish(topic, message, { qos: 1, retain: retain });
         }
@@ -2617,7 +2618,7 @@
                     qrCanvas.innerHTML = '<p style="padding:20px;font-size:0.75rem;">QR Code library loading...</p>';
                 }
             } catch (e) {
-                console.error('[BondPay] QR generation error:', e);
+                console.error('[OffPay] QR generation error:', e);
             }
 
             updatePeersDisplay();
@@ -2647,7 +2648,7 @@
         }
 
         function generateRandomChannel() {
-            const randomCode = 'bp-station-' + Math.random().toString(36).substring(2, 8);
+            const randomCode = 'op-station-' + Math.random().toString(36).substring(2, 8);
             document.getElementById('mqtt-channel-input').value = randomCode;
             toast('Generated new channel: ' + randomCode, 'ok');
         }
@@ -2671,9 +2672,9 @@
             mqttChannel = channel;
             deviceRole = role;
 
-            localStorage.setItem('bondpay_mqtt_broker', mqttBroker);
-            localStorage.setItem('bondpay_mqtt_channel', mqttChannel);
-            localStorage.setItem('bondpay_device_role', deviceRole);
+            localStorage.setItem('offpay_mqtt_broker', mqttBroker);
+            localStorage.setItem('offpay_mqtt_channel', mqttChannel);
+            localStorage.setItem('offpay_device_role', deviceRole);
 
             updateSettingsUI();
             toast('MQTT Settings Saved — Reconnecting...', 'ok');
@@ -2682,7 +2683,7 @@
 
         function selectConnMode(mode, autoConnect = true) {
             connMode = mode;
-            localStorage.setItem('bondpay_conn_mode', mode);
+            localStorage.setItem('offpay_conn_mode', mode);
 
             const btnMqtt = document.getElementById('btn-mode-mqtt');
             const btnLan = document.getElementById('btn-mode-lan');
@@ -2729,7 +2730,7 @@
                     return;
                 }
                 API_BASE = 'http://' + ip;
-                localStorage.setItem('bondpay_esp_ip', ip);
+                localStorage.setItem('offpay_esp_ip', ip);
             }
 
             showSyncOverlay();
@@ -2790,7 +2791,7 @@
                             document.getElementById('sync-spinner').style.display = 'none';
 
                             setTimeout(hideSyncOverlay, 600);
-                            if (!silent) toast('Connected to BondPay Terminal (LAN)', 'ok');
+                            if (!silent) toast('Connected to OffPay Terminal (LAN)', 'ok');
 
                             startPolling();
                         });
@@ -3169,8 +3170,8 @@
             };
 
             allTransactions.push(newTxn);
-            localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
-            localStorage.setItem('bondpay_db_txns', JSON.stringify(allTransactions));
+            localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+            localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
 
             renderCardsSidebar(allCards);
             renderTransactions(allTransactions);
@@ -3215,7 +3216,7 @@
 
                 const newCard = { uid: randomUid, name: n, userId: u, balance: b };
                 allCards.push(newCard);
-                localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
+                localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
 
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
@@ -3260,7 +3261,7 @@
                 const idx = allCards.findIndex(c => c.uid.toLowerCase() === uid.toLowerCase());
                 if (idx !== -1) {
                     allCards[idx].balance = num;
-                    localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
+                    localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                     renderCardsSidebar(allCards);
                     updateStatsCounters();
                     mqttPublishCards();
@@ -3281,7 +3282,7 @@
 
             if (connMode === 'mqtt') {
                 allCards = allCards.filter(c => c.uid.toLowerCase() !== uid.toLowerCase());
-                localStorage.setItem('bondpay_db_cards', JSON.stringify(allCards));
+                localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
                 mqttPublishCards();
@@ -3297,7 +3298,7 @@
         function syncTransactions() {
             if (connMode === 'mqtt') {
                 allTransactions.forEach(t => t.synced = true);
-                localStorage.setItem('bondpay_db_txns', JSON.stringify(allTransactions));
+                localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
                 renderTransactions(allTransactions);
                 mqttPublishTransactions();
                 toast('Transactions synchronized across all devices', 'ok');
@@ -3313,7 +3314,7 @@
 
             if (connMode === 'mqtt') {
                 allTransactions = [];
-                localStorage.setItem('bondpay_db_txns', JSON.stringify(allTransactions));
+                localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
                 renderTransactions(allTransactions);
                 renderRecent(allTransactions);
                 updateStatsCounters();
@@ -3346,7 +3347,7 @@
         function saveSettings(e) {
             e.preventDefault();
             const name = document.getElementById('setting-name').value;
-            localStorage.setItem('bondpay_station_name', name);
+            localStorage.setItem('offpay_station_name', name);
             if (connMode === 'lan') {
                 api('/api/settings?stationName=' + encodeURIComponent(name), 'POST')
                     .then(function () { toast('Settings saved', 'ok'); }).catch(function () { });
