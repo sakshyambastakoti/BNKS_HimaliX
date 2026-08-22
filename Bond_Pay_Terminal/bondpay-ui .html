@@ -8,7 +8,7 @@
     <meta name="description" content="OffPay — Clean Swiss-style offline RFID payment terminal & ledger management system">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <!-- MQTT over WebSockets & QR Code Library -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -16,6 +16,7 @@
         /* ═══════════════════════════════════════════════════════════
            DESIGN SYSTEM — Clean Swiss Monochrome + Emerald Green
            Sharp Edges, Pure White Background, Deep Black Typography
+           Realistic ATM Smart Debit Card Layout
            ═══════════════════════════════════════════════════════════ */
         :root {
             /* Clean White & Slate Backgrounds */
@@ -30,6 +31,7 @@
             --black: #09090b;
             --black-pure: #000000;
             --gray-900: #18181b;
+            --gray-800: #27272a;
             --gray-700: #3f3f46;
             --gray-600: #52525b;
             --gray-500: #71717a;
@@ -66,7 +68,7 @@
             --radius-none: 0px;
 
             /* Layout */
-            --sidebar-width: 390px;
+            --sidebar-width: 410px;
             --header-h: 64px;
 
             /* Sharp Shadows */
@@ -80,7 +82,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            border-radius: 0 !important; /* Enforce crisp sharp edges throughout */
+            border-radius: 0 !important; /* Enforce crisp sharp edges */
         }
 
         body {
@@ -308,7 +310,7 @@
         }
 
         .sidebar-section {
-            padding: 24px;
+            padding: 22px;
             border-bottom: 1px solid var(--gray-200);
         }
 
@@ -323,7 +325,7 @@
             text-transform: uppercase;
             letter-spacing: 1.8px;
             color: var(--gray-500);
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -337,109 +339,287 @@
             background: var(--gray-200);
         }
 
-        /* ── Clean Hardware Terminal POS Card ──────────────────── */
-        .pos-hardware-card {
-            background: var(--bg-white);
-            border: 1px solid var(--gray-300);
-            border-top: 3px solid var(--brand-green);
-            padding: 22px 20px;
-            margin-bottom: 18px;
+        /* ═══════════════════════════════════════════════════════════
+           REAL ATM / SMART DEBIT CARD COMPONENT
+           ═══════════════════════════════════════════════════════════ */
+        .real-atm-card {
+            background: linear-gradient(135deg, #18181b 0%, #0f172a 55%, #020617 100%);
+            border: 1px solid #27272a;
             position: relative;
-            box-shadow: var(--shadow-subtle);
+            overflow: hidden;
+            color: #ffffff;
+            padding: 20px 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.35), 0 0 0 1px #09090b, inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .pos-card-header {
+        .real-atm-card::before {
+            content: '';
+            position: absolute;
+            top: -40%;
+            left: -40%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(circle at 75% 25%, rgba(16, 185, 129, 0.15) 0%, transparent 55%),
+                        radial-gradient(circle at 20% 80%, rgba(132, 204, 22, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .real-atm-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px);
+            pointer-events: none;
+        }
+
+        .atm-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-        }
-
-        .pos-chip-icon {
-            width: 32px;
-            height: 24px;
-            background: var(--gray-100);
-            border: 1px solid var(--gray-300);
             position: relative;
+            z-index: 2;
         }
 
-        .pos-chip-icon::after {
-            content: '';
-            position: absolute;
-            inset: 3px;
-            border: 1px solid var(--gray-400);
-        }
-
-        .pos-contactless-wave {
-            color: var(--brand-green);
+        .atm-brand-group {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+            gap: 10px;
         }
 
-        /* ── Payment Input Module ──────────────────────────────── */
-        .pay-amount-display {
-            text-align: center;
-            padding: 8px 0 16px;
-        }
-
-        .pay-currency {
-            font-size: 0.68rem;
-            font-weight: 800;
-            color: var(--gray-500);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 4px;
-        }
-
-        .pay-amount-input-wrap {
-            position: relative;
+        .atm-card-logo-box {
+            background: #ffffff;
+            padding: 3px 6px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .pay-amount-input-wrap input {
+        .atm-card-logo-img {
+            height: 18px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .atm-card-tier {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .atm-contactless {
+            color: var(--brand-green-light);
+            display: flex;
+            align-items: center;
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4));
+        }
+
+        .atm-card-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Authentic EMV Gold Smart Chip */
+        .atm-emv-chip {
+            width: 44px;
+            height: 32px;
+            background: linear-gradient(135deg, #fef08a 0%, #eab308 45%, #ca8a04 100%);
+            border: 1px solid #854d0e;
+            position: relative;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 2px 6px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+
+        .atm-emv-chip .chip-line {
+            position: absolute;
+            background: #854d0e;
+        }
+
+        .atm-emv-chip .chip-line.horizontal {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            transform: translateY(-50%);
+        }
+
+        .atm-emv-chip .chip-line.vertical-1 {
+            left: 33%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+
+        .atm-emv-chip .chip-line.vertical-2 {
+            left: 66%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+
+        .atm-emv-chip .chip-center-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 10px;
+            border: 1px solid #854d0e;
+            background: rgba(234, 179, 8, 0.4);
+        }
+
+        .atm-security-hologram {
+            padding: 4px 8px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(59, 130, 246, 0.25) 50%, rgba(245, 158, 11, 0.25) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #cbd5e1;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        /* Dynamic POS Terminal Payment Window Inside Card */
+        .atm-amount-display-window {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-left: 3px solid var(--brand-green);
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        .atm-amount-label {
+            font-size: 0.62rem;
+            font-weight: 800;
+            color: var(--brand-green-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .atm-amount-input-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .atm-currency-prefix {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #94a3b8;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .atm-amount-input-box input {
             width: 100%;
             background: transparent;
             border: none;
-            border-bottom: 2px solid var(--black);
-            font-size: 2.5rem;
+            font-size: 1.9rem;
             font-weight: 800;
-            text-align: center;
-            color: var(--black);
-            padding: 4px 0;
+            color: #ffffff;
+            padding: 0;
             font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -1.5px;
+            letter-spacing: -0.5px;
             outline: none;
-            transition: border-color 0.2s ease;
+            text-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
         }
 
-        .pay-amount-input-wrap input:focus {
-            border-bottom-color: var(--brand-green);
+        .atm-amount-input-box input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+            text-shadow: none;
         }
 
-        .pay-amount-input-wrap input::placeholder {
-            color: var(--gray-300);
+        /* ATM Card Embossed Footer */
+        .atm-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 2;
+            padding-top: 4px;
         }
 
+        .atm-holder-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .atm-sub-label {
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .atm-holder-name {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #f1f5f9;
+            letter-spacing: 1.2px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .atm-valid-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: right;
+        }
+
+        .atm-valid-date {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #f1f5f9;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .atm-network-badge {
+            background: var(--brand-green);
+            color: #ffffff;
+            padding: 2px 6px;
+            font-size: 0.58rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── Quick Presets (Sharp Buttons) ─────────────────────── */
         .quick-amounts {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .quick-amt {
             background: var(--bg-white);
-            border: 1px solid var(--gray-200);
+            border: 1px solid var(--gray-300);
             padding: 9px 4px;
             font-size: 0.8rem;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             font-family: 'JetBrains Mono', monospace;
             text-align: center;
@@ -484,32 +664,63 @@
             box-shadow: var(--shadow-green);
         }
 
-        /* ── Card Hub (Sidebar) ────────────────────────────────── */
+        /* ── Card Hub (Sidebar) — ATM Style List ───────────────── */
         .card-list-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
 
         .card-item {
             background: var(--bg-white);
             border: 1px solid var(--gray-200);
+            border-left: 4px solid var(--black);
             padding: 14px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: all 0.15s ease;
             box-shadow: var(--shadow-subtle);
+            position: relative;
         }
 
         .card-item:hover {
-            border-color: var(--black);
+            border-color: var(--gray-400);
+            border-left-color: var(--brand-green);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Mini EMV Chip in Sidebar List */
+        .mini-card-chip {
+            width: 22px;
+            height: 16px;
+            background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+            border: 1px solid #854d0e;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .mini-card-chip::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #854d0e;
+            transform: translateY(-50%);
         }
 
         .card-info {
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
         }
 
         .card-name {
@@ -520,7 +731,7 @@
         }
 
         .card-uid {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 600;
             color: var(--gray-500);
             font-family: 'JetBrains Mono', monospace;
@@ -547,7 +758,7 @@
         .card-actions {
             display: flex;
             gap: 4px;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .card-action-btn {
@@ -1190,7 +1401,7 @@
             height: 32px;
         }
 
-        /* ── Radar Scanner Animations (Sharp Hex/Box Outline) ───── */
+        /* ── Radar Scanner Animations ──────────────────────────── */
         .radar-box {
             position: relative;
             width: 80px;
@@ -1738,22 +1949,57 @@
 
             <!-- Payment Terminal Section -->
             <div class="sidebar-section">
-                <div class="section-label">Terminal POS</div>
+                <div class="section-label">ATM Payment Terminal</div>
 
-                <!-- Hardware Card Display -->
-                <div class="pos-hardware-card">
-                    <div class="pos-card-header">
-                        <div class="pos-chip-icon"></div>
-                        <div class="pos-contactless-wave">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19"/></svg>
-                            <span>RFID / NFC</span>
+                <!-- REAL ATM / SMART DEBIT CARD -->
+                <div class="real-atm-card">
+                    <!-- Top Header of Card -->
+                    <div class="atm-card-header">
+                        <div class="atm-brand-group">
+                            <div class="atm-card-logo-box">
+                                <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay" class="atm-card-logo-img">
+                            </div>
+                            <span class="atm-card-tier">OFFLINE PLATINUM</span>
+                        </div>
+                        <div class="atm-contactless" title="EMV Contactless RFID/NFC Enabled">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19"/></svg>
                         </div>
                     </div>
 
-                    <div class="pay-amount-display">
-                        <div class="pay-currency">Amount (NPR)</div>
-                        <div class="pay-amount-input-wrap">
-                            <input type="number" id="pay-amount" placeholder="0.00" min="0.01" step="0.01">
+                    <!-- EMV Smart Chip & Security Foil -->
+                    <div class="atm-card-body">
+                        <div class="atm-emv-chip" title="EMV Contact Smart Chip">
+                            <div class="chip-line horizontal"></div>
+                            <div class="chip-line vertical-1"></div>
+                            <div class="chip-line vertical-2"></div>
+                            <div class="chip-center-circle"></div>
+                        </div>
+                        <div class="atm-security-hologram">
+                            <span>CIPHER VAULT</span>
+                        </div>
+                    </div>
+
+                    <!-- Integrated Payment Display Window -->
+                    <div class="atm-amount-display-window">
+                        <div class="atm-amount-label">AMOUNT TO CHARGE (NPR)</div>
+                        <div class="atm-amount-input-box">
+                            <span class="atm-currency-prefix">NPR</span>
+                            <input type="number" id="pay-amount" placeholder="0.00" min="0.01" step="0.01" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <!-- Embossed Footer Details -->
+                    <div class="atm-card-footer">
+                        <div class="atm-holder-col">
+                            <span class="atm-sub-label">CARDHOLDER / TERMINAL</span>
+                            <span class="atm-holder-name">OFFPAY VAULT POS</span>
+                        </div>
+                        <div class="atm-valid-col">
+                            <span class="atm-sub-label">VALID THRU</span>
+                            <span class="atm-valid-date">12/29</span>
+                        </div>
+                        <div class="atm-network-badge">
+                            <span>RFID / NFC</span>
                         </div>
                     </div>
                 </div>
@@ -3098,17 +3344,20 @@
             }
             el.innerHTML = cards.map(c => `
                 <div class="card-item">
-                    <div class="card-info">
-                        <div class="card-name">${esc(c.name)}</div>
-                        <div class="card-uid">${esc(c.uid)}</div>
-                        <div class="card-actions">
-                            <button class="card-action-btn" onclick="editBalance('${esc(c.uid)}', ${c.balance})">Edit</button>
-                            <button class="card-action-btn del" onclick="deleteCard('${esc(c.uid)}')">Delete</button>
+                    <div class="card-item-left">
+                        <div class="mini-card-chip" title="EMV Smart RFID Tag"></div>
+                        <div class="card-info">
+                            <div class="card-name">${esc(c.name)}</div>
+                            <div class="card-uid">${esc(c.uid)} &bull; ${esc(c.userId)}</div>
+                            <div class="card-actions">
+                                <button class="card-action-btn" onclick="editBalance('${esc(c.uid)}', ${c.balance})">Edit</button>
+                                <button class="card-action-btn del" onclick="deleteCard('${esc(c.uid)}')">Delete</button>
+                            </div>
                         </div>
                     </div>
                     <div>
                         <div class="card-balance">NPR ${parseFloat(c.balance).toFixed(2)}</div>
-                        <div class="card-balance-label">${esc(c.userId)}</div>
+                        <div class="card-balance-label">BALANCE</div>
                     </div>
                 </div>
             `).join('');
@@ -3205,7 +3454,7 @@
                     </div>
 
                     <div style="margin-bottom:14px; text-align:center;">
-                        <h2 style="font-size:1.2rem;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px;color:var(--black);">Terminal POS Payment</h2>
+                        <h2 style="font-size:1.2rem;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px;color:var(--black);">ATM Terminal POS Payment</h2>
                         <div style="font-size:2.2rem;font-weight:900;letter-spacing:-1px;margin-bottom:2px;color:var(--black);font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(data.activeAmount).toFixed(2)}</div>
                         <p style="color:var(--brand-green-dark);font-size:0.76rem;font-weight:700;">Encrypted Offline Hardware Authorization</p>
                     </div>
