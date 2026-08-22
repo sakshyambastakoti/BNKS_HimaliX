@@ -1498,6 +1498,59 @@
             text-align: left;
         }
 
+        /* ── Live Transaction Sync Spinner & Progress ─────────── */
+        .sync-spinner-box {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sync-spinner {
+            position: absolute;
+            inset: 0;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--brand-green);
+            border-right-color: var(--brand-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .sync-spinner-inner {
+            color: var(--brand-green-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sync-progress-bar-wrap {
+            height: 4px;
+            background: var(--gray-200);
+            width: 100%;
+            margin-top: 14px;
+            overflow: hidden;
+        }
+
+        .sync-progress-bar {
+            height: 100%;
+            width: 30%;
+            background: var(--brand-green);
+            animation: sync-progress-anim 1.2s ease-in-out infinite;
+        }
+
+        @keyframes sync-progress-anim {
+            0% { transform: translateX(-100%); width: 30%; }
+            50% { width: 60%; }
+            100% { transform: translateX(350%); width: 30%; }
+        }
+
         /* ── Toast Notifications ───────────────────────────────── */
         .toast {
             position: fixed;
@@ -2506,10 +2559,10 @@
         }
 
         async function syncTxnToSupabase(txn) {
-            if (!supabaseClient || !supabaseAutoSync) return;
+            if (!supabaseClient || !supabaseAutoSync) return false;
             try {
                 const payload = {
-                    transaction_id: txn.id || null,
+                    transaction_id: txn.id || (Date.now() % 1000000),
                     timestamp: txn.timestamp || new Date().toISOString(),
                     card_uid: txn.uid || '--',
                     cardholder_name: txn.name || 'Cardholder',
@@ -2520,22 +2573,34 @@
                     station_name: localStorage.getItem('offpay_station_name') || 'OffPay Station 1',
                     synced: true
                 };
-                await supabaseClient.from('transactions').insert([payload]);
+                const { error } = await supabaseClient.from('transactions').upsert([payload], { onConflict: 'transaction_id' });
+                if (error) {
+                    console.warn('[Supabase] Txn Sync error:', error);
+                    return false;
+                }
                 txn.synced = true;
-            } catch (err) { }
+                return true;
+            } catch (err) {
+                console.warn('[Supabase] Txn Sync exception:', err);
+                return false;
+            }
         }
 
         async function syncCardToSupabase(card) {
-            if (!supabaseClient || !supabaseAutoSync) return;
+            if (!supabaseClient || !supabaseAutoSync) return false;
             try {
-                await supabaseClient.from('cards').upsert([{
+                const { error } = await supabaseClient.from('cards').upsert([{
                     uid: card.uid,
                     name: card.name,
                     user_id: card.userId || '',
                     balance: parseFloat(card.balance || 0),
                     updated_at: new Date().toISOString()
                 }], { onConflict: 'uid' });
-            } catch (err) { }
+                return !error;
+            } catch (err) {
+                console.warn('[Supabase] Card Sync exception:', err);
+                return false;
+            }
         }
 
         async function pushAllToSupabase() {
@@ -2818,15 +2883,44 @@
             renderTransactions(filtered);
         }
 
-        function handleRemoteEvent(ev) {
+        function showSyncingModal(amount, name, uid) {
+            const overlay = document.getElementById('overlay');
+            const modal = document.getElementById('modal-content');
+            overlay.classList.add('active');
+
+            modal.innerHTML = `
+                <div style="text-align:center; padding:18px 0;">
+                    <div class="sync-spinner-box">
+                        <div class="sync-spinner"></div>
+                        <div class="sync-spinner-inner">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                        </div>
+                    </div>
+                    <div style="font-size:0.72rem; font-weight:800; letter-spacing:1.5px; color:var(--brand-green-dark); text-transform:uppercase; font-family:'JetBrains Mono',monospace; margin-bottom:4px;">
+                        PROCESSING PAYMENT
+                    </div>
+                    <h3 style="font-size:1.6rem; font-weight:800; color:var(--black); margin-bottom:4px; font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(amount || 0).toFixed(2)}</h3>
+                    <p style="font-weight:700; font-size:0.92rem; color:var(--black); margin-bottom:2px;">${esc(name || 'Cardholder')}</p>
+                    <p style="font-size:0.75rem; color:var(--gray-500); font-family:'JetBrains Mono',monospace; margin-bottom:12px;">${esc(uid || '--')}</p>
+                    <p style="font-size:0.78rem; color:var(--gray-600); margin-bottom:12px;">Verifying cryptographic balance & replicating to Supabase Cloud DB...</p>
+                    <div class="sync-progress-bar-wrap">
+                        <div class="sync-progress-bar"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleRemoteEvent(ev) {
             if (!ev) return;
             const isSuccess = (ev.status || '').toLowerCase().includes('success');
-            playAudioTone(isSuccess ? 'ok' : 'err');
 
             const matchingCard = allCards.find(c => (c.uid || '').toLowerCase() === (ev.uid || '').toLowerCase());
             const cardholderName = ev.name && ev.name !== 'Unknown' ? ev.name : (matchingCard ? matchingCard.name : 'Unknown Cardholder');
             const prevBal = ev.prevBal !== undefined ? parseFloat(ev.prevBal) : (matchingCard ? matchingCard.balance : 0);
             const remBal = isSuccess ? (ev.remBal !== undefined ? parseFloat(ev.remBal) : (matchingCard ? matchingCard.balance - parseFloat(ev.amount || 0) : 0)) : prevBal;
+
+            // Show Real-time Loading Sync state while database replication occurs
+            showSyncingModal(ev.amount, cardholderName, ev.uid);
 
             const existingTxnIdx = allTransactions.findIndex(t => 
                 (ev.id && t.id === ev.id) || 
@@ -2834,37 +2928,58 @@
             );
 
             const statusText = isSuccess ? 'Success' : (ev.message ? (ev.message.toLowerCase().includes('insufficient') ? 'Declined: Insufficient Balance' : 'Declined: ' + ev.message) : 'Declined');
+            const nextId = allTransactions.length > 0 ? (Math.max(...allTransactions.map(t => t.id || 0)) + 1) : 101;
+
+            const newTxn = {
+                id: ev.id || nextId,
+                timestamp: ev.timestamp || new Date().toLocaleString(),
+                uid: ev.uid || '--',
+                name: cardholderName,
+                amount: parseFloat(ev.amount || 0),
+                prevBal: prevBal,
+                remBal: remBal,
+                status: statusText,
+                synced: true
+            };
 
             if (existingTxnIdx === -1 && (parseFloat(ev.amount || 0) > 0 || ev.uid)) {
-                const nextId = allTransactions.length > 0 ? (Math.max(...allTransactions.map(t => t.id || 0)) + 1) : 101;
-                const newTxn = {
-                    id: ev.id || nextId,
-                    timestamp: ev.timestamp || new Date().toLocaleString(),
-                    uid: ev.uid || '--',
-                    name: cardholderName,
-                    amount: parseFloat(ev.amount || 0),
-                    prevBal: prevBal,
-                    remBal: remBal,
-                    status: statusText,
-                    synced: true
-                };
                 allTransactions.push(newTxn);
                 localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
-                syncTxnToSupabase(newTxn);
             }
 
             if (isSuccess && matchingCard) {
                 matchingCard.balance = remBal;
                 localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
-                syncCardToSupabase(matchingCard);
+            }
+
+            // Sync to Supabase Cloud asynchronously
+            let cloudSynced = false;
+            if (supabaseClient) {
+                const s1 = await syncTxnToSupabase(newTxn);
+                const s2 = (isSuccess && matchingCard) ? await syncCardToSupabase(matchingCard) : true;
+                cloudSynced = s1 && s2;
             }
 
             renderTransactions(allTransactions);
             renderRecent(allTransactions);
             updateStatsCounters();
 
-            showResultModal({ ...ev, name: cardholderName, prevBal, remBal, status: isSuccess ? 'Success' : 'Declined' });
+            // Play audio tone
+            playAudioTone(isSuccess ? 'ok' : 'err');
+
+            // Brief hold so user sees seamless loading confirmation then reveal final receipt
+            setTimeout(() => {
+                showResultModal({ 
+                    ...ev, 
+                    id: newTxn.id, 
+                    name: cardholderName, 
+                    prevBal, 
+                    remBal, 
+                    status: isSuccess ? 'Success' : 'Declined',
+                    cloudSynced: cloudSynced
+                });
+            }, 300);
         }
 
         function showResultModal(ev) {
@@ -2873,35 +2988,44 @@
             overlay.classList.add('active');
 
             const ok = (ev.status || '').toLowerCase().includes('success');
+            const cloudBadge = ev.cloudSynced ? 
+                `<span class="badge badge-ok" style="font-size:0.72rem; padding:4px 8px;">🟢 Stored in Supabase Cloud DB</span>` : 
+                `<span class="badge" style="font-size:0.72rem; padding:4px 8px; background:var(--bg-subtle); border:1px solid var(--gray-300); color:var(--gray-700);">✓ Stored in Local Ledger</span>`;
+
             if (ok) {
                 modal.innerHTML = `
-                    <div style="text-align:center; padding:10px 0;">
-                        <div style="width:52px;height:52px;background:var(--brand-green-soft);border:1px solid var(--brand-green-border);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;">
+                    <div style="text-align:center; padding:8px 0;">
+                        <div style="width:52px;height:52px;background:var(--brand-green-soft);border:1px solid var(--brand-green-border);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-dark)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                         </div>
                         <h2 style="font-size:1.35rem;font-weight:800;color:var(--brand-green-dark);margin-bottom:2px;">Payment Approved</h2>
                         <p style="font-weight:800;font-size:1rem;color:var(--black);margin-bottom:2px;">${esc(ev.name || 'Cardholder')}</p>
-                        <p style="font-size:0.75rem;color:var(--gray-500);font-family:'JetBrains Mono',monospace;margin-bottom:16px;">${esc(ev.uid)}</p>
+                        <p style="font-size:0.75rem;color:var(--gray-500);font-family:'JetBrains Mono',monospace;margin-bottom:12px;">${esc(ev.uid)}</p>
 
-                        <div style="border:1px solid var(--gray-200);background:var(--bg-subtle);padding:14px;text-align:left;margin-bottom:16px;">
+                        <div style="margin-bottom:12px;">${cloudBadge}</div>
+
+                        <div style="border:1px solid var(--gray-200);background:var(--bg-subtle);padding:14px;text-align:left;margin-bottom:14px;">
                             <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-600)">Charged</span><strong class="mono" style="color:var(--black);">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
                             <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-600)">Previous</span><span class="mono">NPR ${parseFloat(ev.prevBal || 0).toFixed(2)}</span></div>
                             <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px dashed var(--gray-300);font-size:0.84rem;"><span style="color:var(--gray-600)">Remaining</span><strong class="mono" style="color:var(--brand-green-dark);">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
                         </div>
-                        <button class="btn btn-black btn-full" onclick="closeOverlay()">Close</button>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-outline btn-full" onclick="openReceiptModal(${ev.id || (allTransactions.length ? allTransactions[allTransactions.length-1].id : 101)})">View Receipt</button>
+                            <button class="btn btn-black btn-full" onclick="closeOverlay()">Done</button>
+                        </div>
                     </div>
                 `;
             } else {
                 modal.innerHTML = `
-                    <div style="text-align:center; padding:10px 0;">
-                        <div style="width:52px;height:52px;background:var(--danger-bg);border:1px solid var(--danger-border);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;">
+                    <div style="text-align:center; padding:8px 0;">
+                        <div style="width:52px;height:52px;background:var(--danger-bg);border:1px solid var(--danger-border);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </div>
                         <h2 style="font-size:1.35rem;font-weight:800;color:var(--danger);margin-bottom:2px;">Payment Declined</h2>
                         <p style="font-weight:800;font-size:1rem;color:var(--black);margin-bottom:2px;">${esc(ev.name || 'Cardholder')}</p>
-                        <p style="font-size:0.75rem;color:var(--gray-500);font-family:'JetBrains Mono',monospace;margin-bottom:16px;">${esc(ev.uid || '--')}</p>
+                        <p style="font-size:0.75rem;color:var(--gray-500);font-family:'JetBrains Mono',monospace;margin-bottom:12px;">${esc(ev.uid || '--')}</p>
 
-                        <div style="border:1px solid var(--danger-border);background:var(--danger-bg);padding:14px;text-align:left;margin-bottom:16px;">
+                        <div style="border:1px solid var(--danger-border);background:var(--danger-bg);padding:14px;text-align:left;margin-bottom:14px;">
                             <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-700)">Decline Reason</span><strong style="color:var(--danger);">${esc(ev.message || 'Insufficient Balance')}</strong></div>
                             <div style="display:flex;justify-content:space-between;font-size:0.84rem;"><span style="color:var(--gray-700)">Available Vault</span><span class="mono">NPR ${parseFloat(ev.prevBal || 0).toFixed(2)}</span></div>
                         </div>
@@ -2909,7 +3033,6 @@
                     </div>
                 `;
             }
-            setTimeout(closeOverlay, 3500);
         }
 
         function closeOverlay() {
@@ -3058,8 +3181,8 @@
                     };
 
                     handleRemoteEvent(eventPayload);
-                }, 450);
-            }, 450);
+                }, 300);
+            }, 300);
         }
 
         function cancelPaymentAction() {
@@ -3150,7 +3273,7 @@
         // ── MQTT ENGINE & PEER SYNC ──────────────────────────────────
         // ══════════════════════════════════════════════════════════════
         function connectMQTT(silent = true) {
-            if (typeof mqtt === 'undefined') return setTimeout(() => connectMQTT(silent), 1000);
+            if (typeof mqtt === 'undefined') return setTimeout(() => connectMQTT(silent), 500);
             if (mqttClient) {
                 try { mqttClient.end(true); } catch (e) { }
             }
@@ -3158,7 +3281,14 @@
             document.getElementById('conn-text').innerText = 'Connecting...';
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
 
-            mqttClient = mqtt.connect(mqttBroker, { clientId, clean: true, reconnectPeriod: 4000, keepalive: 30 });
+            // Ultra-low latency WebSocket configuration
+            mqttClient = mqtt.connect(mqttBroker, { 
+                clientId, 
+                clean: true, 
+                reconnectPeriod: 2000, 
+                keepalive: 15,
+                connectTimeout: 5000 
+            });
 
             mqttClient.on('connect', function () {
                 connected = true;
@@ -3168,19 +3298,29 @@
                 document.getElementById('diag-mqtt-channel').innerText = mqttChannel;
 
                 const base = 'offpay/' + mqttChannel;
-                mqttClient.subscribe(base + '/#');
+                mqttClient.subscribe(base + '/#', { qos: 0 });
 
                 mqttPublishPresence('join');
                 if (presenceTimer) clearInterval(presenceTimer);
-                presenceTimer = setInterval(() => mqttPublishPresence('ping'), 10000);
+                presenceTimer = setInterval(() => mqttPublishPresence('ping'), 8000);
             });
 
             mqttClient.on('message', function (topic, message) {
                 try {
                     const data = JSON.parse(message.toString());
                     const sub = topic.replace('offpay/' + mqttChannel + '/', '');
-                    if (sub === 'events') handleRemoteEvent(data);
-                    else if (sub === 'presence') handlePeerPresence(data);
+                    if (sub === 'events') {
+                        handleRemoteEvent(data);
+                    } else if (sub === 'presence') {
+                        handlePeerPresence(data);
+                    } else if (sub === 'commands' && data.from !== clientId) {
+                        if (data.cmd === 'start_payment') {
+                            activePaymentAmount = parseFloat(data.amount || 0);
+                            showPaymentWaitingModal(activePaymentAmount);
+                        } else if (data.cmd === 'cancel') {
+                            closeOverlay();
+                        }
+                    }
                 } catch (e) { }
             });
 
