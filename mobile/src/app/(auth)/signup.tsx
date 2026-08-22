@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { OffPayLogo } from '@/components/OffPayLogo';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { MOCK_USER } from '@/constants/mock-data';
@@ -47,8 +48,9 @@ export default function SignupScreen() {
           {/* Header Bar */}
           <View style={styles.headerSection}>
             <Pressable onPress={() => router.back()} style={styles.backButton}>
+              <SvgIcon name="chevron-right" size={14} color={theme.primary} style={{ transform: [{ rotate: '180deg' }] }} />
               <ThemedText style={[styles.backText, { color: theme.primary }]}>
-                ← Back to Login
+                Login
               </ThemedText>
             </Pressable>
             <OffPayLogo size="xs" variant="horizontal" glow />
@@ -65,7 +67,7 @@ export default function SignupScreen() {
           </View>
 
           {/* Form Card */}
-          <View style={[styles.formCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
+          <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
             <View style={styles.inputGroup}>
               <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>
                 FULL LEGAL NAME
@@ -74,7 +76,7 @@ export default function SignupScreen() {
                 value={fullName}
                 onChangeText={setFullName}
                 placeholder="e.g. Suman Sharma"
-                placeholderTextColor={theme.textMuted}
+                placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { backgroundColor: theme.cardElevated, color: theme.text, borderColor: theme.border }]}
               />
             </View>
@@ -87,7 +89,7 @@ export default function SignupScreen() {
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="+977-98XXXXXXXX"
-                placeholderTextColor={theme.textMuted}
+                placeholderTextColor={theme.textSecondary}
                 keyboardType="phone-pad"
                 style={[styles.input, { backgroundColor: theme.cardElevated, color: theme.text, borderColor: theme.border }]}
               />
@@ -100,8 +102,8 @@ export default function SignupScreen() {
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Create strong passphrase"
-                placeholderTextColor={theme.textMuted}
+                placeholder="Create secure passphrase"
+                placeholderTextColor={theme.textSecondary}
                 secureTextEntry
                 style={[styles.input, { backgroundColor: theme.cardElevated, color: theme.text, borderColor: theme.border }]}
               />
@@ -114,41 +116,43 @@ export default function SignupScreen() {
               <TextInput
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                placeholder="Confirm passphrase"
-                placeholderTextColor={theme.textMuted}
+                placeholder="Re-enter passphrase"
+                placeholderTextColor={theme.textSecondary}
                 secureTextEntry
                 style={[styles.input, { backgroundColor: theme.cardElevated, color: theme.text, borderColor: theme.border }]}
               />
             </View>
 
-            {/* Signup Submit Button */}
+            {/* Enclave Notice */}
+            <View style={[styles.enclaveInfo, { backgroundColor: theme.cardElevated, borderColor: theme.border }]}>
+              <SvgIcon name="key" size={16} color={theme.primary} />
+              <View style={styles.enclaveTextWrapper}>
+                <ThemedText style={[styles.enclaveTitle, { color: theme.text }]}>
+                  Hardware Enclave Binding
+                </ThemedText>
+                <ThemedText style={[styles.enclaveDesc, { color: theme.textSecondary }]}>
+                  Private keys remain inside this device's secure enclave and are never transmitted over the network.
+                </ThemedText>
+              </View>
+            </View>
+
+            {/* Submit Button */}
             <Pressable
               onPress={handleSignup}
               disabled={isGenerating}
               style={({ pressed }) => [
-                styles.signupButton,
+                styles.submitBtn,
                 {
-                  backgroundColor: theme.primary,
-                  opacity: pressed ? 0.88 : 1,
+                  backgroundColor: theme.primaryDark,
+                  opacity: pressed || isGenerating ? 0.85 : 1,
                   transform: [{ scale: pressed ? 0.98 : 1 }],
-                  ...Shadows.glowGreen,
                 },
               ]}
             >
-              <ThemedText style={styles.signupButtonText}>
-                {isGenerating ? 'Generating Enclave Keys...' : 'Generate Vault & Register'}
+              <ThemedText style={styles.submitBtnText}>
+                {isGenerating ? 'Generating Enclave Keys...' : 'Generate Node & Open Vault'}
               </ThemedText>
             </Pressable>
-          </View>
-
-          {/* Cryptographic Key Generation Info */}
-          <View style={[styles.keyInfo, { backgroundColor: theme.primaryGlow, borderColor: theme.primary + '40' }]}>
-            <ThemedText style={[styles.keyInfoTitle, { color: theme.primary }]}>
-              🔑 Zero-Knowledge Architecture
-            </ThemedText>
-            <ThemedText style={[styles.keyInfoText, { color: theme.textSecondary }]}>
-              Your Ed25519 private key is sealed inside the phone's Secure Enclave and never leaves your device. Only your public key is broadcasted to the OffPay validator node for transaction verification.
-            </ThemedText>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -160,16 +164,20 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.five,
+    padding: Spacing.four,
+    paddingBottom: Spacing.six,
   },
   headerSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: Spacing.two,
     marginBottom: Spacing.four,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingVertical: Spacing.one,
   },
   backText: {
@@ -178,65 +186,67 @@ const styles = StyleSheet.create({
   },
   titleSection: {
     marginBottom: Spacing.four,
+    gap: Spacing.one,
   },
   title: {
     fontSize: FontSize.xxl,
     fontWeight: FontWeight.black,
-    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: FontSize.xs,
-    marginTop: 4,
   },
   formCard: {
-    padding: Spacing.four,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    gap: Spacing.three,
+    padding: Spacing.four,
+    gap: Spacing.four,
   },
   inputGroup: {
-    gap: Spacing.one,
+    gap: Spacing.one + 2,
   },
   inputLabel: {
-    fontSize: FontSize.xxs + 1,
+    fontSize: FontSize.xxs,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   input: {
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
   },
-  signupButton: {
-    paddingVertical: Spacing.three + 4,
+  enclaveInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.three,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    gap: Spacing.three,
+  },
+  enclaveTextWrapper: {
+    flex: 1,
+    gap: 2,
+  },
+  enclaveTitle: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+  enclaveDesc: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  submitBtn: {
+    paddingVertical: Spacing.four,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: Spacing.two,
   },
-  signupButtonText: {
-    color: '#07090E',
-    fontSize: FontSize.md,
+  submitBtnText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  keyInfo: {
-    marginTop: Spacing.four,
-    padding: Spacing.three,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    gap: Spacing.one,
-  },
-  keyInfoTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  keyInfoText: {
-    fontSize: FontSize.xxs + 1,
-    lineHeight: 16,
+    letterSpacing: 0.5,
   },
 });
