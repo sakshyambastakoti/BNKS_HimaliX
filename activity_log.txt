@@ -20,3 +20,4 @@
 [2026-08-22 11:52:49] Commit #20: feat(settings): add peer mesh discovery and auto-sync toggles
 [2026-08-22 11:54:57] Commit #21: feat(settings): configure biometric FaceID/Fingerprint authorization switch
 [2026-08-22 11:57:06] Commit #22: feat(settings): add developer telemetry trace and diagnostic logs shortcut
+[2026-08-22 11:59:14] Commit #23: feat(send): implement dual-engine transfer mode indicator
