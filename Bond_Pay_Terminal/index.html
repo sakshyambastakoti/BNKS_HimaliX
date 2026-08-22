@@ -3000,12 +3000,50 @@
         // ══════════════════════════════════════════════════════════════
         // ── THERMAL RECEIPT GENERATOR & EXPORTS ──────────────────────
         // ══════════════════════════════════════════════════════════════
-        function openReceiptModal(txnId) {
-            playAudioTone('click');
-            const txn = allTransactions.find(t => t.id === txnId);
-            if (!txn) return toast('Transaction not found', 'er');
+        window.lastActiveTxn = null;
 
-            const isOk = (txn.status || '').toLowerCase().includes('success');
+        function openCurrentReceipt() {
+            if (window.lastActiveTxn) {
+                openReceiptModal(window.lastActiveTxn);
+            } else if (allTransactions && allTransactions.length > 0) {
+                openReceiptModal(allTransactions[allTransactions.length - 1]);
+            } else {
+                toast('No recent receipt available', 'er');
+            }
+        }
+
+        function openReceiptModal(target) {
+            playAudioTone('click');
+            closeOverlay(); // Ensure any background event modal is closed
+
+            let txn = null;
+            if (target && typeof target === 'object') {
+                txn = target;
+            } else if (target !== undefined && target !== null && target !== '') {
+                txn = allTransactions.find(t => String(t.id) === String(target));
+            }
+
+            if (!txn && window.lastActiveTxn) {
+                txn = window.lastActiveTxn;
+            }
+
+            if (!txn && allTransactions && allTransactions.length > 0) {
+                txn = allTransactions[allTransactions.length - 1];
+            }
+
+            if (!txn) {
+                txn = {
+                    id: 101,
+                    timestamp: new Date().toLocaleString(),
+                    name: 'Customer',
+                    amount: activePaymentAmount || 0,
+                    prevBal: 0,
+                    remBal: 0,
+                    status: 'Payment Completed'
+                };
+            }
+
+            const isOk = (txn.status || '').toLowerCase().includes('success') || (txn.status || '').toLowerCase().includes('approved') || (txn.status || '').toLowerCase().includes('completed');
             const amt = parseFloat(txn.amount || 0).toFixed(2);
             const prev = parseFloat(txn.prevBal || 0).toFixed(2);
             const rem = parseFloat(txn.remBal !== undefined ? txn.remBal : txn.prevBal || 0).toFixed(2);
@@ -3013,6 +3051,8 @@
 
             const modal = document.getElementById('thermal-receipt-content');
             modal.innerHTML = `
+                <button type="button" class="modal-close-btn" style="color:#09090b; font-size:1.6rem; top:12px; right:16px; cursor:pointer;" onclick="closeReceiptModal()">&times;</button>
+                
                 <div class="receipt-title-box" style="text-align:center; border-bottom:2px dashed #09090b; padding-bottom:12px; margin-bottom:12px;">
                     <div style="font-size:1.25rem; font-weight:800; letter-spacing:2px; color:#09090b;">${esc(stationName.toUpperCase())}</div>
                     <div style="font-size:0.7rem; font-weight:700; color:#52525b; margin-top:2px;">OFFLINE PAYMENT TERMINAL</div>
@@ -3020,9 +3060,9 @@
                 </div>
 
                 <div style="font-size:0.78rem; margin-bottom:10px;">
-                    <div class="receipt-row"><span>RECEIPT NO:</span><strong class="mono">#TXN-${String(txn.id).padStart(6, '0')}</strong></div>
-                    <div class="receipt-row"><span>DATE / TIME:</span><span class="mono">${esc(txn.timestamp)}</span></div>
-                    <div class="receipt-row"><span>CUSTOMER:</span><strong>${esc(txn.name)}</strong></div>
+                    <div class="receipt-row"><span>RECEIPT NO:</span><strong class="mono">#TXN-${String(txn.id || 101).padStart(6, '0')}</strong></div>
+                    <div class="receipt-row"><span>DATE / TIME:</span><span class="mono">${esc(txn.timestamp || new Date().toLocaleString())}</span></div>
+                    <div class="receipt-row"><span>CUSTOMER:</span><strong>${esc(txn.name || 'Customer')}</strong></div>
                     <div class="receipt-row"><span>STATUS:</span><strong style="color:${isOk ? '#059669' : '#dc2626'}">${isOk ? '✓ PAYMENT COMPLETED' : '✗ DECLINED'}</strong></div>
                 </div>
 
@@ -3069,6 +3109,7 @@
         }
 
         function closeReceiptModal() {
+            playAudioTone('click');
             document.getElementById('receipt-modal').classList.remove('active');
         }
 
@@ -3179,7 +3220,7 @@
                     <td><span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${esc(t.status)}</span></td>
                     <td>
                         <div style="display:flex; gap:4px; align-items:center;">
-                            <button class="btn btn-outline" style="padding:2px 7px;font-size:0.68rem;" onclick="openReceiptModal(${t.id})" title="Print Thermal Receipt">Receipt</button>
+                            <button class="btn btn-outline" style="padding:2px 7px;font-size:0.68rem;" onclick="openReceiptModal('${esc(t.id)}')" title="Print Thermal Receipt">Receipt</button>
                             <button class="btn btn-outline" style="padding:2px 6px;font-size:0.68rem;color:var(--danger);border-color:var(--danger-border);" onclick="deleteTransaction(${t.id})" title="Delete Transaction">&times;</button>
                         </div>
                     </td>
@@ -3277,7 +3318,7 @@
                     <td class="mono" style="font-weight:800;">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
                     <td class="mono" style="font-weight:700;color:var(--brand-green-dark);">NPR ${parseFloat(t.remBal !== undefined ? t.remBal : t.prevBal).toFixed(2)}</td>
                     <td><span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${esc(t.status)}</span></td>
-                    <td><button class="btn btn-outline" style="padding:2px 6px;font-size:0.65rem;" onclick="openReceiptModal(${t.id})">Receipt</button></td>
+                    <td><button class="btn btn-outline" style="padding:2px 6px;font-size:0.65rem;" onclick="openReceiptModal('${esc(t.id)}')">Receipt</button></td>
                 </tr>
             `}).join('');
         }
@@ -3403,6 +3444,8 @@
                 `<span class="badge badge-ok" style="font-size:0.72rem; padding:4px 8px;">🟢 Stored in Supabase Cloud DB</span>` : 
                 `<span class="badge" style="font-size:0.72rem; padding:4px 8px; background:var(--bg-subtle); border:1px solid var(--gray-300); color:var(--gray-700);">✓ Stored in Local Ledger</span>`;
 
+            window.lastActiveTxn = ev;
+
             if (ok) {
                 modal.innerHTML = `
                     <div class="celebration-wrap">
@@ -3416,7 +3459,7 @@
                         </div>
                         <h2 style="font-size:1.45rem; font-weight:800; color:var(--black); margin-bottom:2px; letter-spacing:-0.5px;">Payment Approved!</h2>
                         <p style="font-weight:800; font-size:1.05rem; color:var(--black); margin-bottom:2px;">${esc(ev.name || 'Cardholder')}</p>
-                        <p style="font-size:0.75rem; color:var(--gray-500); font-family:'JetBrains Mono',monospace; margin-bottom:12px;">${esc(ev.uid)}</p>
+                        <p style="font-size:0.75rem; color:var(--gray-500); font-family:'JetBrains Mono',monospace; margin-bottom:12px;">${esc(ev.uid || '--')}</p>
 
                         <div style="margin-bottom:14px;">${cloudBadge}</div>
 
@@ -3436,8 +3479,8 @@
                         </div>
 
                         <div style="display:flex; gap:8px;">
-                            <button class="btn btn-black btn-full" onclick="openReceiptModal(${ev.id || (allTransactions.length ? allTransactions[allTransactions.length-1].id : 101)})">
-                                <span>🧾 View Thermal Bill</span>
+                            <button class="btn btn-black btn-full" onclick="openCurrentReceipt()">
+                                <span>🧾 View Receipt / Bill</span>
                             </button>
                             <button class="btn btn-outline btn-full" onclick="closeOverlay()">Done</button>
                         </div>
