@@ -1,9 +1,9 @@
 /**
  * OffPay Home Screen — Mobile Banking Experience (Inspired by Reference Design)
  * Layout:
- * 1. BankingHeader (Morning Greeting + Avatar + Red Scan button + Status)
+ * 1. BankingHeader (Morning Greeting + Avatar + Red Scan button + Theme Switcher)
  * 2. BalanceCard (Primary Account Card + Bond Vault Card + World Card Carousel)
- * 3. Services Grid (2x3 Grid: Transfer, Payment, Withdraw, Scan Pay, Top Up, Loans)
+ * 3. Services Grid (2x3 Grid with Vector SVGs: Transfer, Payment, Withdraw, Scan Pay, Top Up, Sync)
  * 4. Recent Counterparties Carousel
  * 5. Transactions Feed with merchant icon badges
  */
@@ -36,38 +36,38 @@ export default function HomeScreen() {
   const services: ServiceItem[] = [
     {
       id: 'transfer',
-      icon: '⇄',
+      iconName: 'transfer',
       label: 'Transfer',
       onPress: () => router.push('/send'),
     },
     {
       id: 'payment',
-      icon: '🧾',
+      iconName: 'payment',
       label: 'Payment',
       onPress: () => router.push('/receive'),
     },
     {
       id: 'withdraw',
-      icon: '⬡',
+      iconName: 'withdraw',
       label: 'Withdraw',
       badge: `${MOCK_BONDS.filter((b) => b.status === 'available').length}`,
       onPress: () => Alert.alert('Offline Bond Withdrawal', 'Allocate offline bonds to device enclave for zero-network payments.'),
     },
     {
       id: 'scan-pay',
-      icon: '⚲',
+      iconName: 'scan-pay',
       label: 'Scan Pay',
       onPress: () => router.push('/scan-qr'),
     },
     {
       id: 'topup',
-      icon: '⊕',
+      iconName: 'topup',
       label: 'Top Up',
       onPress: () => Alert.alert('Top Up Account', 'Select linked bank account or mobile wallet to add NPR funds.'),
     },
     {
       id: 'sync',
-      icon: isSyncing ? '⏳' : '⟳',
+      iconName: 'sync',
       label: isSyncing ? 'Syncing...' : 'Fast Sync',
       onPress: () => {
         setIsSyncing(true);
@@ -87,7 +87,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Top Banking Header (Avatar, Greeting, Red QR, Status) */}
+          {/* Top Banking Header (Avatar, Greeting, Red QR, Status, Theme Toggle) */}
           <BankingHeader />
 
           {/* Account Balance Card Carousel (Primary Account, Bond Vault, World Card) */}
@@ -97,7 +97,7 @@ export default function HomeScreen() {
             offlineBalance={offlineBalance}
           />
 
-          {/* Services 2x3 Grid */}
+          {/* Services 2x3 Grid with Vector SVGs */}
           <QuickActions services={services} />
 
           {/* Recent Counterparties Avatar Row */}
