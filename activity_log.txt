@@ -51,3 +51,4 @@
 [2026-08-22 12:59:14] Commit #51: style(colors): fine-tune emerald-to-lime gradient and coral red contrast
 [2026-08-22 13:01:23] Commit #52: style(typography): configure system-ui font weights and letter spacing
 [2026-08-22 13:03:31] Commit #53: refactor(components): extract reusable BrandHeader and NetworkStatusBadge
+[2026-08-22 13:05:40] Commit #54: refactor(components): standardize ActionButton touch scaling and glowing borders
