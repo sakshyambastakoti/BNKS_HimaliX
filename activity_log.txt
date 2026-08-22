@@ -35,3 +35,4 @@
 [2026-08-22 12:24:57] Commit #35: feat(auth): add hardware enclave binding and non-exportable key notice
 [2026-08-22 12:27:06] Commit #36: feat(store): configure Zustand app store with themeMode state
 [2026-08-22 12:29:14] Commit #37: feat(store): add toggleTheme and setThemeMode reactive actions
+[2026-08-22 12:31:23] Commit #38: feat(store): implement offline balance and total balance computed state
