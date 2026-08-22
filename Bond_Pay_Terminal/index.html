@@ -2493,6 +2493,11 @@
             renderTransactions(allTransactions);
             renderRecent(allTransactions);
             updateStatsCounters();
+
+            // Continuous Background Auto-Sync (Every 5s)
+            setInterval(() => {
+                pullFromSupabaseSilent();
+            }, 5000);
         };
 
         function updateClock() {
@@ -2935,6 +2940,63 @@
             }
         }
 
+        async function pullFromSupabaseSilent() {
+            if (!supabaseClient || !supabaseAutoSync) return;
+            try {
+                const { data: remoteCards } = await supabaseClient.from('cards').select('*');
+                const { data: remoteTxns } = await supabaseClient.from('transactions').select('*').order('created_at', { ascending: true });
+
+                if (remoteCards && remoteCards.length > 0) {
+                    let changed = false;
+                    remoteCards.forEach(rc => {
+                        const idx = allCards.findIndex(c => (c.uid || '').toLowerCase() === (rc.uid || '').toLowerCase());
+                        if (idx !== -1) {
+                            if (Math.abs(allCards[idx].balance - parseFloat(rc.balance || 0)) > 0.001 || allCards[idx].name !== rc.name) {
+                                allCards[idx].balance = parseFloat(rc.balance || 0);
+                                allCards[idx].name = rc.name;
+                                changed = true;
+                            }
+                        } else {
+                            allCards.push({ uid: rc.uid, name: rc.name, userId: rc.user_id, balance: parseFloat(rc.balance || 0) });
+                            changed = true;
+                        }
+                    });
+                    if (changed) {
+                        localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+                        renderCardsSidebar(allCards);
+                        updateStatsCounters();
+                    }
+                }
+
+                if (remoteTxns && remoteTxns.length > 0) {
+                    let changed = false;
+                    remoteTxns.forEach(rt => {
+                        const exists = allTransactions.some(t => t.id === rt.transaction_id || (t.timestamp === rt.timestamp && t.uid === rt.card_uid));
+                        if (!exists) {
+                            allTransactions.push({
+                                id: rt.transaction_id || (allTransactions.length + 1),
+                                timestamp: rt.timestamp || rt.created_at,
+                                uid: rt.card_uid,
+                                name: rt.cardholder_name,
+                                amount: parseFloat(rt.amount || 0),
+                                prevBal: parseFloat(rt.prev_balance || 0),
+                                remBal: parseFloat(rt.remaining_balance || 0),
+                                status: rt.status || 'Success',
+                                synced: true
+                            });
+                            changed = true;
+                        }
+                    });
+                    if (changed) {
+                        localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+                        renderTransactions(allTransactions);
+                        renderRecent(allTransactions);
+                        updateStatsCounters();
+                    }
+                }
+            } catch (e) { }
+        }
+
         // ══════════════════════════════════════════════════════════════
         // ── THERMAL RECEIPT GENERATOR & EXPORTS ──────────────────────
         // ══════════════════════════════════════════════════════════════
@@ -2947,28 +3009,21 @@
             const amt = parseFloat(txn.amount || 0).toFixed(2);
             const prev = parseFloat(txn.prevBal || 0).toFixed(2);
             const rem = parseFloat(txn.remBal !== undefined ? txn.remBal : txn.prevBal || 0).toFixed(2);
-            const authHash = 'SHA256-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             const stationName = localStorage.getItem('offpay_station_name') || 'OffPay Station 1';
 
             const modal = document.getElementById('thermal-receipt-content');
             modal.innerHTML = `
                 <div class="receipt-title-box" style="text-align:center; border-bottom:2px dashed #09090b; padding-bottom:12px; margin-bottom:12px;">
-                    <div style="font-size:1.25rem; font-weight:800; letter-spacing:2px; color:#09090b;">OFFPAY TERMINAL</div>
-                    <div style="font-size:0.68rem; font-weight:700; color:#52525b; margin-top:2px;">OFFLINE CRYPTOGRAPHIC POS SETTLEMENT</div>
-                    <div style="font-size:0.68rem; color:#52525b;">${esc(stationName)} &bull; NODE #01</div>
-                    <div class="bill-badge">TAX INVOICE & CASH BILL</div>
+                    <div style="font-size:1.25rem; font-weight:800; letter-spacing:2px; color:#09090b;">${esc(stationName.toUpperCase())}</div>
+                    <div style="font-size:0.7rem; font-weight:700; color:#52525b; margin-top:2px;">OFFLINE PAYMENT TERMINAL</div>
+                    <div class="bill-badge" style="margin-top:6px;">CASH PAYMENT RECEIPT</div>
                 </div>
 
-                <div style="font-size:0.75rem; margin-bottom:10px;">
-                    <div class="receipt-row"><span>INVOICE NO:</span><strong class="mono">#TXN-${String(txn.id).padStart(6, '0')}</strong></div>
+                <div style="font-size:0.78rem; margin-bottom:10px;">
+                    <div class="receipt-row"><span>RECEIPT NO:</span><strong class="mono">#TXN-${String(txn.id).padStart(6, '0')}</strong></div>
                     <div class="receipt-row"><span>DATE / TIME:</span><span class="mono">${esc(txn.timestamp)}</span></div>
-                    <div class="receipt-row"><span>PAYMENT MODE:</span><strong>OFFLINE NFC VAULT</strong></div>
-                    <div class="receipt-row"><span>STATUS:</span><strong style="color:${isOk ? '#059669' : '#dc2626'}">${isOk ? '✓ APPROVED / PAID' : '✗ DECLINED'}</strong></div>
-                </div>
-
-                <div style="border-top:1px dashed #09090b; border-bottom:1px dashed #09090b; padding:8px 0; margin-bottom:10px; font-size:0.75rem;">
-                    <div class="receipt-row"><span>CARDHOLDER:</span><strong>${esc(txn.name)}</strong></div>
-                    <div class="receipt-row"><span>CHIP UID:</span><span class="mono">${esc(txn.uid)}</span></div>
+                    <div class="receipt-row"><span>CUSTOMER:</span><strong>${esc(txn.name)}</strong></div>
+                    <div class="receipt-row"><span>STATUS:</span><strong style="color:${isOk ? '#059669' : '#dc2626'}">${isOk ? '✓ PAYMENT COMPLETED' : '✗ DECLINED'}</strong></div>
                 </div>
 
                 <table class="bill-table">
@@ -2976,45 +3031,36 @@
                         <tr>
                             <th>DESCRIPTION</th>
                             <th style="text-align:center;">QTY</th>
-                            <th style="text-align:right;">RATE</th>
-                            <th style="text-align:right;">TOTAL</th>
+                            <th style="text-align:right;">AMOUNT</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Vault POS Settlement</td>
+                            <td>Card Payment Settlement</td>
                             <td style="text-align:center;">1</td>
-                            <td style="text-align:right;">${amt}</td>
                             <td style="text-align:right; font-weight:700;">NPR ${amt}</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <div style="font-size:0.74rem; border-top:1px dashed #09090b; padding-top:6px; margin-top:6px;">
-                    <div class="receipt-row"><span>SUBTOTAL:</span><span>NPR ${amt}</span></div>
-                    <div class="receipt-row"><span>TAX / VAT (0%):</span><span>NPR 0.00</span></div>
-                    <div class="receipt-row"><span>NETWORK FEE:</span><span>NPR 0.00 (OFFLINE)</span></div>
-                </div>
-
                 <div class="bill-total-row">
-                    <span>GRAND TOTAL:</span>
+                    <span>TOTAL PAID:</span>
                     <span>NPR ${amt}</span>
                 </div>
 
-                <div style="background:#f4f4f5; border:1px solid #e4e4e7; padding:8px 10px; font-size:0.72rem; margin-bottom:12px;">
-                    <div class="receipt-row" style="margin-bottom:3px;"><span>PREV BALANCE:</span><span class="mono">NPR ${prev}</span></div>
-                    <div class="receipt-row" style="margin-bottom:3px;"><span>AMOUNT DEDUCTED:</span><strong class="mono" style="color:#09090b;">- NPR ${amt}</strong></div>
-                    <div class="receipt-row" style="border-top:1px dashed #d4d4d8; padding-top:3px;"><span>REMAINING VAULT:</span><strong class="mono" style="color:#059669;">NPR ${rem}</strong></div>
+                <div style="background:#f4f4f5; border:1px solid #e4e4e7; padding:8px 10px; font-size:0.75rem; margin-bottom:12px;">
+                    <div class="receipt-row" style="margin-bottom:4px;"><span>Previous Balance:</span><span class="mono">NPR ${prev}</span></div>
+                    <div class="receipt-row" style="margin-bottom:4px;"><span>Paid Amount:</span><strong class="mono" style="color:#09090b;">- NPR ${amt}</strong></div>
+                    <div class="receipt-row" style="border-top:1px dashed #d4d4d8; padding-top:4px;"><span>Remaining Balance:</span><strong class="mono" style="color:#059669;">NPR ${rem}</strong></div>
                 </div>
 
-                <div style="text-align:center; margin-top:8px;">
-                    <div style="font-size:0.62rem; color:#71717a; word-break:break-all;">AUTH HASH: ${authHash}</div>
+                <div style="text-align:center; margin-top:10px;">
                     <div style="font-size:1.8rem; letter-spacing:4px; font-family:'Share Tech Mono',monospace; margin-top:4px;">||| | |||| || ||| |||| |</div>
-                    <div style="font-size:0.62rem; color:#71717a; margin-top:2px;">*** THANK YOU FOR BANKING OFFLINE ***</div>
+                    <div style="font-size:0.68rem; color:#71717a; margin-top:4px;">*** THANK YOU FOR YOUR PAYMENT ***</div>
                 </div>
 
                 <div style="display:flex; gap:8px; margin-top:16px;">
-                    <button class="btn btn-black btn-full" onclick="window.print()">🖨️ Print Bill Receipt</button>
+                    <button class="btn btn-black btn-full" onclick="window.print()">🖨️ Print Receipt</button>
                     <button class="btn btn-outline btn-full" onclick="closeReceiptModal()">Done</button>
                 </div>
             `;
