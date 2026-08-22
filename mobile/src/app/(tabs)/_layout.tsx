@@ -1,7 +1,6 @@
 /**
- * OffPay Tab Layout
- * Floating glass bottom tab navigator: Home, History, Account, Settings
- * Features glowing active state pills, custom neo-banking icons, and emerald branding.
+ * OffPay Tab Layout — Matching the Reference Bottom Tab Navigation
+ * Tabs: Home (⌂), Accounts (💼), Cards (💳), More (•••)
  */
 
 import { Tabs } from 'expo-router';
@@ -17,41 +16,49 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.tabBarInactive,
+        tabBarActiveTintColor: '#0F4A3C',
+        tabBarInactiveTintColor: '#9AA8BC',
         tabBarStyle: {
           backgroundColor: theme.tabBar,
           borderTopColor: theme.tabBarBorder,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 86 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 26 : 10,
-          paddingTop: 10,
+          height: Platform.OS === 'ios' ? 84 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+          paddingTop: 8,
           ...Platform.select({
             ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -6 },
-              shadowOpacity: 0.18,
-              shadowRadius: 16,
+              shadowColor: '#1A2533',
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
             },
             android: {
-              elevation: 16,
+              elevation: 8,
             },
           }),
         },
         tabBarLabelStyle: {
-          fontSize: FontSize.xxs + 1,
+          fontSize: 11,
           fontWeight: FontWeight.bold,
-          letterSpacing: 0.4,
-          marginTop: 4,
+          marginTop: 2,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Vault',
+          title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="⌂" label="Vault" color={color} focused={focused} activeColor={theme.primary} />
+            <TabIcon icon="⌂" color={focused ? '#0F4A3C' : color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: 'Accounts',
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon icon="💼" color={focused ? '#0F4A3C' : color} focused={focused} />
           ),
         }}
       />
@@ -60,25 +67,16 @@ export default function TabLayout() {
         options={{
           title: 'Ledger',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="☰" label="Ledger" color={color} focused={focused} activeColor={theme.primary} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: 'Identity',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="◉" label="Identity" color={color} focused={focused} activeColor={theme.primary} />
+            <TabIcon icon="💳" color={focused ? '#0F4A3C' : color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'System',
+          title: 'More',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="⚙" label="System" color={color} focused={focused} activeColor={theme.primary} />
+            <TabIcon icon="•••" color={focused ? '#0F4A3C' : color} focused={focused} />
           ),
         }}
       />
@@ -86,26 +84,12 @@ export default function TabLayout() {
   );
 }
 
-function TabIcon({
-  icon,
-  color,
-  focused,
-  activeColor,
-}: {
-  icon: string;
-  label: string;
-  color: string;
-  focused: boolean;
-  activeColor: string;
-}) {
+function TabIcon({ icon, color, focused }: { icon: string; color: string; focused: boolean }) {
   return (
     <View style={tabStyles.container}>
-      <Text style={[tabStyles.icon, { color, fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.65 }]}>
+      <Text style={[tabStyles.icon, { color, fontSize: icon === '•••' ? 14 : 20 }]}>
         {icon}
       </Text>
-      {focused && (
-        <View style={[tabStyles.activeDot, { backgroundColor: activeColor }]} />
-      )}
     </View>
   );
 }
@@ -114,15 +98,9 @@ const tabStyles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: 28,
+    height: 26,
   },
   icon: {
     fontWeight: '700',
-  },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 2,
   },
 });
