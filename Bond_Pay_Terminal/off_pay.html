@@ -5,84 +5,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>OffPay — Offline Smart Terminal POS</title>
-    <meta name="description" content="OffPay — Premium Glossy Offline RFID Payment Terminal & Ledger Management System">
+    <meta name="description" content="OffPay — Clean Swiss-style offline RFID payment terminal & ledger management system">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- MQTT over WebSockets & QR Code Library -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════════════
-           DESIGN SYSTEM — Ultra-Glossy Obsidian & Emerald Glass
+           DESIGN SYSTEM — Clean Swiss Monochrome + Emerald Green
+           Sharp Edges, Pure White Background, Deep Black Typography
            ═══════════════════════════════════════════════════════════ */
         :root {
-            /* Theme Palettes */
-            --bg-deep: #07090e;
-            --bg-base: #0c1017;
-            --bg-surface: rgba(18, 24, 38, 0.75);
-            --bg-surface-elevated: rgba(26, 35, 54, 0.85);
-            --bg-surface-glass: rgba(255, 255, 255, 0.04);
-            --bg-card: rgba(20, 27, 43, 0.65);
-            
-            /* Glass Borders & Specular Lines */
-            --border-glass: rgba(255, 255, 255, 0.09);
-            --border-glass-bright: rgba(255, 255, 255, 0.18);
-            --border-glass-glow: rgba(34, 197, 94, 0.35);
-            
-            /* OffPay Emerald / Lime Accents */
-            --brand-green: #10b981;
-            --brand-green-light: #34d399;
-            --brand-green-glow: rgba(16, 185, 129, 0.35);
-            --brand-lime: #84cc16;
-            --brand-gradient: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-            --brand-gradient-gloss: linear-gradient(135deg, #34d399 0%, #10b981 40%, #059669 100%);
-            --brand-lime-gradient: linear-gradient(135deg, #84cc16 0%, #10b981 100%);
-            
-            /* Text Hierarchy */
-            --text-white: #ffffff;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --text-dim: #475569;
-            
-            /* Status Accents */
-            --success: #10b981;
-            --success-bg: rgba(16, 185, 129, 0.12);
-            --danger: #ef4444;
-            --danger-bg: rgba(239, 68, 68, 0.12);
-            --warning: #f59e0b;
-            --info: #3b82f6;
+            /* Clean White & Slate Backgrounds */
+            --bg-white: #ffffff;
+            --bg-subtle: #f8fafc;
+            --bg-sidebar: #fafafa;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-hover: #f1f5f9;
 
-            /* Dimensions & Blur */
+            /* Crisp Black & Grays */
+            --black: #09090b;
+            --black-pure: #000000;
+            --gray-900: #18181b;
+            --gray-700: #3f3f46;
+            --gray-600: #52525b;
+            --gray-500: #71717a;
+            --gray-400: #a1a1aa;
+            --gray-300: #d4d4d8;
+            --gray-200: #e4e4e7;
+            --gray-100: #f4f4f5;
+
+            /* Emerald Green Brand Accents */
+            --brand-green: #10b981;
+            --brand-green-dark: #059669;
+            --brand-green-light: #34d399;
+            --brand-green-soft: #ecfdf5;
+            --brand-green-border: rgba(16, 185, 129, 0.35);
+            --brand-green-glow: rgba(16, 185, 129, 0.2);
+
+            /* Typography */
+            --text-primary: #09090b;
+            --text-secondary: #52525b;
+            --text-muted: #71717a;
+            --text-white: #ffffff;
+
+            /* Status */
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --danger-border: rgba(239, 68, 68, 0.3);
+
+            /* Sharp Geometry & Architectural Hairlines */
+            --border-hairline: 1px solid #e4e4e7;
+            --border-black: 1px solid #09090b;
+            --border-green: 1px solid var(--brand-green);
+            --radius-none: 0px;
+
+            /* Layout */
             --sidebar-width: 390px;
-            --header-h: 68px;
-            --glass-blur: 24px;
-            --radius-sm: 8px;
-            --radius-md: 14px;
-            --radius-lg: 20px;
-            --radius-xl: 28px;
-            
-            /* Specular Glow & Shadows */
-            --gloss-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-glass), inset 0 1px 1px rgba(255, 255, 255, 0.15);
-            --gloss-button-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-            --card-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-glass), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            --header-h: 64px;
+
+            /* Sharp Shadows */
+            --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+            --shadow-card: 0 4px 16px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px #e4e4e7;
+            --shadow-elevated: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 0 0 1px #09090b;
+            --shadow-green: 0 4px 14px rgba(16, 185, 129, 0.25);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            border-radius: 0 !important; /* Enforce crisp sharp edges throughout */
         }
 
         body {
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            background: var(--bg-deep);
-            background-image: 
-                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.09) 0%, transparent 45%),
-                radial-gradient(circle at 85% 80%, rgba(132, 204, 22, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.3) 0%, transparent 100%);
-            background-attachment: fixed;
+            background: var(--bg-white);
             color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
@@ -91,19 +94,10 @@
         }
 
         /* ── Scrollbars ─────────────────────────────────────────── */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
-
-        /* ── Ambient Background Glow ───────────────────────────── */
-        .ambient-glow {
-            position: fixed;
-            pointer-events: none;
-            z-index: 0;
-            filter: blur(80px);
-            opacity: 0.5;
-        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-subtle); }
+        ::-webkit-scrollbar-thumb { background: var(--gray-300); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
 
         /* ── Header ────────────────────────────────────────────── */
         header {
@@ -113,15 +107,13 @@
             right: 0;
             z-index: 100;
             height: var(--header-h);
-            background: rgba(12, 16, 23, 0.82);
-            backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-            border-bottom: 1px solid var(--border-glass);
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--gray-200);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 28px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow-subtle);
         }
 
         .logo {
@@ -130,11 +122,11 @@
             gap: 14px;
             text-decoration: none;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: opacity 0.2s;
         }
 
         .logo:hover {
-            transform: translateY(-1px);
+            opacity: 0.85;
         }
 
         .logo-img-wrapper {
@@ -142,18 +134,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.04);
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-glass);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
+            background: var(--bg-white);
+            padding: 2px 6px;
+            border: 1px solid var(--gray-200);
         }
 
         .logo-img {
             height: 28px;
             width: auto;
             object-fit: contain;
-            filter: drop-shadow(0 2px 8px rgba(16, 185, 129, 0.25));
         }
 
         .logo-title-group {
@@ -163,109 +152,103 @@
         }
 
         .logo-text {
-            font-size: 1.18rem;
+            font-size: 1.15rem;
             font-weight: 800;
             letter-spacing: -0.5px;
-            color: var(--text-white);
+            color: var(--black);
             display: flex;
             align-items: center;
         }
 
         .logo-text span {
-            background: var(--brand-lime-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--brand-green);
             margin-left: 2px;
         }
 
         .logo-tag {
             font-size: 0.65rem;
-            font-weight: 700;
-            color: var(--brand-green-light);
+            font-weight: 800;
+            color: var(--black);
             letter-spacing: 1.2px;
             text-transform: uppercase;
-            padding: 3px 8px;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.28);
-            border-radius: 99px;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+            padding: 2px 7px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
+            border-left: 2px solid var(--brand-green);
         }
 
         .header-right {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .mode-pill {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 14px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-glass);
-            border-radius: 99px;
+            padding: 6px 12px;
+            background: var(--bg-white);
+            border: 1px solid var(--gray-200);
             font-size: 0.74rem;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-weight: 700;
+            color: var(--gray-700);
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(10px);
+            transition: all 0.15s ease;
             user-select: none;
         }
 
         .mode-pill:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--border-glass-bright);
-            color: var(--text-white);
-            transform: translateY(-1px);
+            border-color: var(--black);
+            color: var(--black);
+            background: var(--bg-subtle);
+        }
+
+        .mode-icon-svg {
+            display: flex;
+            align-items: center;
+            color: var(--brand-green);
         }
 
         .channel-tag {
             font-family: 'JetBrains Mono', monospace;
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--brand-green-light);
-            padding: 2px 8px;
+            background: var(--bg-subtle);
+            color: var(--black);
+            padding: 2px 6px;
             font-size: 0.68rem;
             font-weight: 700;
             letter-spacing: 0.5px;
-            border-radius: 6px;
-            border: 1px solid rgba(16, 185, 129, 0.25);
+            border: 1px solid var(--gray-200);
         }
 
         .pair-btn {
             display: flex;
             align-items: center;
             gap: 7px;
-            padding: 7px 16px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+            padding: 7px 14px;
+            background: var(--black);
             color: var(--text-white);
-            border: 1px solid var(--border-glass-bright);
-            border-radius: 99px;
+            border: 1px solid var(--black);
             font-size: 0.74rem;
-            font-weight: 700;
+            font-weight: 800;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            letter-spacing: 0.8px;
+            transition: all 0.15s ease;
         }
 
         .pair-btn:hover {
-            background: var(--brand-gradient);
-            border-color: var(--brand-green-light);
-            box-shadow: 0 4px 20px var(--brand-green-glow), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+            background: var(--brand-green);
+            border-color: var(--brand-green);
+            color: var(--text-white);
         }
 
         .peer-badge {
-            background: rgba(0, 0, 0, 0.4);
-            color: var(--brand-green-light);
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-white);
             font-size: 0.68rem;
             font-weight: 800;
-            padding: 1px 7px;
-            border-radius: 99px;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 1px 6px;
         }
 
         .conn-indicator {
@@ -273,34 +256,31 @@
             align-items: center;
             gap: 8px;
             font-size: 0.74rem;
-            font-weight: 600;
-            color: var(--text-muted);
+            font-weight: 700;
+            color: var(--gray-600);
             letter-spacing: 0.4px;
             padding: 6px 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 99px;
-            border: 1px solid var(--border-glass);
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
         }
 
         .conn-dot {
             width: 7px;
             height: 7px;
             background: var(--danger);
-            border-radius: 50%;
             transition: all 0.3s ease;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
         }
 
         .conn-dot.ok {
-            background: var(--brand-green-light);
-            box-shadow: 0 0 10px var(--brand-green-light), 0 0 20px var(--brand-green-glow);
+            background: var(--brand-green);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
             animation: pulse-dot 2s infinite;
         }
 
         .header-clock {
             font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-weight: 700;
+            color: var(--gray-600);
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: 0.3px;
         }
@@ -311,16 +291,13 @@
             display: flex;
             min-height: calc(100vh - var(--header-h));
             position: relative;
-            z-index: 1;
         }
 
         /* ── Sidebar (Payment + Card Hub) ───────────────────────── */
         .sidebar {
             width: var(--sidebar-width);
-            border-right: 1px solid var(--border-glass);
-            background: rgba(12, 16, 23, 0.65);
-            backdrop-filter: blur(var(--glass-blur));
-            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-right: 1px solid var(--gray-200);
+            background: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
@@ -332,7 +309,7 @@
 
         .sidebar-section {
             padding: 24px;
-            border-bottom: 1px solid var(--border-glass);
+            border-bottom: 1px solid var(--gray-200);
         }
 
         .sidebar-section:last-child {
@@ -345,7 +322,7 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.8px;
-            color: var(--text-muted);
+            color: var(--gray-500);
             margin-bottom: 18px;
             display: flex;
             align-items: center;
@@ -357,30 +334,18 @@
             height: 1px;
             flex: 1;
             margin-left: 12px;
-            background: linear-gradient(90deg, var(--border-glass), transparent);
+            background: var(--gray-200);
         }
 
-        /* ── Holographic POS Card Graphic ──────────────────────── */
+        /* ── Clean Hardware Terminal POS Card ──────────────────── */
         .pos-hardware-card {
-            background: linear-gradient(135deg, rgba(26, 35, 54, 0.9) 0%, rgba(15, 23, 42, 0.95) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            margin-bottom: 20px;
+            background: var(--bg-white);
+            border: 1px solid var(--gray-300);
+            border-top: 3px solid var(--brand-green);
+            padding: 22px 20px;
+            margin-bottom: 18px;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-        }
-
-        .pos-hardware-card::before {
-            content: '';
-            position: absolute;
-            top: -40%;
-            left: -30%;
-            width: 160%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
-            pointer-events: none;
+            box-shadow: var(--shadow-subtle);
         }
 
         .pos-card-header {
@@ -388,53 +353,47 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
-            position: relative;
-            z-index: 1;
         }
 
         .pos-chip-icon {
             width: 32px;
             height: 24px;
-            background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
-            border-radius: 4px;
+            background: var(--gray-100);
+            border: 1px solid var(--gray-300);
             position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
         }
 
         .pos-chip-icon::after {
             content: '';
             position: absolute;
             inset: 3px;
-            border: 1px solid rgba(0, 0, 0, 0.3);
-            border-radius: 2px;
+            border: 1px solid var(--gray-400);
         }
 
         .pos-contactless-wave {
-            color: var(--brand-green-light);
+            color: var(--brand-green);
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             font-size: 0.72rem;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         /* ── Payment Input Module ──────────────────────────────── */
         .pay-amount-display {
             text-align: center;
-            padding: 10px 0 18px;
-            position: relative;
-            z-index: 1;
+            padding: 8px 0 16px;
         }
 
         .pay-currency {
             font-size: 0.68rem;
-            font-weight: 700;
-            color: var(--brand-green-light);
+            font-weight: 800;
+            color: var(--gray-500);
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .pay-amount-input-wrap {
@@ -444,160 +403,126 @@
             justify-content: center;
         }
 
-        .pay-amount-input-wrap span {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-right: 4px;
-        }
-
         .pay-amount-input-wrap input {
             width: 100%;
             background: transparent;
             border: none;
-            font-size: 2.6rem;
+            border-bottom: 2px solid var(--black);
+            font-size: 2.5rem;
             font-weight: 800;
             text-align: center;
-            color: var(--text-white);
+            color: var(--black);
             padding: 4px 0;
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: -1.5px;
             outline: none;
-            text-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
-            transition: all 0.25s ease;
+            transition: border-color 0.2s ease;
+        }
+
+        .pay-amount-input-wrap input:focus {
+            border-bottom-color: var(--brand-green);
         }
 
         .pay-amount-input-wrap input::placeholder {
-            color: rgba(255, 255, 255, 0.15);
-            text-shadow: none;
+            color: var(--gray-300);
         }
 
         .quick-amounts {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 18px;
         }
 
         .quick-amt {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-sm);
-            padding: 10px 6px;
-            font-size: 0.82rem;
+            background: var(--bg-white);
+            border: 1px solid var(--gray-200);
+            padding: 9px 4px;
+            font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
             font-family: 'JetBrains Mono', monospace;
             text-align: center;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            color: var(--text-secondary);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.15s ease;
+            color: var(--black);
         }
 
         .quick-amt:hover {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--brand-green-light);
-            border-color: var(--brand-green);
-            box-shadow: 0 4px 12px var(--brand-green-glow);
-            transform: translateY(-1px);
+            background: var(--black);
+            color: var(--text-white);
+            border-color: var(--black);
         }
 
         .quick-amt:active {
-            transform: scale(0.97);
+            background: var(--brand-green);
+            border-color: var(--brand-green);
+            color: var(--text-white);
         }
 
         .pay-btn {
             width: 100%;
-            background: var(--brand-gradient-gloss);
-            color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            font-size: 0.88rem;
+            background: var(--black);
+            color: var(--text-white);
+            border: 1px solid var(--black);
+            padding: 15px;
+            font-size: 0.85rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.2px;
             cursor: pointer;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: var(--gloss-button-shadow);
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pay-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 60%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-            transform: skewX(-20deg);
-            transition: 0.6s;
         }
 
         .pay-btn:hover {
-            box-shadow: 0 12px 30px var(--brand-green-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .pay-btn:hover::after {
-            left: 140%;
-        }
-
-        .pay-btn:active {
-            transform: translateY(0);
+            background: var(--brand-green);
+            border-color: var(--brand-green);
+            box-shadow: var(--shadow-green);
         }
 
         /* ── Card Hub (Sidebar) ────────────────────────────────── */
         .card-list-wrapper {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .card-item {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
+            background: var(--bg-white);
+            border: 1px solid var(--gray-200);
             padding: 14px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-            position: relative;
+            transition: all 0.15s ease;
+            box-shadow: var(--shadow-subtle);
         }
 
         .card-item:hover {
-            border-color: rgba(16, 185, 129, 0.4);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 15px rgba(16, 185, 129, 0.1);
+            border-color: var(--black);
         }
 
         .card-info {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .card-name {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: var(--text-white);
+            font-size: 0.86rem;
+            font-weight: 800;
+            color: var(--black);
             letter-spacing: -0.2px;
         }
 
         .card-uid {
             font-size: 0.7rem;
             font-weight: 600;
-            color: var(--brand-green-light);
+            color: var(--gray-500);
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: 0.5px;
         }
@@ -605,94 +530,90 @@
         .card-balance {
             font-size: 0.95rem;
             font-weight: 800;
-            color: var(--text-white);
+            color: var(--brand-green-dark);
             text-align: right;
             font-family: 'JetBrains Mono', monospace;
         }
 
         .card-balance-label {
             font-size: 0.65rem;
-            color: var(--text-muted);
+            color: var(--gray-500);
             text-transform: uppercase;
             letter-spacing: 0.8px;
             text-align: right;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .card-actions {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             margin-top: 8px;
         }
 
         .card-action-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 0.68rem;
-            font-weight: 700;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
+            padding: 3px 8px;
+            font-size: 0.66rem;
+            font-weight: 800;
             cursor: pointer;
             font-family: 'Plus Jakarta Sans', sans-serif;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            transition: all 0.2s;
+            color: var(--gray-700);
+            transition: all 0.15s ease;
         }
 
         .card-action-btn:hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: var(--black);
             color: var(--text-white);
-            border-color: var(--border-glass-bright);
+            border-color: var(--black);
         }
 
         .card-action-btn.del:hover {
-            background: rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            border-color: rgba(239, 68, 68, 0.4);
+            background: var(--danger);
+            color: var(--text-white);
+            border-color: var(--danger);
         }
 
         .empty-state {
             text-align: center;
-            padding: 32px 16px;
-            color: var(--text-muted);
-            font-size: 0.84rem;
-            font-weight: 500;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed var(--border-glass);
-            border-radius: var(--radius-md);
+            padding: 30px 16px;
+            color: var(--gray-500);
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: var(--bg-white);
+            border: 1px dashed var(--gray-300);
         }
 
         .add-card-toggle {
             width: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px dashed var(--border-glass-bright);
-            border-radius: var(--radius-md);
+            background: var(--bg-white);
+            border: 1px dashed var(--gray-300);
             padding: 12px;
-            font-size: 0.78rem;
-            font-weight: 700;
+            font-size: 0.76rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--text-secondary);
+            color: var(--gray-700);
             cursor: pointer;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-top: 14px;
+            transition: all 0.15s ease;
+            margin-top: 12px;
         }
 
         .add-card-toggle:hover {
-            border-color: var(--brand-green);
-            color: var(--brand-green-light);
-            background: rgba(16, 185, 129, 0.06);
+            border-color: var(--black);
+            color: var(--black);
+            background: var(--bg-subtle);
         }
 
         .add-card-form {
             display: none;
-            margin-top: 16px;
+            margin-top: 14px;
             padding: 18px;
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
+            background: var(--bg-white);
+            border: 1px solid var(--gray-300);
             animation: panelIn 0.2s ease;
         }
 
@@ -705,71 +626,66 @@
             flex: 1;
             min-width: 0;
             overflow-y: auto;
-            background: transparent;
+            background: var(--bg-white);
         }
 
         /* ── Tab Navigation ────────────────────────────────────── */
         .main-nav {
             display: flex;
-            border-bottom: 1px solid var(--border-glass);
-            background: rgba(12, 16, 23, 0.75);
-            backdrop-filter: blur(var(--glass-blur));
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--bg-white);
             position: sticky;
             top: 0;
             z-index: 10;
             padding: 0 32px;
-            gap: 8px;
+            gap: 4px;
         }
 
         .main-nav button {
             background: none;
             border: none;
             border-bottom: 2px solid transparent;
-            color: var(--text-muted);
+            color: var(--gray-500);
             padding: 18px 20px;
-            font-size: 0.82rem;
-            font-weight: 700;
+            font-size: 0.8rem;
+            font-weight: 800;
             cursor: pointer;
             font-family: 'Plus Jakarta Sans', sans-serif;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             white-space: nowrap;
-            position: relative;
         }
 
         .main-nav button:hover {
-            color: var(--text-primary);
+            color: var(--black);
         }
 
         .main-nav button.active {
-            color: var(--text-white);
+            color: var(--black);
             border-bottom-color: var(--brand-green);
-            text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
         }
 
         .main-nav button.active svg {
-            stroke: var(--brand-green-light);
-            filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+            stroke: var(--brand-green);
         }
 
         .main-nav button svg {
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             stroke: currentColor;
-            stroke-width: 2;
+            stroke-width: 2.2;
             fill: none;
-            transition: stroke 0.2s;
         }
 
         /* ── Panels ────────────────────────────────────────────── */
         .panel {
             display: none;
             padding: 36px;
-            animation: panelIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: panelIn 0.2s ease;
             max-width: 1400px;
             margin: 0 auto;
         }
@@ -783,20 +699,22 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 20px;
         }
 
         .panel-title {
             font-size: 1.75rem;
             font-weight: 800;
             letter-spacing: -0.6px;
-            color: var(--text-white);
+            color: var(--black);
             margin-bottom: 4px;
         }
 
         .panel-subtitle {
             font-size: 0.88rem;
-            color: var(--text-secondary);
-            font-weight: 400;
+            color: var(--gray-500);
+            font-weight: 500;
         }
 
         /* ── Stat Metric Row ───────────────────────────────────── */
@@ -808,30 +726,16 @@
         }
 
         .stat-cell {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            padding: 22px 24px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.25s, border-color 0.25s;
+            background: var(--bg-white);
+            border: 1px solid var(--gray-200);
+            border-top: 3px solid var(--black);
+            padding: 20px 22px;
+            box-shadow: var(--shadow-subtle);
+            transition: border-color 0.2s ease;
         }
 
         .stat-cell:hover {
-            transform: translateY(-2px);
-            border-color: var(--border-glass-bright);
-        }
-
-        .stat-cell::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--brand-gradient);
-            opacity: 0.8;
+            border-top-color: var(--brand-green);
         }
 
         .stat-label {
@@ -839,15 +743,15 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
+            color: var(--gray-500);
+            margin-bottom: 8px;
         }
 
         .stat-value {
             font-size: 1.8rem;
             font-weight: 800;
             letter-spacing: -0.5px;
-            color: var(--text-white);
+            color: var(--black);
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -855,14 +759,12 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ── Glossy Tables ─────────────────────────────────────── */
+        /* ── Tables ────────────────────────────────────────────── */
         .table-container {
-            background: rgba(18, 24, 38, 0.6);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
-            backdrop-filter: blur(12px);
+            background: var(--bg-white);
+            border: 1px solid var(--gray-200);
+            overflow-x: auto;
+            box-shadow: var(--shadow-subtle);
         }
 
         table {
@@ -872,21 +774,21 @@
         }
 
         th {
-            background: rgba(0, 0, 0, 0.35);
-            color: var(--text-muted);
-            padding: 14px 18px;
+            background: var(--bg-subtle);
+            color: var(--gray-700);
+            padding: 12px 16px;
             text-align: left;
             font-size: 0.7rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.2px;
-            border-bottom: 1px solid var(--border-glass);
+            border-bottom: 1px solid var(--gray-200);
             white-space: nowrap;
         }
 
         td {
-            padding: 14px 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--gray-100);
             color: var(--text-primary);
         }
 
@@ -895,7 +797,7 @@
         }
 
         tr:hover td {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--bg-subtle);
         }
 
         .mono {
@@ -907,34 +809,32 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 4px 10px;
+            padding: 3px 8px;
             font-size: 0.68rem;
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-radius: 99px;
         }
 
         .badge-ok {
-            background: rgba(16, 185, 129, 0.12);
-            color: var(--brand-green-light);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: var(--brand-green-soft);
+            color: var(--brand-green-dark);
+            border: 1px solid var(--brand-green-border);
         }
 
         .badge-err {
-            background: rgba(239, 68, 68, 0.12);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
         }
 
         /* ── Forms & Controls ──────────────────────────────────── */
         .form-section {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            padding: 26px;
+            background: var(--bg-white);
+            border: 1px solid var(--gray-200);
+            padding: 24px;
             margin-bottom: 24px;
-            box-shadow: var(--card-shadow);
+            box-shadow: var(--shadow-subtle);
         }
 
         .form-section-title {
@@ -943,7 +843,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 20px;
-            color: var(--text-white);
+            color: var(--black);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -965,36 +865,33 @@
 
         .form-label {
             display: block;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--text-muted);
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--gray-600);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .form-input {
             width: 100%;
-            background: rgba(0, 0, 0, 0.45);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-sm);
-            padding: 12px 14px;
-            color: var(--text-white);
+            background: var(--bg-input);
+            border: 1px solid var(--gray-300);
+            padding: 10px 12px;
+            color: var(--black);
             font-size: 0.88rem;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease;
             outline: none;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
         }
 
         .form-input:focus {
-            border-color: var(--brand-green);
-            background: rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.4);
+            border-color: var(--black);
+            box-shadow: 0 0 0 1px var(--black);
         }
 
         .form-input::placeholder {
-            color: var(--text-dim);
+            color: var(--gray-400);
         }
 
         /* ── Buttons ───────────────────────────────────────────── */
@@ -1003,55 +900,49 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 12px 22px;
+            padding: 11px 20px;
             font-size: 0.78rem;
             font-weight: 800;
-            border-radius: var(--radius-sm);
             border: 1px solid transparent;
             cursor: pointer;
             font-family: 'Plus Jakarta Sans', sans-serif;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
+            transition: all 0.15s ease;
         }
 
         .btn-black {
-            background: var(--brand-gradient);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.18);
-            box-shadow: 0 4px 18px var(--brand-green-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            background: var(--black);
+            color: var(--text-white);
+            border-color: var(--black);
         }
 
         .btn-black:hover {
-            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-            transform: translateY(-1px);
+            background: var(--brand-green);
+            border-color: var(--brand-green);
+            color: var(--text-white);
         }
 
         .btn-outline {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-glass-bright);
-            color: var(--text-primary);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            background: var(--bg-white);
+            border: 1px solid var(--gray-300);
+            color: var(--black);
         }
 
         .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--black);
             color: var(--text-white);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+            border-color: var(--black);
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+            background: var(--danger);
+            color: var(--text-white);
+            border-color: var(--danger);
         }
 
         .btn-danger:hover {
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
-            transform: translateY(-1px);
+            opacity: 0.9;
         }
 
         .btn-full {
@@ -1061,7 +952,7 @@
         /* ── Search Bar ────────────────────────────────────────── */
         .search-row {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             margin-bottom: 24px;
         }
 
@@ -1077,12 +968,11 @@
         }
 
         .conn-card {
-            border: 1px solid var(--border-glass);
-            padding: 26px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            padding: 24px;
+            background: var(--bg-white);
             margin-bottom: 24px;
-            box-shadow: var(--card-shadow);
+            box-shadow: var(--shadow-subtle);
         }
 
         .conn-card-title {
@@ -1090,64 +980,64 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--brand-green-light);
+            color: var(--black);
             margin-bottom: 18px;
+            border-left: 3px solid var(--brand-green);
+            padding-left: 8px;
         }
 
         .conn-mode-selector {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            margin-bottom: 26px;
+            margin-bottom: 24px;
         }
 
         .conn-mode-btn {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 18px 20px;
-            border: 1.5px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            background: rgba(255, 255, 255, 0.03);
+            gap: 14px;
+            padding: 16px 18px;
+            border: 1px solid var(--gray-200);
+            background: var(--bg-white);
             cursor: pointer;
             text-align: left;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.15s ease;
             color: var(--text-primary);
         }
 
         .conn-mode-btn.active {
-            border-color: var(--brand-green);
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.02) 100%);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: var(--black);
+            border-left: 3px solid var(--brand-green);
+            background: var(--bg-subtle);
         }
 
         .conn-mode-btn svg {
-            color: var(--brand-green-light);
+            color: var(--black);
         }
 
         .mode-btn-title {
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 800;
-            color: var(--text-white);
-            margin-bottom: 3px;
+            color: var(--black);
+            margin-bottom: 2px;
         }
 
         .mode-btn-sub {
             font-size: 0.74rem;
-            color: var(--text-secondary);
+            color: var(--gray-500);
             line-height: 1.4;
         }
 
         .diag-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
+            gap: 10px;
         }
 
         .diag-item {
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-sm);
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
             padding: 12px 14px;
             display: flex;
             flex-direction: column;
@@ -1156,8 +1046,8 @@
 
         .diag-lbl {
             font-size: 0.66rem;
-            font-weight: 700;
-            color: var(--text-muted);
+            font-weight: 800;
+            color: var(--gray-500);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -1165,7 +1055,7 @@
         .diag-val {
             font-size: 0.88rem;
             font-weight: 800;
-            color: var(--text-white);
+            color: var(--black);
         }
 
         /* ── Info Items ────────────────────────────────────────── */
@@ -1178,8 +1068,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-100);
             font-size: 0.84rem;
         }
 
@@ -1188,23 +1078,24 @@
         }
 
         .info-item-label {
-            color: var(--text-muted);
+            color: var(--gray-600);
             font-weight: 600;
         }
 
         .info-item-value {
-            font-weight: 700;
-            color: var(--text-white);
+            font-weight: 800;
+            color: var(--black);
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.84rem;
         }
 
         /* ── Danger Zone ───────────────────────────────────────── */
         .danger-section {
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            padding: 26px;
-            background: rgba(239, 68, 68, 0.03);
-            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            border-left: 3px solid var(--danger);
+            padding: 24px;
+            background: var(--bg-white);
+            margin-top: 24px;
         }
 
         .danger-title {
@@ -1212,20 +1103,20 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            margin-bottom: 8px;
-            color: #f87171;
+            margin-bottom: 6px;
+            color: var(--danger);
         }
 
         .danger-desc {
             font-size: 0.82rem;
-            color: var(--text-secondary);
+            color: var(--gray-600);
             margin-bottom: 18px;
             line-height: 1.5;
         }
 
         .danger-btns {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         /* ── Dashboard Grid ────────────────────────────────────── */
@@ -1236,39 +1127,39 @@
         }
 
         .sync-card {
-            border: 1px solid var(--border-glass);
-            padding: 26px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            border-top: 3px solid var(--black);
+            padding: 24px;
+            background: var(--bg-white);
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 16px;
             height: fit-content;
-            box-shadow: var(--card-shadow);
+            box-shadow: var(--shadow-subtle);
         }
 
         .sync-card p {
-            color: var(--text-secondary);
+            color: var(--gray-600);
             font-size: 0.82rem;
             line-height: 1.6;
         }
 
-        /* ── Overlays & Modals (Glossy Glassmorphic) ───────────── */
+        /* ── Overlays & Modals (Sharp & Clean) ──────────────────── */
         .overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(6, 9, 14, 0.88);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            background: rgba(9, 9, 11, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 300;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 24px;
-            animation: fadeIn 0.25s ease;
+            animation: fadeIn 0.2s ease;
         }
 
         .overlay.active {
@@ -1276,15 +1167,14 @@
         }
 
         .modal {
-            background: linear-gradient(145deg, rgba(24, 32, 50, 0.95) 0%, rgba(13, 18, 28, 0.98) 100%);
-            border: 1px solid var(--border-glass-bright);
-            border-radius: var(--radius-xl);
+            background: var(--bg-white);
+            border: 1px solid var(--black);
             max-width: 440px;
             width: 100%;
-            padding: 40px 36px;
+            padding: 36px 32px;
             text-align: center;
-            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(16, 185, 129, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+            animation: modalIn 0.2s ease;
+            box-shadow: var(--shadow-elevated);
             position: relative;
         }
 
@@ -1298,14 +1188,13 @@
 
         .modal-logo-img {
             height: 32px;
-            filter: drop-shadow(0 2px 10px rgba(16, 185, 129, 0.3));
         }
 
-        /* ── Radar Scanner Animations ──────────────────────────── */
+        /* ── Radar Scanner Animations (Sharp Hex/Box Outline) ───── */
         .radar-box {
             position: relative;
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
             margin: 12px auto 20px;
             display: flex;
             align-items: center;
@@ -1315,9 +1204,8 @@
         .radar-wave {
             position: absolute;
             inset: 0;
-            border-radius: 50%;
-            border: 2px solid rgba(16, 185, 129, 0.3);
-            animation: radar-expand 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+            border: 1px solid var(--brand-green);
+            animation: radar-expand 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
         }
 
         .radar-wave:nth-child(2) {
@@ -1329,36 +1217,35 @@
         }
 
         .radar-center-icon {
-            width: 52px;
-            height: 52px;
-            background: var(--brand-gradient);
+            width: 48px;
+            height: 48px;
+            background: var(--black);
             color: var(--text-white);
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 20px var(--brand-green-glow), inset 0 1px 1px rgba(255, 255, 255, 0.4);
             z-index: 2;
+            border: 1px solid var(--black);
         }
 
         .radar-center-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             stroke: #fff;
             fill: none;
             stroke-width: 2.2;
         }
 
         @keyframes radar-expand {
-            0% { transform: scale(0.5); opacity: 1; border-color: rgba(16, 185, 129, 0.6); }
-            100% { transform: scale(1.8); opacity: 0; border-color: rgba(16, 185, 129, 0); }
+            0% { transform: scale(0.6); opacity: 1; border-color: var(--brand-green); }
+            100% { transform: scale(1.6); opacity: 0; border-color: var(--brand-green); }
         }
 
-        /* ── Real-Time Step Timeline ───────────────────────────── */
+        /* ── Step Timeline ─────────────────────────────────────── */
         .payment-steps {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             margin: 20px 0;
             text-align: left;
         }
@@ -1367,76 +1254,64 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--border-glass);
+            padding: 9px 12px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
             font-size: 0.82rem;
-            color: var(--text-muted);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            color: var(--gray-600);
+            transition: all 0.15s ease;
         }
 
         .p-step::before {
             content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-dim);
+            width: 7px;
+            height: 7px;
+            background: var(--gray-400);
             flex-shrink: 0;
-            transition: all 0.2s ease;
         }
 
         .p-step.active {
-            background: rgba(16, 185, 129, 0.12);
-            border-color: var(--brand-green);
-            color: var(--text-white);
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);
-            transform: scale(1.01);
+            background: var(--bg-white);
+            border-color: var(--black);
+            border-left: 3px solid var(--brand-green);
+            color: var(--black);
+            font-weight: 800;
         }
 
         .p-step.active::before {
-            background: var(--brand-green-light);
-            box-shadow: 0 0 10px var(--brand-green-light);
-            animation: pulse-dot 0.8s infinite alternate;
+            background: var(--brand-green);
         }
 
         .p-step.done {
-            background: rgba(16, 185, 129, 0.08);
-            border-color: rgba(16, 185, 129, 0.25);
-            color: var(--brand-green-light);
-            font-weight: 600;
+            background: var(--brand-green-soft);
+            border-color: var(--brand-green-border);
+            color: var(--brand-green-dark);
+            font-weight: 700;
         }
 
         .p-step.done::before {
-            background: var(--brand-green-light);
+            background: var(--brand-green);
         }
 
         /* ── Result Pop Screen ─────────────────────────────────── */
-        .result-screen.spring-pop {
-            animation: spring-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-        }
-
         .result-icon {
-            width: 72px;
-            height: 72px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 2px solid var(--black);
         }
 
         .result-icon.ok {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 100%);
-            border: 2px solid var(--brand-green-light);
-            box-shadow: 0 0 30px var(--brand-green-glow);
+            background: var(--brand-green-soft);
+            border-color: var(--brand-green);
         }
 
         .result-icon.fail {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%);
-            border: 2px solid #ef4444;
-            box-shadow: 0 0 30px rgba(239, 68, 68, 0.35);
+            background: var(--danger-bg);
+            border-color: var(--danger);
         }
 
         /* ── Sync Overlay ──────────────────────────────────────── */
@@ -1446,15 +1321,13 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(7, 9, 14, 0.94);
-            backdrop-filter: blur(36px) saturate(180%);
-            -webkit-backdrop-filter: blur(36px) saturate(180%);
+            background: var(--bg-white);
             z-index: 500;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.3s ease;
         }
 
         .sync-overlay.fade-out {
@@ -1470,32 +1343,31 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 40px;
+            margin-bottom: 32px;
         }
 
         .sync-spinner {
-            width: 46px;
-            height: 46px;
-            border: 3px solid rgba(255, 255, 255, 0.08);
-            border-top-color: var(--brand-green-light);
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--black);
+            border-right-color: var(--brand-green);
             animation: spin 0.8s linear infinite;
-            margin-bottom: 28px;
-            box-shadow: 0 0 20px var(--brand-green-glow);
+            margin-bottom: 24px;
         }
 
         .sync-status-text {
             font-size: 1.1rem;
             font-weight: 800;
-            color: var(--text-white);
-            margin-bottom: 8px;
+            color: var(--black);
+            margin-bottom: 6px;
             letter-spacing: -0.3px;
         }
 
         .sync-sub-text {
             font-size: 0.82rem;
-            color: var(--text-secondary);
-            margin-bottom: 32px;
+            color: var(--gray-500);
+            margin-bottom: 30px;
             max-width: 320px;
             text-align: center;
         }
@@ -1503,53 +1375,48 @@
         .sync-steps {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             min-width: 280px;
         }
 
         .sync-step {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             font-size: 0.82rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            transition: color 0.3s;
+            color: var(--gray-500);
+            font-weight: 700;
         }
 
         .sync-step.active {
-            color: var(--text-white);
+            color: var(--black);
         }
 
         .sync-step.done {
-            color: var(--brand-green-light);
+            color: var(--brand-green-dark);
         }
 
         .sync-step-icon {
-            width: 22px;
-            height: 22px;
-            border: 1.5px solid var(--border-glass-bright);
-            border-radius: 6px;
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--gray-300);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--bg-subtle);
         }
 
         .sync-step.active .sync-step-icon {
-            border-color: var(--brand-green-light);
-            background: rgba(16, 185, 129, 0.15);
+            border-color: var(--black);
+            background: var(--black);
         }
 
         .sync-step.active .sync-step-icon::after {
             content: '';
             width: 6px;
             height: 6px;
-            background: var(--brand-green-light);
-            border-radius: 50%;
-            animation: pulse-dot 1s infinite;
+            background: var(--brand-green);
         }
 
         .sync-step.done .sync-step-icon {
@@ -1574,9 +1441,8 @@
         }
 
         .modal-close-btn {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid var(--border-glass);
-            border-radius: 50%;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
             width: 32px;
             height: 32px;
             display: flex;
@@ -1584,41 +1450,39 @@
             justify-content: center;
             font-size: 1.2rem;
             cursor: pointer;
-            color: var(--text-secondary);
-            transition: all 0.2s;
+            color: var(--black);
+            transition: all 0.15s ease;
         }
 
         .modal-close-btn:hover {
+            background: var(--black);
             color: var(--text-white);
-            background: rgba(255, 255, 255, 0.15);
         }
 
         .qr-box-wrap {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 22px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-md);
-            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 18px;
             text-align: center;
         }
 
         .pair-qr-canvas {
             background: #ffffff;
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border: 1px solid var(--gray-300);
             display: inline-block;
         }
 
         .pair-peers-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             margin-top: 10px;
-            max-height: 130px;
+            max-height: 120px;
             overflow-y: auto;
         }
 
@@ -1626,35 +1490,32 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 14px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-glass);
-            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
             font-size: 0.8rem;
         }
 
         .peer-item-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .peer-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--brand-green-light);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--brand-green-light);
+            width: 7px;
+            height: 7px;
+            background: var(--brand-green);
         }
 
         .sim-action-banner {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px dashed rgba(16, 185, 129, 0.35);
-            border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            background: var(--bg-subtle);
+            border: 1px dashed var(--gray-300);
+            border-left: 3px solid var(--brand-green);
+            padding: 12px 14px;
             margin-top: 16px;
             font-size: 0.78rem;
             text-align: left;
@@ -1663,26 +1524,23 @@
         /* ── Toast Notification ────────────────────────────────── */
         .toast {
             position: fixed;
-            bottom: 28px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%) translateY(90px);
-            background: rgba(18, 24, 38, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: var(--black);
             color: var(--text-white);
-            padding: 14px 28px;
-            font-size: 0.84rem;
-            font-weight: 700;
-            border-radius: 99px;
-            border: 1px solid var(--border-glass-bright);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            padding: 12px 24px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            border: 1px solid var(--black);
             z-index: 600;
             opacity: 0;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.25s ease;
             letter-spacing: 0.3px;
             display: flex;
             align-items: center;
             gap: 10px;
+            box-shadow: var(--shadow-elevated);
         }
 
         .toast.show {
@@ -1691,13 +1549,11 @@
         }
 
         .toast.ok {
-            border-color: rgba(16, 185, 129, 0.4);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px var(--brand-green-glow);
+            border-left: 4px solid var(--brand-green);
         }
 
         .toast.er {
-            border-color: rgba(239, 68, 68, 0.4);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(239, 68, 68, 0.3);
+            border-left: 4px solid var(--danger);
         }
 
         /* ── Mobile Sidebar Toggle ──────────────────────────────── */
@@ -1706,22 +1562,21 @@
             position: fixed;
             bottom: 24px;
             right: 24px;
-            width: 52px;
-            height: 52px;
-            background: var(--brand-gradient);
+            width: 48px;
+            height: 48px;
+            background: var(--black);
             color: var(--text-white);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
+            border: 1px solid var(--black);
             z-index: 90;
             cursor: pointer;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 25px var(--brand-green-glow);
+            box-shadow: var(--shadow-elevated);
         }
 
         .mobile-sidebar-toggle svg {
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             stroke: #fff;
             stroke-width: 2.2;
             fill: none;
@@ -1729,13 +1584,13 @@
 
         /* ── Animations ────────────────────────────────────────── */
         @keyframes panelIn {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.94) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from { opacity: 0; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         @keyframes fadeIn {
@@ -1743,14 +1598,9 @@
             to { opacity: 1; }
         }
 
-        @keyframes spring-in {
-            0% { transform: scale(0.85); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
         @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(0.85); }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
         @keyframes spin {
@@ -1758,7 +1608,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ── Responsive Media Queries ───────────────────────────── */
+        /* ── Responsive ────────────────────────────────────────── */
         @media (max-width: 960px) {
             .sidebar {
                 position: fixed;
@@ -1767,10 +1617,10 @@
                 width: 100%;
                 max-width: 360px;
                 z-index: 120;
-                transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: left 0.25s ease;
                 height: calc(100vh - var(--header-h));
-                background: rgba(12, 16, 23, 0.95);
-                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.6);
+                background: var(--bg-white);
+                box-shadow: var(--shadow-elevated);
             }
 
             .sidebar.open {
@@ -1785,8 +1635,7 @@
                 display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(8px);
+                background: rgba(0, 0, 0, 0.4);
                 z-index: 110;
             }
 
@@ -1854,16 +1703,18 @@
         </div>
 
         <div class="header-right">
-            <!-- Mode Pill -->
+            <!-- Mode Pill with SVG Icon -->
             <div class="mode-pill" id="header-mode-badge" onclick="switchTab('set')" title="Click to configure MQTT / LAN">
-                <span id="header-mode-icon">🌐</span>
+                <span id="header-mode-icon" class="mode-icon-svg">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </span>
                 <span id="header-mode-label">MQTT Cloud</span>
                 <span class="channel-tag" id="header-channel-tag">op-station-01</span>
             </div>
 
-            <!-- Pair Button -->
+            <!-- Pair Button with SVG Icon -->
             <button class="pair-btn" id="header-pair-btn" onclick="openPairModal()" title="Pair Another Phone / Device">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 <span>Pair</span>
                 <span class="peer-badge" id="peer-count-badge">1</span>
             </button>
@@ -1885,16 +1736,16 @@
         <!-- ── Sidebar: POS Payment & RFID Cards ── -->
         <aside class="sidebar" id="sidebar">
 
-            <!-- Payment Terminal Hero Section -->
+            <!-- Payment Terminal Section -->
             <div class="sidebar-section">
                 <div class="section-label">Terminal POS</div>
 
-                <!-- Holographic Card Display -->
+                <!-- Hardware Card Display -->
                 <div class="pos-hardware-card">
                     <div class="pos-card-header">
                         <div class="pos-chip-icon"></div>
                         <div class="pos-contactless-wave">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19"/></svg>
                             <span>RFID / NFC</span>
                         </div>
                     </div>
@@ -1907,7 +1758,7 @@
                     </div>
                 </div>
 
-                <!-- Quick Presets -->
+                <!-- Quick Presets (Sharp Buttons) -->
                 <div class="quick-amounts">
                     <button class="quick-amt" onclick="setAmount(50)">50</button>
                     <button class="quick-amt" onclick="setAmount(100)">100</button>
@@ -1918,7 +1769,7 @@
                 </div>
 
                 <button class="pay-btn" onclick="startPayment(event)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                     <span>Initiate Payment</span>
                 </button>
             </div>
@@ -1945,7 +1796,7 @@
                             <label class="form-label">Initial Balance (NPR)</label>
                             <input type="number" class="form-input" id="reg-balance" required min="0" value="1000" step="0.01">
                         </div>
-                        <button type="submit" class="btn btn-black btn-full" style="margin-top:8px;">Register Card</button>
+                        <button type="submit" class="btn btn-black btn-full" style="margin-top:6px;">Register Card</button>
                     </form>
                 </div>
             </div>
@@ -1961,24 +1812,24 @@
             <nav class="main-nav" id="main-nav">
                 <button class="active" onclick="switchTab('dash')">
                     <svg viewBox="0 0 24 24">
-                        <rect x="3" y="3" width="7" height="9" rx="1" />
-                        <rect x="14" y="3" width="7" height="5" rx="1" />
-                        <rect x="14" y="12" width="7" height="9" rx="1" />
-                        <rect x="3" y="16" width="7" height="5" rx="1" />
+                        <rect x="3" y="3" width="7" height="9"/>
+                        <rect x="14" y="3" width="7" height="5"/>
+                        <rect x="14" y="12" width="7" height="9"/>
+                        <rect x="3" y="16" width="7" height="5"/>
                     </svg>
                     Overview
                 </button>
                 <button onclick="switchTab('txn')">
                     <svg viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
                     </svg>
                     Transactions
                 </button>
                 <button onclick="switchTab('set')">
                     <svg viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
                     Settings
                 </button>
@@ -1999,9 +1850,9 @@
                         <div class="stat-label">Active Cards</div>
                         <div class="stat-value mono" id="s-cards">0</div>
                     </div>
-                    <div class="stat-cell">
+                    <div class="stat-cell" style="border-top-color: var(--brand-green);">
                         <div class="stat-label">Total Vault Balance</div>
-                        <div class="stat-value mono" id="s-balance" style="color:var(--brand-green-light);">NPR 0.00</div>
+                        <div class="stat-value mono" id="s-balance" style="color:var(--brand-green-dark);">NPR 0.00</div>
                     </div>
                     <div class="stat-cell">
                         <div class="stat-label">Pending Cloud Sync</div>
@@ -2017,7 +1868,7 @@
                 <div class="dash-grid">
                     <div>
                         <div class="form-section-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                             <span>Live Activity Feed</span>
                         </div>
                         <div class="table-container">
@@ -2033,7 +1884,7 @@
                                 </thead>
                                 <tbody id="recent-list">
                                     <tr>
-                                        <td colspan="5" style="text-align:center;color:var(--text-muted)">No transactions</td>
+                                        <td colspan="5" style="text-align:center;color:var(--gray-500)">No transactions</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2042,7 +1893,7 @@
 
                     <div class="sync-card">
                         <div class="form-section-title">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
                             <span>Cloud Ledger Sync</span>
                         </div>
                         <p>Batch sync locally stored offline cryptographic transactions to central cloud ledger.</p>
@@ -2064,7 +1915,7 @@
                     <input type="text" class="form-input" id="txn-search" oninput="filterTransactions()"
                         placeholder="Search by cardholder name, RFID UID, status...">
                     <button class="btn btn-outline" onclick="loadData()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                         <span>Refresh</span>
                     </button>
                 </div>
@@ -2085,7 +1936,7 @@
                         </thead>
                         <tbody id="txn-list">
                             <tr>
-                                <td colspan="8" style="text-align:center;color:var(--text-muted)">No records</td>
+                                <td colspan="8" style="text-align:center;color:var(--gray-500)">No records</td>
                             </tr>
                         </tbody>
                     </table>
@@ -2111,7 +1962,7 @@
                         </div>
                     </button>
                     <button type="button" class="conn-mode-btn" id="btn-mode-lan" onclick="selectConnMode('lan')">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8"/><rect x="2" y="14" width="20" height="8"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
                         <div>
                             <div class="mode-btn-title">Direct Local ESP32 LAN</div>
                             <div class="mode-btn-sub">Direct HTTP REST connection on local Wi-Fi subnet</div>
@@ -2143,7 +1994,10 @@
                             <label class="form-label">Station Channel Code</label>
                             <div style="display: flex; gap: 8px;">
                                 <input type="text" class="form-input mono" id="mqtt-channel-input" value="op-station-01" placeholder="e.g. op-station-01">
-                                <button class="btn btn-outline" type="button" onclick="generateRandomChannel()" title="Generate Random ID">🎲 Random</button>
+                                <button class="btn btn-outline" type="button" onclick="generateRandomChannel()" title="Generate Random ID">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+                                    <span>Random</span>
+                                </button>
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
@@ -2152,15 +2006,21 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="button" class="btn btn-black" onclick="saveAndConnectMQTT()">Save & Connect MQTT</button>
-                        <button type="button" class="btn btn-outline" onclick="openPairModal()">📲 Pair Another Device (QR)</button>
-                        <button type="button" class="btn btn-outline" onclick="testMQTTPing()">⚡ Test Ping</button>
+                        <button type="button" class="btn btn-outline" onclick="openPairModal()">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            <span>Pair Another Device (QR)</span>
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="testMQTTPing()">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            <span>Test Ping</span>
+                        </button>
                     </div>
 
                     <!-- Live MQTT Diagnostics -->
-                    <div style="margin-top: 22px; border-top: 1px solid var(--border-glass); padding-top: 18px;">
-                        <div class="form-label" style="margin-bottom: 12px;">Live Sync Status & Diagnostics</div>
+                    <div style="margin-top: 22px; border-top: 1px solid var(--gray-200); padding-top: 16px;">
+                        <div class="form-label" style="margin-bottom: 10px;">Live Sync Status & Diagnostics</div>
                         <div class="diag-grid">
                             <div class="diag-item">
                                 <span class="diag-lbl">MQTT Broker</span>
@@ -2190,7 +2050,7 @@
                             <label class="form-label">ESP32 IP Address</label>
                             <input type="text" class="form-input mono" id="esp-ip" value="" placeholder="192.168.x.x">
                         </div>
-                        <button class="btn btn-black" onclick="connectESP()" style="margin-bottom:0;height:45px;">Connect IP</button>
+                        <button class="btn btn-black" onclick="connectESP()" style="margin-bottom:0;height:42px;">Connect IP</button>
                     </div>
                 </div>
 
@@ -2231,7 +2091,7 @@
                 </div>
 
                 <!-- Danger Zone -->
-                <div class="danger-section" style="margin-top: 24px;">
+                <div class="danger-section">
                     <div class="danger-title">Terminal Vault Danger Zone</div>
                     <p class="danger-desc">These actions are irreversible. Purging data will permanently wipe the station database.</p>
                     <div class="danger-btns">
@@ -2248,18 +2108,18 @@
     <!-- Mobile Sidebar Toggle -->
     <button class="mobile-sidebar-toggle" id="mobile-toggle" onclick="toggleSidebar()" title="Open Payment Terminal">
         <svg viewBox="0 0 24 24">
-            <rect x="2" y="5" width="20" height="14" rx="2" />
-            <line x1="2" y1="10" x2="22" y2="10" />
+            <rect x="2" y="5" width="20" height="14"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
         </svg>
     </button>
 
     <!-- ═══ SYNC OVERLAY ═══ -->
     <div class="sync-overlay hidden" id="sync-overlay">
         <div class="sync-logo">
-            <div class="logo-img-wrapper" style="height:44px;padding:6px 12px;">
-                <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay" class="logo-img" style="height:32px;">
+            <div class="logo-img-wrapper" style="height:42px;padding:4px 8px;">
+                <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay" class="logo-img" style="height:30px;">
             </div>
-            <div class="logo-text" style="font-size:1.4rem;">Off<span>Pay</span></div>
+            <div class="logo-text" style="font-size:1.35rem;">Off<span>Pay</span></div>
             <span class="logo-tag">TERMINAL</span>
         </div>
 
@@ -2286,19 +2146,19 @@
             </div>
         </div>
 
-        <!-- IP Entry State (visible when no IP is saved/configured in LAN mode) -->
+        <!-- IP Entry State -->
         <div id="sync-ip-form-container" style="display:none; flex-direction:column; align-items:center; width:100%; max-width:320px; text-align:center;">
             <p class="sync-sub-text" style="margin-bottom:20px; font-size:0.85rem; padding:0 16px;">Enter the IP address of your OffPay Terminal to connect. Make sure both devices are on the same WiFi network.</p>
             <div class="form-group" style="width:100%; margin-bottom:16px; padding:0 16px;">
-                <input type="text" class="form-input mono" id="sync-esp-ip" placeholder="e.g. 192.168.1.100" style="text-align:center; font-size:1.1rem; height:45px; width:100%;">
+                <input type="text" class="form-input mono" id="sync-esp-ip" placeholder="e.g. 192.168.1.100" style="text-align:center; font-size:1.1rem; height:42px; width:100%;">
             </div>
-            <button class="btn btn-black btn-full" onclick="connectFromSyncOverlay()" style="height:45px; font-weight:700; width:calc(100% - 32px);">Connect Terminal</button>
+            <button class="btn btn-black btn-full" onclick="connectFromSyncOverlay()" style="height:42px; font-weight:800; width:calc(100% - 32px);">Connect Terminal</button>
         </div>
 
         <!-- Connection Fail Actions -->
-        <div id="sync-fail-actions" style="display:none; flex-direction:column; align-items:center; gap:12px; margin-top:24px; width:100%; max-width:320px;">
-            <button class="btn btn-black btn-full" onclick="showSyncIPConfig()" style="height:45px; font-weight:700; width:calc(100% - 32px);">Change IP / Channel</button>
-            <button class="btn btn-outline btn-full" onclick="hideSyncOverlay()" style="height:45px; font-weight:700; width:calc(100% - 32px);">Use Dashboard Offline</button>
+        <div id="sync-fail-actions" style="display:none; flex-direction:column; align-items:center; gap:10px; margin-top:24px; width:100%; max-width:320px;">
+            <button class="btn btn-black btn-full" onclick="showSyncIPConfig()" style="height:42px; font-weight:800; width:calc(100% - 32px);">Change IP / Channel</button>
+            <button class="btn btn-outline btn-full" onclick="hideSyncOverlay()" style="height:42px; font-weight:800; width:calc(100% - 32px);">Use Dashboard Offline</button>
         </div>
     </div>
 
@@ -2307,15 +2167,15 @@
         <div class="modal pair-modal-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
                 <div style="text-align:left;">
-                    <h2 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px; color:var(--text-white);">Pair Another Device</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.8rem;">Scan QR or copy link to sync across devices anywhere in real time</p>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px; color:var(--black);">Pair Another Device</h2>
+                    <p style="color: var(--gray-500); font-size: 0.8rem;">Scan QR or copy link to sync across devices anywhere in real time</p>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closePairModal()">&times;</button>
             </div>
 
             <div class="qr-box-wrap">
                 <div id="pair-qr-canvas" class="pair-qr-canvas"></div>
-                <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 14px; font-weight: 600;">
+                <p style="font-size: 0.78rem; color: var(--gray-600); margin-top: 14px; font-weight: 700;">
                     Scan with any smartphone camera to open synced terminal
                 </p>
             </div>
@@ -2336,8 +2196,8 @@
                 </div>
             </div>
 
-            <div style="margin-top: 18px; border-top: 1px solid var(--border-glass); padding-top: 16px; text-align:left;">
-                <div class="form-label" style="margin-bottom: 8px;">Active Devices in Sync (<span id="pair-peer-count" style="color:var(--brand-green-light);">1</span>)</div>
+            <div style="margin-top: 18px; border-top: 1px solid var(--gray-200); padding-top: 16px; text-align:left;">
+                <div class="form-label" style="margin-bottom: 8px;">Active Devices in Sync (<span id="pair-peer-count" style="color:var(--brand-green-dark);">1</span>)</div>
                 <div id="pair-peers-list" class="pair-peers-list">
                     <div class="peer-item">
                         <div class="peer-item-info">
@@ -2349,7 +2209,7 @@
                 </div>
             </div>
 
-            <button type="button" class="btn btn-outline btn-full" onclick="closePairModal()" style="margin-top: 20px;">Done</button>
+            <button type="button" class="btn btn-outline btn-full" onclick="closePairModal()" style="margin-top: 18px;">Done</button>
         </div>
     </div>
 
@@ -2383,6 +2243,10 @@
         let showingSyncOverlay = false;
         let autoConnectAttempts = 0;
         let sameOriginMode = false;
+
+        // SVG Constants for Zero-Emoji Icons
+        const SVG_GLOBE = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+        const SVG_ZAP = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
 
         // MQTT Client instance
         let mqttClient = null;
@@ -2465,7 +2329,6 @@
             const isLocalhost = (host === 'localhost' || host === '127.0.0.1' || host === '');
 
             if (!isLocalFile && !isLocalhost && !channelParam) {
-                // Served from ESP hardware directly
                 sameOriginMode = true;
                 connMode = 'lan';
                 API_BASE = '';
@@ -2513,7 +2376,6 @@
             document.getElementById('mqtt-device-role').value = deviceRole;
             document.getElementById('diag-mqtt-channel').innerText = mqttChannel;
 
-            // Match broker preset dropdown
             const select = document.getElementById('mqtt-broker-select');
             let matched = false;
             for (let i = 0; i < select.options.length; i++) {
@@ -2549,7 +2411,7 @@
             document.getElementById('step-data-label').innerText = 'Synchronizing Cards & Ledger';
 
             document.getElementById('conn-text').innerText = 'Connecting';
-            document.getElementById('conn-text').style.color = 'var(--text-muted)';
+            document.getElementById('conn-text').style.color = 'var(--gray-500)';
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
 
             console.log('[OffPay] Connecting to MQTT broker: ' + mqttBroker + ' on channel: ' + mqttChannel);
@@ -2575,15 +2437,14 @@
                 autoConnectAttempts = 0;
                 document.getElementById('conn-dot').classList.add('ok');
                 document.getElementById('conn-text').innerText = 'Online (MQTT)';
-                document.getElementById('conn-text').style.color = 'var(--brand-green-light)';
+                document.getElementById('conn-text').style.color = 'var(--brand-green-dark)';
                 document.getElementById('diag-mqtt-status').innerText = 'Connected (WSS)';
-                document.getElementById('diag-mqtt-status').style.color = 'var(--brand-green-light)';
+                document.getElementById('diag-mqtt-status').style.color = 'var(--brand-green-dark)';
 
                 setSyncStep('step-connect', 'done');
                 setSyncStep('step-time', 'active');
                 setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
 
-                // Topics to subscribe (supporting both offpay and bondpay for compatibility)
                 const topics = [
                     `offpay/${mqttChannel}/status`,
                     `offpay/${mqttChannel}/events`,
@@ -2606,16 +2467,10 @@
                     setSyncStep('step-data', 'active');
                     setSyncStatus('Syncing Data', 'Broadcasting presence and syncing peer state');
 
-                    // Announce presence
                     mqttAnnouncePresence();
-
-                    // Request state sync from any active peer/terminal
                     mqttSendCmd('request_sync', {});
-
-                    // Send initial ping to check latency
                     testMQTTPing();
 
-                    // If no response after 800ms, initialize with current local data
                     setTimeout(function () {
                         setSyncStep('step-data', 'done');
                         setSyncStep('step-ready', 'done');
@@ -2625,18 +2480,15 @@
                         setTimeout(hideSyncOverlay, 600);
                         if (!silent) toast('Connected to MQTT Cloud (' + mqttChannel + ')', 'ok');
 
-                        // Publish retained current state if first creator
                         mqttPublishStatus();
                         mqttPublishCards();
                         mqttPublishTransactions();
                     }, 800);
                 });
 
-                // Periodic presence heartbeat every 8 seconds
                 if (presenceTimer) clearInterval(presenceTimer);
                 presenceTimer = setInterval(mqttAnnouncePresence, 8000);
 
-                // Periodic ping latency check every 20 seconds
                 if (pingTimer) clearInterval(pingTimer);
                 pingTimer = setInterval(testMQTTPing, 20000);
             });
@@ -2685,7 +2537,6 @@
                 const payload = JSON.parse(messageStr);
                 const subTopic = topic.split('/').pop();
 
-                // Ignore own commands to avoid echo loops
                 if (payload.sender && payload.sender === clientId) {
                     if (subTopic !== 'ping') return;
                 }
@@ -2696,27 +2547,21 @@
                     case 'status':
                         handleRemoteStatus(payload);
                         break;
-
                     case 'events':
                         handleRemoteEvent(payload);
                         break;
-
                     case 'cards':
                         handleRemoteCards(payload);
                         break;
-
                     case 'txns':
                         handleRemoteTxns(payload);
                         break;
-
                     case 'cmd':
                         handleRemoteCmd(payload);
                         break;
-
                     case 'presence':
                         handleRemotePresence(payload);
                         break;
-
                     case 'ping':
                         handleRemotePing(payload);
                         break;
@@ -2726,12 +2571,10 @@
             }
         }
 
-        // ── Message Handlers ─────────────────────────────────────────
         function handleRemoteStatus(status) {
             if (!status) return;
             terminalStatus = { ...terminalStatus, ...status };
 
-            // Update header / settings diagnostics
             if (status.freeHeap) {
                 document.getElementById('info-heap').innerText = Math.round(status.freeHeap / 1024) + ' KB';
             }
@@ -2763,7 +2606,6 @@
                 if (ctx.state === 'suspended') ctx.resume();
 
                 if (type === 'ok') {
-                    // Upbeat double-chime (D5 -> A5) matching hardware buzzer
                     const osc1 = ctx.createOscillator();
                     const gain1 = ctx.createGain();
                     osc1.type = 'sine';
@@ -2776,7 +2618,6 @@
                     osc1.start();
                     osc1.stop(ctx.currentTime + 0.3);
                 } else if (type === 'err') {
-                    // Low buzz (A3)
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = 'sawtooth';
@@ -2793,7 +2634,7 @@
 
         function handleRemoteEvent(ev) {
             if (!ev) return;
-            console.log('[OffPay] Received Remote Tap Event (Real-Time):', ev);
+            console.log('[OffPay] Received Remote Tap Event:', ev);
             
             const isSuccess = (ev.status || '').toLowerCase().includes('success');
             playChime(isSuccess ? 'ok' : 'err');
@@ -2817,7 +2658,6 @@
                 if (visual) visual.style.display = 'none';
                 if (cancelBtn) cancelBtn.style.display = 'none';
 
-                // Fast, fluid 180ms micro-transition for visual smoothness
                 setTimeout(() => {
                     showResult(ev);
                 }, 180);
@@ -2979,7 +2819,7 @@
                         <div class="peer-item">
                             <div class="peer-item-info">
                                 <span class="peer-dot"></span>
-                                <span class="peer-name">${esc(peer.name)} ${peer.isCurrent ? '<small style="color:var(--text-muted)">(This Device)</small>' : ''}</span>
+                                <span class="peer-name">${esc(peer.name)} ${peer.isCurrent ? '<small style="color:var(--gray-500)">(This Device)</small>' : ''}</span>
                             </div>
                             <span class="badge badge-ok">${peer.isCurrent ? 'Current' : 'Synced'}</span>
                         </div>
@@ -3099,7 +2939,7 @@
                 btnLan.classList.remove('active');
                 secMqtt.style.display = 'block';
                 secLan.style.display = 'none';
-                modeIcon.innerText = '🌐';
+                modeIcon.innerHTML = SVG_GLOBE;
                 modeLabel.innerText = 'MQTT Cloud';
                 document.getElementById('header-channel-tag').style.display = '';
 
@@ -3109,7 +2949,7 @@
                 btnLan.classList.add('active');
                 secMqtt.style.display = 'none';
                 secLan.style.display = 'block';
-                modeIcon.innerText = '⚡';
+                modeIcon.innerHTML = SVG_ZAP;
                 modeLabel.innerText = 'Direct LAN';
                 document.getElementById('header-channel-tag').style.display = 'none';
 
@@ -3142,7 +2982,7 @@
             document.getElementById('step-data-label').innerText = 'Loading Cards & Transactions';
 
             document.getElementById('conn-text').innerText = 'Connecting';
-            document.getElementById('conn-text').style.color = 'var(--text-muted)';
+            document.getElementById('conn-text').style.color = 'var(--gray-500)';
 
             fetchWithTimeout(API_BASE + '/api/status', {}, 5000)
                 .then(r => r.json())
@@ -3151,7 +2991,7 @@
                     autoConnectAttempts = 0;
                     document.getElementById('conn-dot').classList.add('ok');
                     document.getElementById('conn-text').innerText = 'Online (LAN)';
-                    document.getElementById('conn-text').style.color = 'var(--brand-green-light)';
+                    document.getElementById('conn-text').style.color = 'var(--brand-green-dark)';
 
                     setSyncStep('step-connect', 'done');
                     setSyncStep('step-time', 'active');
@@ -3200,7 +3040,7 @@
                     connected = false;
                     document.getElementById('conn-dot').classList.remove('ok');
                     document.getElementById('conn-text').innerText = 'Offline';
-                    document.getElementById('conn-text').style.color = 'var(--text-muted)';
+                    document.getElementById('conn-text').style.color = 'var(--gray-500)';
 
                     if (showingSyncOverlay) {
                         setSyncStep('step-connect', 'error');
@@ -3277,7 +3117,7 @@
         function renderTransactions(txns) {
             const el = document.getElementById('txn-list');
             if (!txns || !txns.length) {
-                el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted)">No records</td></tr>';
+                el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-500)">No records</td></tr>';
                 return;
             }
             const sorted = [...txns].reverse();
@@ -3285,13 +3125,13 @@
                 const cls = (t.status || '').toLowerCase().includes('success') ? 'badge-ok' : 'badge-err';
                 return `
                     <tr>
-                        <td class="mono" style="color:var(--brand-green-light)">#${t.id}</td>
-                        <td style="color:var(--text-secondary)">${esc(t.timestamp)}</td>
+                        <td class="mono" style="color:var(--black);font-weight:700;">#${t.id}</td>
+                        <td style="color:var(--gray-600)">${esc(t.timestamp)}</td>
                         <td class="mono">${esc(t.uid)}</td>
                         <td><strong>${esc(t.name)}</strong></td>
-                        <td style="font-weight:800;color:var(--text-white);">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
-                        <td class="mono" style="color:var(--text-muted)">${parseFloat(t.prevBal || 0).toFixed(2)}</td>
-                        <td class="mono" style="color:var(--brand-green-light);font-weight:700;">${parseFloat(t.remBal || 0).toFixed(2)}</td>
+                        <td style="font-weight:800;color:var(--black);">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
+                        <td class="mono" style="color:var(--gray-500)">${parseFloat(t.prevBal || 0).toFixed(2)}</td>
+                        <td class="mono" style="color:var(--brand-green-dark);font-weight:800;">${parseFloat(t.remBal || 0).toFixed(2)}</td>
                         <td><span class="badge ${cls}">${esc(t.status)}</span></td>
                     </tr>
                 `;
@@ -3301,7 +3141,7 @@
         function renderRecent(txns) {
             const el = document.getElementById('recent-list');
             if (!txns || !txns.length) {
-                el.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No transactions</td></tr>';
+                el.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">No transactions</td></tr>';
                 return;
             }
             const recent = [...txns].reverse().slice(0, 5);
@@ -3310,10 +3150,10 @@
                 const time = t.timestamp ? (t.timestamp.split(' ')[1] || t.timestamp) : '';
                 return `
                     <tr>
-                        <td style="color:var(--text-secondary);font-family:'JetBrains Mono',monospace;">${esc(time)}</td>
+                        <td style="color:var(--gray-600);font-family:'JetBrains Mono',monospace;">${esc(time)}</td>
                         <td><strong>${esc(t.name)}</strong></td>
-                        <td style="font-weight:800;color:var(--text-white);">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
-                        <td class="mono" style="color:var(--brand-green-light)">${parseFloat(t.remBal || 0).toFixed(2)}</td>
+                        <td style="font-weight:800;color:var(--black);">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
+                        <td class="mono" style="color:var(--brand-green-dark);font-weight:700;">${parseFloat(t.remBal || 0).toFixed(2)}</td>
                         <td><span class="badge ${cls}">${esc(t.status)}</span></td>
                     </tr>
                 `;
@@ -3348,10 +3188,10 @@
                     cardSelectHtml = `
                         <div class="sim-action-banner">
                             <div>
-                                <span style="font-weight:800;font-size:0.78rem;color:var(--brand-green-light);">Simulate Card Tap</span>
-                                <div style="color:var(--text-muted);font-size:0.7rem;">Test instant real-time RFID debit</div>
+                                <span style="font-weight:800;font-size:0.78rem;color:var(--black);">Simulate Card Tap</span>
+                                <div style="color:var(--gray-500);font-size:0.7rem;">Test instant real-time RFID debit</div>
                             </div>
-                            <select class="form-input" id="sim-card-select" style="width:auto;padding:6px 10px;font-size:0.75rem;" onchange="if(this.value){simulateCardTap(this.value);this.value='';}">
+                            <select class="form-input" id="sim-card-select" style="width:auto;padding:5px 8px;font-size:0.75rem;" onchange="if(this.value){simulateCardTap(this.value);this.value='';}">
                                 <option value="">Tap a Card...</option>
                                 ${allCards.map(c => `<option value="${esc(c.uid)}">${esc(c.name)} (NPR ${c.balance})</option>`).join('')}
                             </select>
@@ -3365,9 +3205,9 @@
                     </div>
 
                     <div style="margin-bottom:14px; text-align:center;">
-                        <h2 style="font-size:1.2rem;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px;color:var(--text-white);">Terminal POS Payment</h2>
-                        <div style="font-size:2.2rem;font-weight:900;letter-spacing:-1px;margin-bottom:2px;color:var(--text-white);font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(data.activeAmount).toFixed(2)}</div>
-                        <p style="color:var(--brand-green-light);font-size:0.76rem;font-weight:600;">Encrypted Offline Hardware Authorization</p>
+                        <h2 style="font-size:1.2rem;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px;color:var(--black);">Terminal POS Payment</h2>
+                        <div style="font-size:2.2rem;font-weight:900;letter-spacing:-1px;margin-bottom:2px;color:var(--black);font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(data.activeAmount).toFixed(2)}</div>
+                        <p style="color:var(--brand-green-dark);font-size:0.76rem;font-weight:700;">Encrypted Offline Hardware Authorization</p>
                     </div>
 
                     <!-- Steps Timeline -->
@@ -3395,7 +3235,7 @@
                             <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                         </div>
                     </div>
-                    <p style="color:var(--text-secondary);font-size:0.78rem;margin-bottom:12px;" id="tap-instruction-text">Hold smart card or keyfob against reader</p>
+                    <p style="color:var(--gray-600);font-size:0.78rem;margin-bottom:12px;" id="tap-instruction-text">Hold smart card or keyfob against reader</p>
 
                     ${cardSelectHtml}
 
@@ -3417,9 +3257,9 @@
                             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="#fff" stroke="none"/></svg>
                         </div>
                     </div>
-                    <h2 style="font-size:1.25rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.3px;color:var(--text-white);">Scan New RFID Card</h2>
-                    <p style="font-size:1rem;font-weight:700;margin-bottom:4px;color:var(--brand-green-light);">User ID: ${esc(data.activeUserId || '')}</p>
-                    <p style="color:var(--text-secondary);font-size:0.82rem;margin-bottom:24px">Tap an unregistered card on the terminal sensor.</p>
+                    <h2 style="font-size:1.25rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.3px;color:var(--black);">Scan New RFID Card</h2>
+                    <p style="font-size:1rem;font-weight:700;margin-bottom:4px;color:var(--brand-green-dark);">User ID: ${esc(data.activeUserId || '')}</p>
+                    <p style="color:var(--gray-600);font-size:0.82rem;margin-bottom:24px">Tap an unregistered card on the terminal sensor.</p>
                     <button class="btn btn-outline btn-full" onclick="cancelAction('cards')">Cancel</button>
                 `;
             } else {
@@ -3445,29 +3285,29 @@
 
             if (ok) {
                 modal.innerHTML = `
-                    <div class="result-screen spring-pop">
+                    <div class="result-screen">
                         <div class="result-icon ok">
-                            <svg style="width:34px;height:34px" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-light)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-dark)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                         </div>
-                        <h2 style="font-size:1.35rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.4px;color:var(--brand-green-light)">Payment Approved</h2>
-                        <p style="font-weight:800;font-size:1.05rem;margin-bottom:2px;color:var(--text-white);">${esc(ev.name || 'Verified Cardholder')}</p>
-                        <p style="color:var(--text-muted);font-size:0.76rem;margin-bottom:18px;font-family:'JetBrains Mono',monospace;">${esc(ev.uid)}</p>
+                        <h2 style="font-size:1.35rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.4px;color:var(--brand-green-dark)">Payment Approved</h2>
+                        <p style="font-weight:800;font-size:1.05rem;margin-bottom:2px;color:var(--black);">${esc(ev.name || 'Verified Cardholder')}</p>
+                        <p style="color:var(--gray-500);font-size:0.76rem;margin-bottom:18px;font-family:'JetBrains Mono',monospace;">${esc(ev.uid)}</p>
                         
-                        <div style="border:1px solid var(--border-glass-bright);border-radius:var(--radius-md);padding:18px;text-align:left;margin-bottom:18px;background:rgba(0,0,0,0.4);box-shadow:inset 0 1px 1px rgba(255,255,255,0.1);">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:0.88rem"><span style="color:var(--text-secondary)">Charged Amount</span><strong style="font-size:1.1rem;color:var(--text-white);font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
-                            <div style="display:flex;justify-content:space-between;font-size:0.88rem"><span style="color:var(--text-secondary)">Remaining Vault</span><strong style="color:var(--brand-green-light);font-family:'JetBrains Mono',monospace;font-size:1.05rem;">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
+                        <div style="border:1px solid var(--gray-200);padding:16px;text-align:left;margin-bottom:18px;background:var(--bg-subtle);">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.88rem"><span style="color:var(--gray-600)">Charged Amount</span><strong style="font-size:1.05rem;color:var(--black);font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.88rem"><span style="color:var(--gray-600)">Remaining Vault</span><strong style="color:var(--brand-green-dark);font-family:'JetBrains Mono',monospace;font-size:1.05rem;">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
                         </div>
-                        <p style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px">Auto-closing in 2.5s</p>
+                        <p style="color:var(--gray-500);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px">Auto-closing in 2.5s</p>
                     </div>
                 `;
             } else {
                 modal.innerHTML = `
-                    <div class="result-screen spring-pop">
+                    <div class="result-screen">
                         <div class="result-icon fail">
-                            <svg style="width:34px;height:34px" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </div>
-                        <h2 style="font-size:1.3rem;margin:8px;font-weight:800;letter-spacing:-0.3px;color:#ef4444;">Payment Declined</h2>
-                        <p style="font-weight:600;font-size:0.95rem;margin-bottom:22px;color:var(--text-secondary)">${esc(ev.message || 'Transaction Declined')}</p>
+                        <h2 style="font-size:1.3rem;margin:8px;font-weight:800;letter-spacing:-0.3px;color:var(--danger);">Payment Declined</h2>
+                        <p style="font-weight:600;font-size:0.95rem;margin-bottom:22px;color:var(--gray-700)">${esc(ev.message || 'Transaction Declined')}</p>
                         <button class="btn btn-black btn-full" onclick="closeOverlay()">Close</button>
                     </div>
                 `;
@@ -3539,7 +3379,6 @@
                 return;
             }
 
-            // Deduct balance and log transaction
             card.balance = prevBal - amt;
             const newTxn = {
                 id: allTransactions.length > 0 ? allTransactions[allTransactions.length - 1].id + 1 : 1,
