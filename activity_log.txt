@@ -23,3 +23,4 @@
 [2026-08-22 11:59:14] Commit #23: feat(send): implement dual-engine transfer mode indicator
 [2026-08-22 12:01:23] Commit #24: feat(send): add quick NPR denomination chips (+100, +500, +1000, MAX)
 [2026-08-22 12:03:31] Commit #25: feat(send): add allocated offline bond tokens breakdown preview
+[2026-08-22 12:05:40] Commit #26: feat(receive): build cryptographic payment request QR generator
