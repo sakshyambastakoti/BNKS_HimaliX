@@ -89,6 +89,8 @@ String deviceIP = "Connecting...";
 #include "payment.h"
 #include "web.h"
 #include "mqtt_sync.h"
+#include "web_ui_data.h"
+#include "ota_update.h"
 
 // ══════════════════════════════════════════════════════════════════════
 // ── WiFi STA Connection (connects to your router) ────────────────────
@@ -147,14 +149,38 @@ void connectToWiFi() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// ── API ROUTES (JSON only, no HTML) ──────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// ── WEB & API ROUTES ─────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════
 void setupRoutes() {
 
-  // ── Root — just returns device info ───────────────────────────────
-  server.on("/", HTTP_GET, []() {
+  // ── Web UI Root & Static Files ────────────────────────────────────
+  auto handleServeWebUI = []() {
     sendCORS(server);
-    server.send(200, "application/json", "{\"device\":\"OffPay Terminal\",\"version\":\"2.0\",\"status\":\"online\"}");
+    if (LittleFS.exists("/index.html")) {
+      File f = LittleFS.open("/index.html", "r");
+      server.streamFile(f, "text/html");
+      f.close();
+      return;
+    }
+    if (LittleFS.exists("/off-pay.html")) {
+      File f = LittleFS.open("/off-pay.html", "r");
+      server.streamFile(f, "text/html");
+      f.close();
+      return;
+    }
+    // Fallback to embedded flash UI
+    server.send_P(200, "text/html", EMBEDDED_UI_HTML);
+  };
+
+  server.on("/", HTTP_GET, handleServeWebUI);
+  server.on("/index.html", HTTP_GET, handleServeWebUI);
+  server.on("/off-pay.html", HTTP_GET, handleServeWebUI);
+
+  // ── Info API ──────────────────────────────────────────────────────
+  server.on("/api/info", HTTP_GET, []() {
+    sendCORS(server);
+    server.send(200, "application/json", "{\"device\":\"OffPay Terminal\",\"version\":\"2.0\",\"status\":\"online\",\"ota\":true}");
   });
 
   // ── CORS preflight for all /api/* routes ──────────────────────────
@@ -460,6 +486,10 @@ void setup() {
   setupRoutes();
   server.begin();
 
+  // ── Start OTA Updates (Wireless ArduinoOTA & Web /update) ─────────
+  setupOTA();
+  Serial.println("OTA services initialized.");
+
   // ── Start MQTT Cloud Sync ─────────────────────────────────────────
   setupMQTT();
   Serial.println("MQTT cloud sync initialized.");
@@ -483,6 +513,9 @@ void setup() {
 void loop() {
   // Handle API requests
   server.handleClient();
+
+  // Handle OTA update routines
+  handleOTA();
 
   // Handle MQTT cloud sync
   handleMQTT();
