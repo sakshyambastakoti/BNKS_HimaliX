@@ -1534,11 +1534,15 @@
             bottom: 0;
             background: var(--bg-white);
             z-index: 500;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             transition: opacity 0.3s ease;
+        }
+
+        .sync-overlay.active {
+            display: flex;
         }
 
         .sync-overlay.fade-out {
@@ -2637,7 +2641,7 @@
         // ══════════════════════════════════════════════════════════════
         // ── MQTT CLOUD SYNCHRONIZATION ENGINE ────────────────────────
         // ══════════════════════════════════════════════════════════════
-        function connectMQTT(silent) {
+        function connectMQTT(silent = true) {
             if (typeof mqtt === 'undefined') {
                 console.error('[MQTT] mqtt.js library not loaded!');
                 if (!silent) toast('MQTT library loading...', 'er');
@@ -2649,14 +2653,16 @@
                 try { mqttClient.end(true); } catch (e) { }
             }
 
-            showSyncOverlay();
-            setSyncStep('step-connect', 'active');
-            setSyncStatus('Connecting to MQTT Broker', 'Establishing secure WebSocket tunnel (' + mqttBroker + ')');
-            document.getElementById('step-connect-label').innerText = 'Connecting to MQTT Broker';
-            document.getElementById('step-time-label').innerText = 'Joining Station Channel: ' + mqttChannel;
-            document.getElementById('step-data-label').innerText = 'Synchronizing Cards & Ledger';
+            if (!silent) {
+                showSyncOverlay();
+                setSyncStep('step-connect', 'active');
+                setSyncStatus('Connecting to MQTT Broker', 'Establishing secure WebSocket tunnel (' + mqttBroker + ')');
+                document.getElementById('step-connect-label').innerText = 'Connecting to MQTT Broker';
+                document.getElementById('step-time-label').innerText = 'Joining Station Channel: ' + mqttChannel;
+                document.getElementById('step-data-label').innerText = 'Synchronizing Cards & Ledger';
+            }
 
-            document.getElementById('conn-text').innerText = 'Connecting';
+            document.getElementById('conn-text').innerText = 'Connecting...';
             document.getElementById('conn-text').style.color = 'var(--gray-500)';
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
 
@@ -2687,9 +2693,11 @@
                 document.getElementById('diag-mqtt-status').innerText = 'Connected (WSS)';
                 document.getElementById('diag-mqtt-status').style.color = 'var(--brand-green-dark)';
 
-                setSyncStep('step-connect', 'done');
-                setSyncStep('step-time', 'active');
-                setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
+                if (!silent) {
+                    setSyncStep('step-connect', 'done');
+                    setSyncStep('step-time', 'active');
+                    setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
+                }
 
                 const topics = [
                     `offpay/${mqttChannel}/status`,
@@ -2709,27 +2717,32 @@
                     }
                     console.log('[MQTT] Successfully subscribed to channel topics:', topics);
 
-                    setSyncStep('step-time', 'done');
-                    setSyncStep('step-data', 'active');
-                    setSyncStatus('Syncing Data', 'Broadcasting presence and syncing peer state');
+                    if (!silent) {
+                        setSyncStep('step-time', 'done');
+                        setSyncStep('step-data', 'active');
+                        setSyncStatus('Syncing Data', 'Broadcasting presence and syncing peer state');
+                    }
 
                     mqttAnnouncePresence();
                     mqttSendCmd('request_sync', {});
                     testMQTTPing();
 
                     setTimeout(function () {
-                        setSyncStep('step-data', 'done');
-                        setSyncStep('step-ready', 'done');
-                        setSyncStatus('Terminal Ready', 'Multi-device internet sync active');
-                        document.getElementById('sync-spinner').style.display = 'none';
-
-                        setTimeout(hideSyncOverlay, 600);
-                        if (!silent) toast('Connected to MQTT Cloud (' + mqttChannel + ')', 'ok');
+                        if (!silent) {
+                            setSyncStep('step-data', 'done');
+                            setSyncStep('step-ready', 'done');
+                            setSyncStatus('Terminal Ready', 'Multi-device internet sync active');
+                            document.getElementById('sync-spinner').style.display = 'none';
+                            setTimeout(hideSyncOverlay, 400);
+                            toast('Connected to MQTT Cloud (' + mqttChannel + ')', 'ok');
+                        } else {
+                            hideSyncOverlay();
+                        }
 
                         mqttPublishStatus();
                         mqttPublishCards();
                         mqttPublishTransactions();
-                    }, 800);
+                    }, 400);
                 });
 
                 if (presenceTimer) clearInterval(presenceTimer);
@@ -3264,7 +3277,7 @@
         // ══════════════════════════════════════════════════════════════
         // ── LOCAL LAN HTTP CONNECTION FALLBACK ───────────────────────
         // ══════════════════════════════════════════════════════════════
-        function attemptConnectLAN(silent) {
+        function attemptConnectLAN(silent = true) {
             const ip = document.getElementById('esp-ip').value.trim();
 
             if (sameOriginMode) {
@@ -3278,14 +3291,16 @@
                 localStorage.setItem('offpay_esp_ip', ip);
             }
 
-            showSyncOverlay();
-            setSyncStep('step-connect', 'active');
-            setSyncStatus('Connecting to ESP', 'Connecting to hardware at ' + (sameOriginMode ? window.location.hostname : ip));
-            document.getElementById('step-connect-label').innerText = 'Connecting to ESP Hardware';
-            document.getElementById('step-time-label').innerText = 'Syncing Time Clock';
-            document.getElementById('step-data-label').innerText = 'Loading Cards & Transactions';
+            if (!silent) {
+                showSyncOverlay();
+                setSyncStep('step-connect', 'active');
+                setSyncStatus('Connecting to ESP', 'Connecting to hardware at ' + (sameOriginMode ? window.location.hostname : ip));
+                document.getElementById('step-connect-label').innerText = 'Connecting to ESP Hardware';
+                document.getElementById('step-time-label').innerText = 'Syncing Time Clock';
+                document.getElementById('step-data-label').innerText = 'Loading Cards & Transactions';
+            }
 
-            document.getElementById('conn-text').innerText = 'Connecting';
+            document.getElementById('conn-text').innerText = 'Connecting...';
             document.getElementById('conn-text').style.color = 'var(--gray-500)';
 
             fetchWithTimeout(API_BASE + '/api/status', {}, 5000)
@@ -3297,22 +3312,27 @@
                     document.getElementById('conn-text').innerText = 'Online (LAN)';
                     document.getElementById('conn-text').style.color = 'var(--brand-green-dark)';
 
-                    setSyncStep('step-connect', 'done');
-                    setSyncStep('step-time', 'active');
-                    setSyncStatus('Syncing Time', 'Synchronizing clock with terminal');
+                    if (!silent) {
+                        setSyncStep('step-connect', 'done');
+                        setSyncStep('step-time', 'active');
+                        setSyncStatus('Syncing Time', 'Synchronizing clock with terminal');
+                    }
 
                     const epoch = Math.floor(Date.now() / 1000);
                     return fetchWithTimeout(API_BASE + '/api/time?epoch=' + epoch, { method: 'POST' }, 5000)
                         .catch(function () { })
                         .then(function () {
-                            setSyncStep('step-time', 'done');
-                            setSyncStep('step-data', 'active');
-                            setSyncStatus('Loading Data', 'Fetching cards, transactions and status');
+                            if (!silent) {
+                                setSyncStep('step-time', 'done');
+                                setSyncStep('step-data', 'active');
+                                setSyncStatus('Loading Data', 'Fetching cards, transactions and status');
+                            }
 
                             const p1 = fetchWithTimeout(API_BASE + '/api/cards', {}, 10000)
                                 .then(r => r.json())
                                 .then(cards => {
                                     allCards = cards;
+                                    localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                                     renderCardsSidebar(cards);
                                     updateStatsCounters();
                                 }).catch(function () { });
@@ -3321,13 +3341,111 @@
                                 .then(r => r.json())
                                 .then(txns => {
                                     allTransactions = txns;
+                                    localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
                                     renderTransactions(txns);
                                     renderRecent(txns);
                                     updateStatsCounters();
                                 }).catch(function () { });
 
                             return Promise.all([p1, p2]);
-                function renderTransactions(txns) {
+                        })
+                        .then(function () {
+                            if (!silent) {
+                                setSyncStep('step-data', 'done');
+                                setSyncStep('step-ready', 'done');
+                                setSyncStatus('Terminal Ready', 'All systems operational');
+                                document.getElementById('sync-spinner').style.display = 'none';
+                                setTimeout(hideSyncOverlay, 400);
+                                toast('Connected to OffPay Terminal (LAN)', 'ok');
+                            } else {
+                                hideSyncOverlay();
+                            }
+
+                            startPolling();
+                        });
+                })
+                .catch(err => {
+                    connected = false;
+                    document.getElementById('conn-dot').classList.remove('ok');
+                    document.getElementById('conn-text').innerText = 'Offline';
+                    document.getElementById('conn-text').style.color = 'var(--gray-500)';
+
+                    if (!silent && showingSyncOverlay) {
+                        setSyncStep('step-connect', 'error');
+                        setSyncStatus('LAN Connection Failed', 'Could not reach ESP IP — verify Wi-Fi subnet');
+                        document.getElementById('sync-spinner').style.display = 'none';
+                        document.getElementById('sync-fail-actions').style.display = 'flex';
+                    }
+
+                    if (!silent) toast('LAN Connection failed: ' + err.message, 'er');
+                });
+        }
+
+        function connectESP() {
+            autoConnectAttempts = 0;
+            attemptConnectLAN(false);
+        }
+
+        function api(path, method) {
+            if (connMode === 'mqtt') {
+                return Promise.resolve({ ok: true });
+            }
+            if (!connected) { toast('Not connected to ESP', 'er'); return Promise.reject('Not connected'); }
+            return fetchWithTimeout(API_BASE + path, {
+                method: method || 'GET'
+            }, 20000);
+        }
+
+        function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+                options.signal = AbortSignal.timeout(timeoutMs);
+                return fetch(url, options);
+            }
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeoutMs);
+            options.signal = controller.signal;
+            return fetch(url, options).finally(() => clearTimeout(id));
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        // ── UI RENDERING & DATA MANAGEMENT ───────────────────────────
+        // ══════════════════════════════════════════════════════════════
+        function updateStatsCounters() {
+            document.getElementById('s-cards').innerText = allCards.length;
+            document.getElementById('s-txn-count').innerText = allTransactions.length;
+            let total = 0;
+            allCards.forEach(c => total += parseFloat(c.balance || 0));
+            document.getElementById('s-balance').innerText = 'NPR ' + total.toFixed(2);
+        }
+
+        function renderCardsSidebar(cards) {
+            const el = document.getElementById('cards-sidebar-list');
+            if (!cards || !cards.length) {
+                el.innerHTML = '<div class="empty-state">No cards registered</div>';
+                return;
+            }
+            el.innerHTML = cards.map(c => `
+                <div class="card-item">
+                    <div class="card-item-left">
+                        <div class="mini-card-chip" title="EMV Smart RFID Tag"></div>
+                        <div class="card-info">
+                            <div class="card-name">${esc(c.name)}</div>
+                            <div class="card-uid">${esc(c.uid)} &bull; ${esc(c.userId)}</div>
+                            <div class="card-actions">
+                                <button class="card-action-btn" onclick="editBalance('${esc(c.uid)}', ${c.balance})">Edit</button>
+                                <button class="card-action-btn del" onclick="deleteCard('${esc(c.uid)}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="card-balance">NPR ${parseFloat(c.balance).toFixed(2)}</div>
+                        <div class="card-balance-label">BALANCE</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTransactions(txns) {
             const el = document.getElementById('txn-list');
             if (!txns || !txns.length) {
                 el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:24px;">No transaction records found in ledger</td></tr>';
@@ -3803,6 +3921,7 @@
         function showSyncOverlay() {
             const el = document.getElementById('sync-overlay');
             el.classList.remove('hidden', 'fade-out');
+            el.classList.add('active');
             el.style.display = 'flex';
             showingSyncOverlay = true;
             ['step-connect','step-time','step-data','step-ready'].forEach(id => {
@@ -3831,7 +3950,12 @@
             const el = document.getElementById('sync-overlay');
             if (el) {
                 el.classList.add('fade-out');
-                setTimeout(() => { el.classList.add('hidden'); showingSyncOverlay = false; }, 400);
+                el.classList.remove('active');
+                setTimeout(() => { 
+                    el.classList.add('hidden'); 
+                    el.style.display = 'none'; 
+                    showingSyncOverlay = false; 
+                }, 200);
             }
         }
 
