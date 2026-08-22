@@ -8,6 +8,7 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { useLogStore, type LogEntry } from '@/store/useLogStore';
 import { Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
@@ -101,12 +102,12 @@ export default function LogsScreen() {
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
         ListEmptyComponent={
-          <View style={[styles.emptyState, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-            <ThemedText style={styles.emptyIcon}>📋</ThemedText>
+          <View style={[styles.emptyState, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <SvgIcon name="more" size={36} color={theme.textSecondary} />
             <ThemedText style={[styles.emptyText, { color: theme.text }]}>
               No log traces recorded
             </ThemedText>
-            <ThemedText style={[styles.emptyHint, { color: theme.textMuted }]}>
+            <ThemedText style={[styles.emptyHint, { color: theme.textSecondary }]}>
               Ed25519 cryptography and peer sync events will stream here live.
             </ThemedText>
           </View>
