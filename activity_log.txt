@@ -10,3 +10,4 @@
 [2026-08-22 11:31:23] Commit #10: feat(services): bind Transfer, Payment, Withdraw, Scan Pay, and Top Up
 [2026-08-22 11:33:31] Commit #11: feat(peers): add recent counterparties avatar stream with 1-tap transfer
 [2026-08-22 11:35:40] Commit #12: feat(ledger): create transaction item rows with merchant badges and amounts
+[2026-08-22 11:37:49] Commit #13: feat(tabs): revamp bottom navigation bar with vector home, cards, and accounts
