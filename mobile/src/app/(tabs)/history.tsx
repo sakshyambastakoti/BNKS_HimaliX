@@ -1,7 +1,6 @@
 /**
- * OffPay History Screen — Cryptographic Transaction Ledger
- * Displays full transaction stream with search, stats summary, and filter tabs:
- * All, Sent, Received, Offline Bonds
+ * OffPay History Screen — Transaction Feed & Statements
+ * Matching the clean Mobile Banking layout with search, category filters, and merchant badges.
  */
 
 import React, { useState } from 'react';
@@ -9,19 +8,19 @@ import { View, StyleSheet, ScrollView, Pressable, FlatList, TextInput, Platform 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BrandHeader } from '@/components/BrandHeader';
+import { BankingHeader } from '@/components/BankingHeader';
 import { TransactionItem } from '@/components/TransactionItem';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
-import { MOCK_TRANSACTIONS, type MockTransaction, formatNPR } from '@/constants/mock-data';
+import { MOCK_TRANSACTIONS, formatNPR } from '@/constants/mock-data';
 
 type FilterTab = 'all' | 'sent' | 'received' | 'offline';
 
-const FILTERS: { key: FilterTab; label: string; icon: string }[] = [
-  { key: 'all', label: 'All Ledger', icon: '☰' },
-  { key: 'sent', label: 'Sent', icon: '↗' },
-  { key: 'received', label: 'Received', icon: '↙' },
-  { key: 'offline', label: 'Offline Bonds', icon: '⬡' },
+const FILTERS: { key: FilterTab; label: string }[] = [
+  { key: 'all', label: 'All Transactions' },
+  { key: 'sent', label: 'Transfer Out' },
+  { key: 'received', label: 'Income & Top Up' },
+  { key: 'offline', label: 'Offline Bonds' },
 ];
 
 export default function HistoryScreen() {
@@ -29,19 +28,15 @@ export default function HistoryScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Compute ledger analytics
   const totalSent = MOCK_TRANSACTIONS.filter((t) => t.type === 'sent').reduce((acc, t) => acc + t.amount, 0);
-  const totalReceived = MOCK_TRANSACTIONS.filter((t) => t.type === 'received').reduce((acc, t) => acc + t.amount, 0);
-  const offlineCount = MOCK_TRANSACTIONS.filter((t) => t.isOffline).length;
+  const totalReceived = MOCK_TRANSACTIONS.filter((t) => t.type === 'received' || t.type === 'topup').reduce((acc, t) => acc + t.amount, 0);
 
   const filteredTransactions = MOCK_TRANSACTIONS.filter((tx) => {
-    // Filter by tab
     let matchesTab = true;
     if (activeFilter === 'sent') matchesTab = tx.type === 'sent';
-    else if (activeFilter === 'received') matchesTab = tx.type === 'received';
+    else if (activeFilter === 'received') matchesTab = tx.type === 'received' || tx.type === 'topup';
     else if (activeFilter === 'offline') matchesTab = tx.isOffline;
 
-    // Filter by search query
     const matchesSearch =
       searchQuery.trim() === '' ||
       tx.counterparty.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -53,55 +48,28 @@ export default function HistoryScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        {/* Top Header */}
-        <BrandHeader showBondCount={false} />
+        <BankingHeader />
 
-        {/* Ledger Title & Subtitle */}
-        <View style={styles.header}>
-          <ThemedText style={[styles.title, { color: theme.text }]}>
-            Transaction Ledger
-          </ThemedText>
-          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Decentralized online + offline cryptographic history
-          </ThemedText>
-        </View>
-
-        {/* Stats Summary Bar */}
-        <View style={styles.statsContainer}>
-          <View style={[styles.statBox, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Received</ThemedText>
-            <ThemedText style={[styles.statValue, { color: theme.success }]}>+{formatNPR(totalReceived)}</ThemedText>
-          </View>
-          <View style={[styles.statBox, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Sent</ThemedText>
-            <ThemedText style={[styles.statValue, { color: theme.error }]}>-{formatNPR(totalSent)}</ThemedText>
-          </View>
-          <View style={[styles.statBox, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Offline TXs</ThemedText>
-            <ThemedText style={[styles.statValue, { color: theme.accent }]}>{offlineCount} Verified</ThemedText>
-          </View>
-        </View>
-
-        {/* Search Input */}
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <View style={[styles.searchInputWrapper, { backgroundColor: theme.cardElevated, borderColor: theme.border }]}>
-            <ThemedText style={[styles.searchIcon, { color: theme.textMuted }]}>🔍</ThemedText>
+          <View style={[styles.searchInputWrapper, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.subtle }]}>
+            <ThemedText style={styles.searchIcon}>🔍</ThemedText>
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search counterparty, ID or bond..."
-              placeholderTextColor={theme.textMuted}
+              placeholder="Search merchant, ID or recipient..."
+              placeholderTextColor={theme.textSecondary}
               style={[styles.searchInput, { color: theme.text }]}
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')}>
-                <ThemedText style={[styles.clearSearch, { color: theme.textMuted }]}>✕</ThemedText>
+                <ThemedText style={[styles.clearSearch, { color: theme.textSecondary }]}>✕</ThemedText>
               </Pressable>
             )}
           </View>
         </View>
 
-        {/* Filter Tabs */}
+        {/* Filter Pills */}
         <View style={styles.filterContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             {FILTERS.map((filter) => {
@@ -113,20 +81,20 @@ export default function HistoryScreen() {
                   style={({ pressed }) => [
                     styles.filterTab,
                     {
-                      backgroundColor: isActive ? theme.primary : theme.cardGlass,
-                      borderColor: isActive ? theme.primary : theme.border,
+                      backgroundColor: isActive ? '#0F4A3C' : theme.card,
+                      borderColor: isActive ? '#0F4A3C' : theme.border,
                       opacity: pressed ? 0.8 : 1,
-                      ...(isActive ? Shadows.glowGreen : {}),
+                      ...Shadows.subtle,
                     },
                   ]}
                 >
                   <ThemedText
                     style={[
                       styles.filterLabel,
-                      { color: isActive ? '#07090E' : theme.textSecondary },
+                      { color: isActive ? '#FFFFFF' : theme.textSecondary },
                     ]}
                   >
-                    {filter.icon} {filter.label}
+                    {filter.label}
                   </ThemedText>
                 </Pressable>
               );
@@ -134,7 +102,7 @@ export default function HistoryScreen() {
           </ScrollView>
         </View>
 
-        {/* Transactions FlatList */}
+        {/* Transaction Feed */}
         <FlatList
           data={filteredTransactions}
           keyExtractor={(item) => item.id}
@@ -145,13 +113,10 @@ export default function HistoryScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={[styles.emptyState, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-              <ThemedText style={[styles.emptyIcon]}>📭</ThemedText>
+            <View style={[styles.emptyState, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <ThemedText style={styles.emptyIcon}>📋</ThemedText>
               <ThemedText style={[styles.emptyText, { color: theme.text }]}>
                 No transactions found
-              </ThemedText>
-              <ThemedText style={[styles.emptySubtext, { color: theme.textMuted }]}>
-                Transactions matching your search or filter will appear here.
               </ThemedText>
             </View>
           }
@@ -162,59 +127,18 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
-    paddingBottom: Spacing.two,
-  },
-  title: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: FontSize.xs,
-    marginTop: 2,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-  },
-  statBox: {
-    flex: 1,
-    padding: Spacing.two + 2,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-  },
-  statLabel: {
-    fontSize: FontSize.xxs,
-    fontWeight: FontWeight.bold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extrabold,
-    marginTop: 2,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
   searchContainer: {
     paddingHorizontal: Spacing.four,
-    marginTop: Spacing.three,
+    marginTop: Spacing.two,
   },
   searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
     paddingVertical: Platform.OS === 'ios' ? Spacing.two + 2 : Spacing.one,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     gap: Spacing.two,
   },
@@ -244,8 +168,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: 0.3,
+    fontWeight: FontWeight.bold,
   },
   listContent: {
     paddingHorizontal: Spacing.four,
@@ -253,28 +176,21 @@ const styles = StyleSheet.create({
   },
   separator: {
     height: 1,
-    marginHorizontal: Spacing.two,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.six,
-    paddingHorizontal: Spacing.four,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     marginTop: Spacing.four,
     gap: Spacing.two,
   },
   emptyIcon: {
-    fontSize: 40,
-    marginBottom: Spacing.one,
+    fontSize: 36,
   },
   emptyText: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
-  },
-  emptySubtext: {
-    fontSize: FontSize.xs,
-    textAlign: 'center',
   },
 });
