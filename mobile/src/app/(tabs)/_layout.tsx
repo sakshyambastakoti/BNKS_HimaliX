@@ -1,23 +1,23 @@
 /**
- * OffPay Tab Layout — Matching the Reference Bottom Tab Navigation
- * Tabs: Home (⌂), Accounts (💼), Cards (💳), More (•••)
+ * OffPay Tab Layout — Vector SVG Bottom Tab Navigation
+ * Tabs: Home, Accounts, Ledger, More
  */
 
 import { Tabs } from 'expo-router';
-import { useColorScheme, Platform, View, StyleSheet, Text } from 'react-native';
-import { Colors, BorderRadius, FontSize, FontWeight, Spacing } from '@/constants/theme';
+import { Platform, View, StyleSheet } from 'react-native';
+import { SvgIcon, type IconName } from '@/components/SvgIcons';
+import { useTheme } from '@/hooks/use-theme';
+import { FontWeight } from '@/constants/theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
-  const theme = Colors[scheme];
+  const theme = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#0F4A3C',
-        tabBarInactiveTintColor: '#9AA8BC',
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.tabBarInactive,
         tabBarStyle: {
           backgroundColor: theme.tabBar,
           borderTopColor: theme.tabBarBorder,
@@ -40,7 +40,7 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          marginTop: 2,
+          marginTop: 3,
         },
       }}
     >
@@ -49,7 +49,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="⌂" color={focused ? '#0F4A3C' : color} focused={focused} />
+            <TabSvgIcon iconName="home" color={focused ? theme.primary : color} />
           ),
         }}
       />
@@ -58,7 +58,7 @@ export default function TabLayout() {
         options={{
           title: 'Accounts',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="💼" color={focused ? '#0F4A3C' : color} focused={focused} />
+            <TabSvgIcon iconName="accounts" color={focused ? theme.primary : color} />
           ),
         }}
       />
@@ -67,7 +67,7 @@ export default function TabLayout() {
         options={{
           title: 'Ledger',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="💳" color={focused ? '#0F4A3C' : color} focused={focused} />
+            <TabSvgIcon iconName="cards" color={focused ? theme.primary : color} />
           ),
         }}
       />
@@ -76,7 +76,7 @@ export default function TabLayout() {
         options={{
           title: 'More',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon="•••" color={focused ? '#0F4A3C' : color} focused={focused} />
+            <TabSvgIcon iconName="more" color={focused ? theme.primary : color} />
           ),
         }}
       />
@@ -84,12 +84,10 @@ export default function TabLayout() {
   );
 }
 
-function TabIcon({ icon, color, focused }: { icon: string; color: string; focused: boolean }) {
+function TabSvgIcon({ iconName, color }: { iconName: IconName; color: string }) {
   return (
     <View style={tabStyles.container}>
-      <Text style={[tabStyles.icon, { color, fontSize: icon === '•••' ? 14 : 20 }]}>
-        {icon}
-      </Text>
+      <SvgIcon name={iconName} size={22} color={color} />
     </View>
   );
 }
@@ -99,8 +97,5 @@ const tabStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 26,
-  },
-  icon: {
-    fontWeight: '700',
   },
 });
