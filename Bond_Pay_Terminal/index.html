@@ -3151,7 +3151,10 @@
                 </div>
 
                 <div style="display:flex; gap:8px; margin-top:16px;">
-                    <button class="btn btn-black btn-full" onclick="window.print()">🖨️ Print Receipt</button>
+                    <button class="btn btn-black btn-full" style="display:flex; align-items:center; justify-content:center; gap:8px;" onclick="window.print()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        <span>Print Receipt</span>
+                    </button>
                     <button class="btn btn-outline btn-full" onclick="closeReceiptModal()">Done</button>
                 </div>
             `;
@@ -3492,8 +3495,8 @@
 
             const ok = (ev.status || '').toLowerCase().includes('success');
             const cloudBadge = ev.cloudSynced ? 
-                `<span class="badge badge-ok" style="font-size:0.72rem; padding:4px 8px;">🟢 Stored in Supabase Cloud DB</span>` : 
-                `<span class="badge" style="font-size:0.72rem; padding:4px 8px; background:var(--bg-subtle); border:1px solid var(--gray-300); color:var(--gray-700);">✓ Stored in Local Ledger</span>`;
+                `<span class="badge badge-ok" style="display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; padding:4px 9px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="#059669"><circle cx="12" cy="12" r="10"/></svg> Stored in Supabase Cloud DB</span>` : 
+                `<span class="badge" style="display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; padding:4px 9px; background:var(--bg-subtle); border:1px solid var(--gray-300); color:var(--gray-700);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Stored in Local Ledger</span>`;
 
             window.lastActiveTxn = ev;
 
@@ -3530,8 +3533,9 @@
                         </div>
 
                         <div style="display:flex; gap:8px;">
-                            <button class="btn btn-black btn-full" onclick="openCurrentReceipt()">
-                                <span>🧾 View Receipt / Bill</span>
+                            <button class="btn btn-black btn-full" style="display:flex; align-items:center; justify-content:center; gap:8px;" onclick="openCurrentReceipt()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                <span>View Receipt / Bill</span>
                             </button>
                             <button class="btn btn-outline btn-full" onclick="closeOverlay()">Done</button>
                         </div>
