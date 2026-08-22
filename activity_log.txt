@@ -28,3 +28,4 @@
 [2026-08-22 12:09:57] Commit #28: feat(scan): create cyberpunk HUD camera viewfinder with laser sweep animation
 [2026-08-22 12:12:06] Commit #29: feat(scan): add flashlight torch toggle and developer scan simulators
 [2026-08-22 12:14:14] Commit #30: feat(receipt): implement cryptographic payment confirmation settlement card
+[2026-08-22 12:16:23] Commit #31: feat(receipt): add hardware Ed25519 signature validation trust pill
