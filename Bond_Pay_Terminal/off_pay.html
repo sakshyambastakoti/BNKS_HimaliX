@@ -1513,6 +1513,175 @@
             margin-top: 14px;
             font-size: 0.75rem;
         }
+
+        /* ── Real-Time Step Timeline & Radar Animations ── */
+        .payment-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 16px 0;
+            text-align: left;
+        }
+
+        .p-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--gray-50);
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .p-step::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .p-step.active {
+            background: var(--white);
+            border-color: var(--black);
+            color: var(--black);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transform: scale(1.01);
+        }
+
+        .p-step.active::before {
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+            animation: pulse-dot 0.8s infinite alternate;
+        }
+
+        .p-step.done {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .p-step.done::before {
+            background: #22c55e;
+        }
+
+        @keyframes pulse-dot {
+            from { transform: scale(0.8); opacity: 0.6; }
+            to { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* ── Radar Wave Tap Scanner ── */
+        .radar-box {
+            position: relative;
+            width: 76px;
+            height: 76px;
+            margin: 8px auto 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-wave {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 0, 0, 0.12);
+            animation: radar-expand 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+        }
+
+        .radar-wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .radar-wave:nth-child(3) {
+            animation-delay: 1.0s;
+        }
+
+        .radar-center-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--black);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            z-index: 2;
+        }
+
+        .radar-center-icon svg {
+            width: 22px;
+            height: 22px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        @keyframes radar-expand {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* ── Cryptographic Authorization Spinner ── */
+        .auth-loader-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 14px;
+            margin: 12px 0;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .crypto-spinner-ring {
+            width: 38px;
+            height: 38px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #000;
+            border-right-color: #000;
+            border-radius: 50%;
+            animation: crypto-spin 0.6s linear infinite;
+            margin-bottom: 8px;
+        }
+
+        @keyframes crypto-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .crypto-text {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--black);
+            letter-spacing: -0.2px;
+        }
+
+        .crypto-sub {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            margin-top: 2px;
+        }
+
+        /* ── Spring Pop Result ── */
+        .result-screen.spring-pop {
+            animation: spring-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes spring-in {
+            0% { transform: scale(0.88); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 
@@ -2389,11 +2558,50 @@
             handleState(status);
         }
 
+        // ── Audio Feedback Synthesizer ──────────────────────────────
+        function playChime(type) {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+
+                if (type === 'ok') {
+                    // Upbeat double-chime (D5 -> A5) matching hardware buzzer
+                    const osc1 = ctx.createOscillator();
+                    const gain1 = ctx.createGain();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+                    osc1.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08);
+                    gain1.gain.setValueAtTime(0.18, ctx.currentTime);
+                    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                    osc1.connect(gain1);
+                    gain1.connect(ctx.destination);
+                    osc1.start();
+                    osc1.stop(ctx.currentTime + 0.3);
+                } else if (type === 'err') {
+                    // Low buzz (A3)
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.35);
+                }
+            } catch (e) { }
+        }
+
         function handleRemoteEvent(ev) {
             if (!ev) return;
-            console.log('[OffPay] Received Remote Event:', ev);
+            console.log('[OffPay] Received Remote Tap Event (Real-Time):', ev);
             
-            // Put terminal in processing state, then display result
+            const isSuccess = (ev.status || '').toLowerCase().includes('success');
+            playChime(isSuccess ? 'ok' : 'err');
+
             currentModalState = 'PROCESSING';
             const overlay = document.getElementById('overlay');
             overlay.classList.add('active');
@@ -2401,19 +2609,22 @@
             const s1 = document.getElementById('p-step-1');
             const s2 = document.getElementById('p-step-2');
             const s3 = document.getElementById('p-step-3');
+            const s4 = document.getElementById('p-step-4');
             const visual = document.getElementById('scanner-visual');
             const cancelBtn = document.getElementById('payment-cancel-btn');
 
             if (s1 && s2 && s3) {
                 s1.className = 'p-step done';
                 s2.className = 'p-step done';
-                s3.className = 'p-step active';
+                s3.className = 'p-step done';
+                if (s4) s4.className = 'p-step active';
                 if (visual) visual.style.display = 'none';
                 if (cancelBtn) cancelBtn.style.display = 'none';
 
+                // Fast, fluid 180ms micro-transition for visual smoothness
                 setTimeout(() => {
                     showResult(ev);
-                }, 1200);
+                }, 180);
             } else {
                 showResult(ev);
             }
@@ -2949,11 +3160,11 @@
                     cardSelectHtml = `
                         <div class="sim-action-banner">
                             <div>
-                                <span style="font-weight:700;font-size:0.75rem;">Simulate Card Tap (Demo)</span>
-                                <div style="color:var(--text-muted);font-size:0.7rem;">Test real-time sync without hardware</div>
+                                <span style="font-weight:700;font-size:0.75rem;">Simulate Card Tap (Instant Demo)</span>
+                                <div style="color:var(--text-muted);font-size:0.68rem;">Test real-time MQTT tap & deduct</div>
                             </div>
-                            <select class="form-input" id="sim-card-select" style="width:auto;padding:4px 8px;font-size:0.75rem;" onchange="if(this.value){simulateCardTap(this.value);this.value='';}">
-                                <option value="">Select Card to Tap...</option>
+                            <select class="form-input" id="sim-card-select" style="width:auto;padding:5px 8px;font-size:0.75rem;" onchange="if(this.value){simulateCardTap(this.value);this.value='';}">
+                                <option value="">Tap a Card...</option>
                                 ${allCards.map(c => `<option value="${esc(c.uid)}">${esc(c.name)} (NPR ${c.balance})</option>`).join('')}
                             </select>
                         </div>
@@ -2961,59 +3172,55 @@
                 }
 
                 modal.innerHTML = `
-                    <div style="margin-bottom:20px; text-align:center;">
-                        <h2 style="font-size:1.15rem;font-weight:800;letter-spacing:-0.3px;margin-bottom:6px;">Terminal Payment</h2>
-                        <div style="font-size:1.8rem;font-weight:900;letter-spacing:-0.5px;margin-bottom:2px;">NPR ${parseFloat(data.activeAmount).toFixed(2)}</div>
-                        <p style="color:var(--text-muted);font-size:0.75rem;">Step-by-step transaction details</p>
+                    <div style="margin-bottom:14px; text-align:center;">
+                        <h2 style="font-size:1.15rem;font-weight:800;letter-spacing:-0.3px;margin-bottom:4px;">Terminal Payment</h2>
+                        <div style="font-size:1.9rem;font-weight:900;letter-spacing:-0.5px;margin-bottom:2px;">NPR ${parseFloat(data.activeAmount).toFixed(2)}</div>
+                        <p style="color:var(--text-muted);font-size:0.75rem;">Real-time offline authorization</p>
                     </div>
 
                     <!-- Steps Timeline -->
                     <div class="payment-steps">
-                        <div class="p-step active" id="p-step-1">
-                            <div class="p-step-text">Initializing Terminal Connection</div>
+                        <div class="p-step done" id="p-step-1">
+                            <div class="p-step-text">Terminal Initialized</div>
                         </div>
-                        <div class="p-step" id="p-step-2">
-                            <div class="p-step-text">Waiting for Card Tap</div>
+                        <div class="p-step active" id="p-step-2">
+                            <div class="p-step-text">Waiting for RFID Card Tap</div>
                         </div>
                         <div class="p-step" id="p-step-3">
-                            <div class="p-step-text">Authorizing Transaction</div>
+                            <div class="p-step-text">Authorizing Offline Ledger</div>
                         </div>
                         <div class="p-step" id="p-step-4">
-                            <div class="p-step-text">Finished</div>
+                            <div class="p-step-text">Payment Settled</div>
                         </div>
                     </div>
 
-                    <!-- Pulse Scanner Ring -->
-                    <div class="scanner-container" id="scanner-visual" style="display:none; margin-bottom:20px;">
-                        <div class="scanner-ring" style="width:64px; height:64px; margin: 0 auto;">
-                            <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <!-- Radar Wave Tap Scanner Visual -->
+                    <div class="radar-box" id="scanner-visual">
+                        <div class="radar-wave"></div>
+                        <div class="radar-wave"></div>
+                        <div class="radar-wave"></div>
+                        <div class="radar-center-icon">
+                            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                         </div>
-                        <p style="color:var(--text-muted);font-size:0.75rem;margin-top:10px;">Tap RFID card on terminal</p>
                     </div>
+                    <p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:12px;" id="tap-instruction-text">Tap RFID card or NFC tag on terminal</p>
 
                     ${cardSelectHtml}
 
-                    <button class="btn btn-outline" id="payment-cancel-btn" onclick="cancelAction('payment')" style="width:100%;margin-top:16px;">Cancel</button>
+                    <button class="btn btn-outline" id="payment-cancel-btn" onclick="cancelAction('payment')" style="width:100%;margin-top:14px;">Cancel</button>
                 `;
-
-                // Animate Step 1 -> Step 2
-                setTimeout(() => {
-                    if (currentModalState !== 'PAYMENT') return;
-                    const s1 = document.getElementById('p-step-1');
-                    const s2 = document.getElementById('p-step-2');
-                    const visual = document.getElementById('scanner-visual');
-                    if (s1) s1.className = 'p-step done';
-                    if (s2) s2.className = 'p-step active';
-                    if (visual) visual.style.display = 'block';
-                }, 800);
 
             } else if (data.mode === 'ADD_CARD') {
                 if (currentModalState === 'ADD_CARD') return;
                 currentModalState = 'ADD_CARD';
                 overlay.classList.add('active');
                 modal.innerHTML = `
-                    <div class="scanner-ring">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="var(--black)" stroke="none"/></svg>
+                    <div class="radar-box">
+                        <div class="radar-wave"></div>
+                        <div class="radar-wave"></div>
+                        <div class="radar-center-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="#fff" stroke="none"/></svg>
+                        </div>
                     </div>
                     <h2 style="font-size:1.2rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.3px">Scan New Card</h2>
                     <p style="font-size:1rem;font-weight:700;margin-bottom:4px">User ID: ${esc(data.activeUserId || '')}</p>
@@ -3023,26 +3230,7 @@
             } else {
                 if (data.lastEvent && data.lastEvent.processed === false) {
                     if (currentModalState === 'PROCESSING' || currentModalState === 'RESULT') return;
-                    currentModalState = 'PROCESSING';
-                    overlay.classList.add('active');
-
-                    const s1 = document.getElementById('p-step-1');
-                    const s2 = document.getElementById('p-step-2');
-                    const s3 = document.getElementById('p-step-3');
-                    const visual = document.getElementById('scanner-visual');
-                    const cancelBtn = document.getElementById('payment-cancel-btn');
-
-                    if (s1 && s2 && s3) {
-                        s1.className = 'p-step done';
-                        s2.className = 'p-step done';
-                        s3.className = 'p-step active';
-                        if (visual) visual.style.display = 'none';
-                        if (cancelBtn) cancelBtn.style.display = 'none';
-
-                        setTimeout(() => { showResult(data.lastEvent); }, 1400);
-                    } else {
-                        showResult(data.lastEvent);
-                    }
+                    handleRemoteEvent(data.lastEvent);
                 } else if (!modal.querySelector('.result-screen') && currentModalState !== 'PROCESSING') {
                     if (currentModalState !== '') {
                         overlay.classList.remove('active');
@@ -3062,27 +3250,27 @@
 
             if (ok) {
                 modal.innerHTML = `
-                    <div class="result-screen">
-                        <div class="result-icon ok">
-                            <svg style="width:28px;height:28px" viewBox="0 0 24 24" fill="none" stroke="var(--black)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <div class="result-screen spring-pop">
+                        <div class="result-icon ok" style="background:#f0fdf4;border-color:#22c55e;">
+                            <svg style="width:28px;height:28px" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                         </div>
-                        <h2 style="font-size:1.2rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.3px">Payment Successful</h2>
-                        <p style="font-weight:600;font-size:0.95rem;margin-bottom:2px">${esc(ev.name || '')}</p>
+                        <h2 style="font-size:1.25rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.3px;color:#166534">Payment Successful</h2>
+                        <p style="font-weight:700;font-size:0.98rem;margin-bottom:2px">${esc(ev.name || 'Verified Cardholder')}</p>
                         <p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:16px;font-family:monospace">${esc(ev.uid)}</p>
-                        <div style="border:1px solid var(--border);padding:16px;text-align:left;margin-bottom:16px">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.85rem"><span style="color:var(--text-muted)">Charged</span><strong>NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
-                            <div style="display:flex;justify-content:space-between;font-size:0.85rem"><span style="color:var(--text-muted)">Remaining</span><strong>NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
+                        <div style="border:1px solid var(--border);border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;background:#fafafa;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.85rem"><span style="color:var(--text-muted)">Charged Amount</span><strong style="font-size:1rem;color:#000;">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.85rem"><span style="color:var(--text-muted)">Remaining Balance</span><strong style="color:#16a34a;">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
                         </div>
-                        <p style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px">Auto-closing in 3s</p>
+                        <p style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px">Auto-closing in 2.5s</p>
                     </div>
                 `;
             } else {
                 modal.innerHTML = `
-                    <div class="result-screen">
+                    <div class="result-screen spring-pop">
                         <div class="result-icon fail">
                             <svg style="width:28px;height:28px" viewBox="0 0 24 24" fill="none" stroke="var(--white)" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </div>
-                        <h2 style="font-size:1.2rem;margin:8px;font-weight:800;letter-spacing:-0.3px">Failed</h2>
+                        <h2 style="font-size:1.2rem;margin:8px;font-weight:800;letter-spacing:-0.3px">Payment Declined</h2>
                         <p style="font-weight:500;font-size:0.92rem;margin-bottom:20px;color:var(--text-secondary)">${esc(ev.message || 'Transaction Declined')}</p>
                         <button class="btn btn-black btn-full" onclick="closeOverlay()">Close</button>
                     </div>
@@ -3092,7 +3280,7 @@
             if (connMode === 'lan') {
                 api('/api/status/acknowledge-event', 'POST').catch(function () { });
             }
-            setTimeout(closeOverlay, 3500);
+            setTimeout(closeOverlay, 2800);
         }
 
         function closeOverlay() {
