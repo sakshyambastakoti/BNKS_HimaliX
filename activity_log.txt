@@ -12,3 +12,4 @@
 [2026-08-22 11:35:40] Commit #12: feat(ledger): create transaction item rows with merchant badges and amounts
 [2026-08-22 11:37:49] Commit #13: feat(tabs): revamp bottom navigation bar with vector home, cards, and accounts
 [2026-08-22 11:39:57] Commit #14: feat(account): build All Accounts & Summary dashboard view
+[2026-08-22 11:42:06] Commit #15: feat(account): add dual overlapping card visual graphic and balance metrics
