@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Alert, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { OffPayLogo } from '@/components/OffPayLogo';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
 
@@ -45,14 +46,16 @@ export default function PaymentConfirmationScreen() {
             styles.iconBubble,
             {
               backgroundColor: status === 'success' ? theme.successBg : theme.warningBg,
-              borderColor: status === 'success' ? theme.success : theme.warning,
+              borderColor: status === 'success' ? theme.primary : theme.warning,
               ...(status === 'success' ? Shadows.glowGreen : {}),
             },
           ]}
         >
-          <ThemedText style={[styles.statusIcon, { color: status === 'success' ? theme.success : theme.warning }]}>
-            {status === 'success' ? '✓' : '⏳'}
-          </ThemedText>
+          <SvgIcon
+            name={status === 'success' ? 'check' : 'sync'}
+            size={36}
+            color={status === 'success' ? theme.primary : theme.warning}
+          />
         </View>
 
         {/* Status Title & Subtitle */}
@@ -67,7 +70,7 @@ export default function PaymentConfirmationScreen() {
 
         {/* Cryptographic Receipt Card */}
         {status === 'success' && (
-          <View style={[styles.receiptCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
+          <View style={[styles.receiptCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
             {/* Amount Hero */}
             <View style={styles.receiptAmountRow}>
               <ThemedText style={[styles.receiptCurrency, { color: theme.primary }]}>NPR</ThemedText>
@@ -75,9 +78,10 @@ export default function PaymentConfirmationScreen() {
             </View>
 
             {/* Signature Verified Pill */}
-            <View style={[styles.proofPill, { backgroundColor: theme.primaryGlow, borderColor: theme.primary + '40' }]}>
+            <View style={[styles.proofPill, { backgroundColor: theme.successBg, borderColor: theme.primary + '40' }]}>
+              <SvgIcon name="shield" size={14} color={theme.primary} />
               <ThemedText style={[styles.proofText, { color: theme.primary }]}>
-                ✓ HARDWARE ED25519 SIGNATURE VALID
+                HARDWARE ED25519 SIGNATURE VALID
               </ThemedText>
             </View>
 
@@ -101,15 +105,14 @@ export default function PaymentConfirmationScreen() {
               style={({ pressed }) => [
                 styles.doneButton,
                 {
-                  backgroundColor: theme.primary,
+                  backgroundColor: theme.primaryDark,
                   opacity: pressed ? 0.88 : 1,
                   transform: [{ scale: pressed ? 0.98 : 1 }],
-                  ...Shadows.glowGreen,
                 },
               ]}
             >
               <ThemedText style={styles.doneButtonText}>
-                Return to Dashboard
+                Done & Return to Vault
               </ThemedText>
             </Pressable>
 
@@ -118,14 +121,15 @@ export default function PaymentConfirmationScreen() {
               style={({ pressed }) => [
                 styles.shareButton,
                 {
-                  backgroundColor: theme.cardGlass,
+                  backgroundColor: theme.card,
                   borderColor: theme.border,
                   opacity: pressed ? 0.75 : 1,
                 },
               ]}
             >
+              <SvgIcon name="copy" size={16} color={theme.text} />
               <ThemedText style={[styles.shareButtonText, { color: theme.text }]}>
-                Export Cryptographic Receipt
+                Export Receipt Cryptogram
               </ThemedText>
             </Pressable>
           </View>
@@ -139,14 +143,14 @@ function ReceiptRow({
   label,
   value,
   theme,
-  highlight,
   mono,
+  highlight,
 }: {
   label: string;
   value: string;
   theme: any;
-  highlight?: boolean;
   mono?: boolean;
+  highlight?: boolean;
 }) {
   return (
     <View style={receiptStyles.row}>
@@ -157,12 +161,10 @@ function ReceiptRow({
         style={[
           receiptStyles.value,
           {
-            color: highlight ? theme.accent : theme.text,
+            color: highlight ? theme.primary : theme.text,
             fontFamily: mono ? 'monospace' : undefined,
-            fontWeight: highlight ? FontWeight.bold : FontWeight.medium,
           },
         ]}
-        numberOfLines={1}
       >
         {value}
       </ThemedText>
@@ -173,102 +175,102 @@ function ReceiptRow({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.five,
+    padding: Spacing.four,
     alignItems: 'center',
+    paddingBottom: Spacing.six,
   },
   logoRow: {
+    marginTop: Spacing.two,
     marginBottom: Spacing.four,
   },
   iconBubble: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.three,
-  },
-  statusIcon: {
-    fontSize: 44,
-    fontWeight: FontWeight.black,
+    marginBottom: Spacing.four,
   },
   title: {
     fontSize: FontSize.xl,
     fontWeight: FontWeight.black,
-    letterSpacing: -0.5,
     textAlign: 'center',
+    marginBottom: Spacing.one,
   },
   subtitle: {
     fontSize: FontSize.xs,
-    marginTop: 4,
     textAlign: 'center',
-    marginBottom: Spacing.four,
+    marginBottom: Spacing.five,
   },
   receiptCard: {
     width: '100%',
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     padding: Spacing.four,
-    gap: Spacing.two + 2,
+    gap: Spacing.three,
   },
   receiptAmountRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     justifyContent: 'center',
-    gap: Spacing.one,
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
   },
   receiptCurrency: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.black,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.extrabold,
   },
   receiptAmount: {
     fontSize: FontSize.hero,
     fontWeight: FontWeight.black,
-    letterSpacing: -1.5,
   },
   proofPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     paddingVertical: Spacing.one + 2,
     paddingHorizontal: Spacing.three,
     borderRadius: BorderRadius.full,
     borderWidth: 1,
-    alignSelf: 'center',
-    marginBottom: Spacing.one,
   },
   proofText: {
     fontSize: 10,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: 0.8,
+    fontWeight: FontWeight.black,
+    letterSpacing: 0.5,
   },
   divider: {
     height: 1,
-    marginVertical: Spacing.two,
   },
   actionsSection: {
     width: '100%',
-    marginTop: Spacing.five,
     gap: Spacing.two + 2,
+    marginTop: Spacing.five,
   },
   doneButton: {
-    paddingVertical: Spacing.three + 4,
+    paddingVertical: Spacing.four,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   doneButtonText: {
-    color: '#07090E',
-    fontSize: FontSize.md,
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   shareButton: {
-    paddingVertical: Spacing.three + 2,
+    flexDirection: 'row',
+    paddingVertical: Spacing.three,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
   },
   shareButtonText: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.xs + 1,
     fontWeight: FontWeight.bold,
   },
 });
@@ -278,15 +280,13 @@ const receiptStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 2,
   },
   label: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.xxs,
     fontWeight: FontWeight.medium,
   },
   value: {
     fontSize: FontSize.xs,
-    maxWidth: '58%',
-    textAlign: 'right',
+    fontWeight: FontWeight.bold,
   },
 });
