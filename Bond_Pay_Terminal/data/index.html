@@ -2192,6 +2192,64 @@
         </div>
     </div>
 
+    <!-- ═══ EDIT CARD DETAILS MODAL ═══ -->
+    <div id="edit-card-modal" class="overlay">
+        <div class="modal edit-card-modal-content" style="max-width:440px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:36px; height:36px; border-radius:8px; background:var(--brand-green-soft); color:var(--brand-green-dark); display:flex; align-items:center; justify-content:center;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.3px; margin: 0; color:var(--black);">Edit Customer Card</h2>
+                        <p style="color: var(--gray-500); font-size: 0.76rem; margin: 2px 0 0 0;">Update cardholder info, user tag & cryptographic vault balance</p>
+                    </div>
+                </div>
+                <button type="button" class="modal-close-btn" onclick="closeEditCardModal()">&times;</button>
+            </div>
+
+            <form id="edit-card-form" onsubmit="saveEditedCard(event)">
+                <input type="hidden" id="edit-card-orig-uid">
+
+                <div class="form-group">
+                    <label class="form-label">RFID Hardware UID</label>
+                    <input type="text" class="form-input mono" id="edit-card-uid" readonly style="background:var(--bg-subtle); font-weight:700; color:var(--brand-green-dark);">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Customer / Cardholder Name</label>
+                    <input type="text" class="form-input" id="edit-card-name" required placeholder="e.g. Sakshyam Bastakoti" style="font-weight:700;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">User ID / Tag Code</label>
+                    <input type="text" class="form-input" id="edit-card-userid" required placeholder="e.g. USR-001">
+                </div>
+
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label class="form-label">Vault Balance (NPR)</label>
+                    <div style="position:relative;">
+                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:800; font-size:0.85rem; color:var(--gray-500);">NPR</span>
+                        <input type="number" class="form-input mono" id="edit-card-balance" required min="0" step="0.01" style="padding-left:48px; font-size:1.1rem; font-weight:800; color:var(--black);">
+                    </div>
+                </div>
+
+                <!-- Quick Top-up buttons -->
+                <div style="display:flex; gap:6px; margin-bottom:18px;">
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(100)">+100</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(500)">+500</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(1000)">+1,000</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(2500)">+2,500</button>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" class="btn btn-black" style="flex:2;">Save Changes</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; color:var(--danger); border-color:var(--danger-border);" onclick="deleteFromEditModal()">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ═══ THERMAL RECEIPT MODAL ═══ -->
     <div id="receipt-modal" class="overlay">
         <div class="modal thermal-receipt" id="thermal-receipt-content" style="max-width:380px;">
@@ -2833,7 +2891,7 @@
                         <div class="smart-card-balance">NPR ${parseFloat(c.balance || 0).toFixed(2)}</div>
                         <div class="card-actions-mini">
                             <button class="card-action-mini-btn" onclick="quickChargeCard('${esc(c.uid)}', '${esc(c.name)}', ${c.balance})" title="Select for Charge">Charge</button>
-                            <button class="card-action-mini-btn" onclick="editBalance('${esc(c.uid)}', ${c.balance})" title="Edit Vault">Edit</button>
+                            <button class="card-action-mini-btn" onclick="openEditCardModal('${esc(c.uid)}')" title="Edit Cardholder & Balance">Edit</button>
                             <button class="card-action-mini-btn" onclick="deleteCard('${esc(c.uid)}')" title="Delete" style="color:var(--danger);">&times;</button>
                         </div>
                     </div>
@@ -3362,31 +3420,74 @@
             toast(`Card registered for ${n} ${suOk ? '(Saved to Supabase DB)' : ''}!`, 'ok');
         }
 
-        async function editBalance(uid, current) {
-            const val = prompt('New balance (NPR) for card ' + uid + ':', current);
-            if (val === null) return;
-            const num = parseFloat(val);
-            if (isNaN(num) || num < 0) return toast('Invalid balance', 'er');
+        function openEditCardModal(uid) {
+            playAudioTone('click');
+            const card = allCards.find(c => (c.uid || '').toLowerCase() === (uid || '').toLowerCase());
+            if (!card) return toast('Card not found', 'er');
 
-            const idx = allCards.findIndex(c => c.uid.toLowerCase() === uid.toLowerCase());
-            if (idx !== -1) {
-                allCards[idx].balance = num;
-                localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
-                renderCardsSidebar(allCards);
-                updateStatsCounters();
+            document.getElementById('edit-card-orig-uid').value = card.uid;
+            document.getElementById('edit-card-uid').value = card.uid;
+            document.getElementById('edit-card-name').value = card.name || '';
+            document.getElementById('edit-card-userid').value = card.userId || 'USR';
+            document.getElementById('edit-card-balance').value = parseFloat(card.balance || 0).toFixed(2);
 
-                // Directly update in Supabase
-                let suOk = false;
-                if (supabaseClient) {
-                    suOk = await syncCardToSupabase(allCards[idx]);
-                }
+            document.getElementById('edit-card-modal').classList.add('active');
+        }
 
-                if (connMode === 'mqtt') {
-                    mqttPublishCards();
-                    mqttSendCmd('update_balance', { uid, balance: num });
-                }
-                toast(`Balance updated to NPR ${num.toFixed(2)} ${suOk ? '(Supabase Synced)' : ''}`, 'ok');
+        function closeEditCardModal() {
+            playAudioTone('click');
+            document.getElementById('edit-card-modal').classList.remove('active');
+        }
+
+        function addQuickBalance(amt) {
+            playAudioTone('click');
+            const input = document.getElementById('edit-card-balance');
+            const current = parseFloat(input.value) || 0;
+            input.value = (current + amt).toFixed(2);
+        }
+
+        async function saveEditedCard(e) {
+            e.preventDefault();
+            playAudioTone('click');
+
+            const origUid = document.getElementById('edit-card-orig-uid').value;
+            const name = document.getElementById('edit-card-name').value.trim();
+            const userId = document.getElementById('edit-card-userid').value.trim();
+            const balance = parseFloat(document.getElementById('edit-card-balance').value) || 0;
+
+            const idx = allCards.findIndex(c => (c.uid || '').toLowerCase() === origUid.toLowerCase());
+            if (idx === -1) return toast('Card not found', 'er');
+
+            allCards[idx].name = name;
+            allCards[idx].userId = userId;
+            allCards[idx].balance = balance;
+
+            localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+            renderCardsSidebar(allCards);
+            updateStatsCounters();
+
+            // Update in Supabase
+            let suOk = false;
+            if (supabaseClient) {
+                suOk = await syncCardToSupabase(allCards[idx]);
             }
+
+            // Broadcast to Hardware & MQTT
+            if (connMode === 'mqtt') {
+                mqttPublishCards();
+                mqttSendCmd('update_balance', { uid: origUid, balance, name, userId });
+            } else if (connMode === 'lan' && API_BASE) {
+                fetch(API_BASE + '/api/cards/update-balance?uid=' + encodeURIComponent(origUid) + '&balance=' + balance, { method: 'POST' }).catch(() => {});
+            }
+
+            closeEditCardModal();
+            toast(`Card details saved for ${name} ${suOk ? '(Supabase Synced)' : ''}!`, 'ok');
+        }
+
+        function deleteFromEditModal() {
+            const uid = document.getElementById('edit-card-orig-uid').value;
+            closeEditCardModal();
+            deleteCard(uid);
         }
 
         async function deleteCard(uid) {
