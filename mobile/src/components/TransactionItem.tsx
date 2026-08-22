@@ -1,6 +1,6 @@
 /**
- * TransactionItem — Individual transaction row for history lists
- * Shows type icon, counterparty, time, amount, status, and offline badge.
+ * TransactionItem — High-fidelity Ledger Transaction Row
+ * Displays counterparty, cryptographic offline badges, time, formatted amount, and status pill.
  */
 
 import React from 'react';
@@ -16,25 +16,28 @@ interface TransactionItemProps {
 }
 
 const typeConfig = {
-  sent: { icon: '↗', color: 'error' as const, prefix: '-' },
-  received: { icon: '↙', color: 'success' as const, prefix: '+' },
-  topup: { icon: '⊕', color: 'info' as const, prefix: '+' },
-  bond_load: { icon: '⬡', color: 'warning' as const, prefix: '-' },
-  bond_reverse: { icon: '↩', color: 'info' as const, prefix: '+' },
-  sync: { icon: '⟳', color: 'success' as const, prefix: '' },
+  sent: { icon: '↗', colorKey: 'error' as const, prefix: '-', label: 'Sent' },
+  received: { icon: '↙', colorKey: 'success' as const, prefix: '+', label: 'Received' },
+  topup: { icon: '⊕', colorKey: 'info' as const, prefix: '+', label: 'Top Up' },
+  bond_load: { icon: '⬡', colorKey: 'warning' as const, prefix: '⚡', label: 'Bond Mint' },
+  bond_reverse: { icon: '↩', colorKey: 'cyan' as const, prefix: '↩', label: 'Bond Release' },
+  sync: { icon: '⟳', colorKey: 'success' as const, prefix: '✓', label: 'Synced' },
 };
 
 const statusConfig = {
-  completed: { label: '✓', color: 'success' as const },
-  pending: { label: '⏳', color: 'warning' as const },
-  failed: { label: '✗', color: 'error' as const },
-  synced: { label: '☁ synced', color: 'info' as const },
+  completed: { label: 'Settled', colorKey: 'success' as const },
+  pending: { label: 'Pending Sync', colorKey: 'warning' as const },
+  failed: { label: 'Failed', colorKey: 'error' as const },
+  synced: { label: 'Validated', colorKey: 'info' as const },
 };
 
 export function TransactionItem({ transaction, onPress }: TransactionItemProps) {
   const theme = useTheme();
-  const type = typeConfig[transaction.type];
-  const status = statusConfig[transaction.status];
+  const type = typeConfig[transaction.type] ?? typeConfig.sent;
+  const status = statusConfig[transaction.status] ?? statusConfig.completed;
+
+  const typeColor = theme[type.colorKey];
+  const statusColor = theme[status.colorKey];
 
   return (
     <Pressable
@@ -46,19 +49,22 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
         },
       ]}
     >
-      {/* Icon */}
+      {/* Icon Bubble */}
       <View
         style={[
           styles.iconContainer,
-          { backgroundColor: theme[type.color] + '18' },
+          {
+            backgroundColor: typeColor + '18',
+            borderColor: typeColor + '30',
+          },
         ]}
       >
-        <ThemedText style={[styles.icon, { color: theme[type.color] }]}>
+        <ThemedText style={[styles.icon, { color: typeColor }]}>
           {type.icon}
         </ThemedText>
       </View>
 
-      {/* Details */}
+      {/* Center Details */}
       <View style={styles.details}>
         <View style={styles.topRow}>
           <ThemedText style={[styles.counterparty, { color: theme.text }]} numberOfLines={1}>
@@ -67,28 +73,33 @@ export function TransactionItem({ transaction, onPress }: TransactionItemProps) 
           <ThemedText
             style={[
               styles.amount,
-              { color: theme[type.color] },
+              { color: transaction.type === 'received' ? theme.success : theme.text },
             ]}
           >
             {type.prefix}{formatNPR(transaction.amount)}
           </ThemedText>
         </View>
+
         <View style={styles.bottomRow}>
-          <View style={styles.metaRow}>
+          <View style={styles.metaGroup}>
             <ThemedText style={[styles.time, { color: theme.textMuted }]}>
               {formatTime(transaction.timestamp)}
             </ThemedText>
+
             {transaction.isOffline && (
-              <View style={[styles.offlineBadge, { backgroundColor: theme.accent + '20', borderColor: theme.accent + '40' }]}>
+              <View style={[styles.offlineBadge, { backgroundColor: theme.accent + '20', borderColor: theme.accent + '50' }]}>
                 <ThemedText style={[styles.offlineText, { color: theme.accent }]}>
-                  OFFLINE
+                  OFFLINE BOND
                 </ThemedText>
               </View>
             )}
           </View>
-          <ThemedText style={[styles.status, { color: theme[status.color] }]}>
-            {status.label}
-          </ThemedText>
+
+          <View style={[styles.statusPill, { backgroundColor: statusColor + '15' }]}>
+            <ThemedText style={[styles.statusText, { color: statusColor }]}>
+              {status.label}
+            </ThemedText>
+          </View>
         </View>
       </View>
     </Pressable>
@@ -107,12 +118,13 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 44,
     height: 44,
-    borderRadius: BorderRadius.md,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
   },
   icon: {
-    fontSize: FontSize.xl,
+    fontSize: FontSize.lg,
     fontWeight: FontWeight.bold,
   },
   details: {
@@ -126,20 +138,20 @@ const styles = StyleSheet.create({
   },
   counterparty: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
+    fontWeight: FontWeight.bold,
     flex: 1,
     marginRight: Spacing.two,
   },
   amount: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.extrabold,
   },
   bottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  metaRow: {
+  metaGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
@@ -148,18 +160,23 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
   },
   offlineBadge: {
-    paddingHorizontal: Spacing.one + 2,
-    paddingVertical: 1,
-    borderRadius: BorderRadius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xs,
     borderWidth: 1,
   },
   offlineText: {
     fontSize: 9,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.extrabold,
     letterSpacing: 0.5,
   },
-  status: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.medium,
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  statusText: {
+    fontSize: FontSize.xxs,
+    fontWeight: FontWeight.bold,
   },
 });

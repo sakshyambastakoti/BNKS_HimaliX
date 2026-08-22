@@ -1,20 +1,21 @@
 /**
- * ActionButton — Large, gradient-filled action buttons with press animation
- * Used for Send/Receive and other primary actions.
+ * ActionButton — High-impact Action Button
+ * Provides primary neon-gradient fill, glass secondary, and outline styling with tactile micro-interactions.
  */
 
 import React from 'react';
 import { Pressable, StyleSheet, View, Platform } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
-import { BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
+import { BorderRadius, Spacing, FontSize, FontWeight, Shadows } from '@/constants/theme';
 
 interface ActionButtonProps {
   title: string;
   icon: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'accent' | 'outline';
   size?: 'large' | 'medium' | 'small';
+  badge?: string;
 }
 
 export function ActionButton({
@@ -23,43 +24,48 @@ export function ActionButton({
   onPress,
   variant = 'primary',
   size = 'large',
+  badge,
 }: ActionButtonProps) {
   const theme = useTheme();
 
   const isPrimary = variant === 'primary';
+  const isAccent = variant === 'accent';
   const isSecondary = variant === 'secondary';
   const isOutline = variant === 'outline';
 
-  const bgColor = isPrimary
-    ? theme.primary
-    : isSecondary
-      ? theme.cardElevated
-      : 'transparent';
+  let backgroundColor: string = theme.primary;
+  let textColor: string = '#07090E';
+  let borderColor: string = 'transparent';
 
-  const textColor = isPrimary
-    ? '#0A0A0F'
-    : isSecondary
-      ? theme.text
-      : theme.primary;
-
-  const borderColor = isOutline ? theme.primary : 'transparent';
+  if (isAccent) {
+    backgroundColor = theme.accent;
+    textColor = '#07090E';
+  } else if (isSecondary) {
+    backgroundColor = theme.cardElevated;
+    textColor = theme.text;
+    borderColor = theme.border;
+  } else if (isOutline) {
+    backgroundColor = 'transparent';
+    textColor = theme.primary;
+    borderColor = theme.primary;
+  }
 
   const sizeStyles = {
-    large: { paddingVertical: Spacing.three + 4, paddingHorizontal: Spacing.four },
+    large: { paddingVertical: Spacing.four, paddingHorizontal: Spacing.four },
     medium: { paddingVertical: Spacing.three, paddingHorizontal: Spacing.four },
     small: { paddingVertical: Spacing.two + 2, paddingHorizontal: Spacing.three },
   };
 
-  const iconSizeStyles = {
+  const iconSizes = {
     large: FontSize.xxl,
     medium: FontSize.xl,
-    small: FontSize.lg,
+    small: FontSize.md,
   };
 
-  const textSizeStyles = {
-    large: FontSize.lg,
-    medium: FontSize.md,
-    small: FontSize.sm,
+  const textSizes = {
+    large: FontSize.md,
+    medium: FontSize.sm,
+    small: FontSize.xs,
   };
 
   return (
@@ -69,40 +75,54 @@ export function ActionButton({
         styles.container,
         sizeStyles[size],
         {
-          backgroundColor: bgColor,
-          borderColor: borderColor,
-          borderWidth: isOutline ? 1.5 : 0,
-          opacity: pressed ? 0.85 : 1,
+          backgroundColor,
+          borderColor,
+          borderWidth: isOutline || isSecondary ? 1 : 0,
+          opacity: pressed ? 0.88 : 1,
           transform: [{ scale: pressed ? 0.97 : 1 }],
-          ...Platform.select({
-            ios: {
-              shadowColor: isPrimary ? theme.primary : '#000',
-              shadowOffset: { width: 0, height: isPrimary ? 4 : 2 },
-              shadowOpacity: isPrimary ? 0.35 : 0.1,
-              shadowRadius: isPrimary ? 12 : 4,
-            },
-            android: {
-              elevation: isPrimary ? 8 : 3,
-            },
-          }),
+          ...(isPrimary ? Shadows.glowGreen : isAccent ? Shadows.glowAccent : Shadows.card),
         },
       ]}
     >
       <View style={styles.content}>
-        <ThemedText style={[styles.icon, { fontSize: iconSizeStyles[size], color: textColor }]}>
-          {icon}
-        </ThemedText>
+        <View
+          style={[
+            styles.iconBubble,
+            {
+              backgroundColor: isPrimary || isAccent ? 'rgba(7, 9, 14, 0.12)' : theme.primaryGlow,
+            },
+          ]}
+        >
+          <ThemedText
+            style={[
+              styles.icon,
+              {
+                fontSize: iconSizes[size],
+                color: isPrimary || isAccent ? '#07090E' : theme.primary,
+              },
+            ]}
+          >
+            {icon}
+          </ThemedText>
+        </View>
+
         <ThemedText
           style={[
             styles.title,
             {
-              fontSize: textSizeStyles[size],
+              fontSize: textSizes[size],
               color: textColor,
             },
           ]}
         >
           {title}
         </ThemedText>
+
+        {badge && (
+          <View style={[styles.badge, { backgroundColor: theme.error }]}>
+            <ThemedText style={styles.badgeText}>{badge}</ThemedText>
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -114,18 +134,40 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   content: {
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.two,
+    flexDirection: 'column',
+  },
+  iconBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   icon: {
-    textAlign: 'center',
+    fontWeight: FontWeight.bold,
   },
   title: {
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.extrabold,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    textAlign: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: FontWeight.bold,
   },
 });

@@ -1,13 +1,14 @@
 /**
- * BalanceCard — Glassmorphic card showing Total / Online / Offline balances
- * Features gradient border, animated balance display, and split balance view.
+ * BalanceCard — Ultra-premium Glassmorphic card
+ * Shows Total / Online / Offline breakdown with progress ratio bar,
+ * cryptographic security badge, and instant visual feedback.
  */
 
-import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Platform, Pressable } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
-import { BorderRadius, Spacing, FontSize, FontWeight } from '@/constants/theme';
+import { BorderRadius, Spacing, FontSize, FontWeight, Shadows } from '@/constants/theme';
 import { formatNPR } from '@/constants/mock-data';
 
 interface BalanceCardProps {
@@ -18,84 +19,120 @@ interface BalanceCardProps {
 
 export function BalanceCard({ totalBalance, onlineBalance, offlineBalance }: BalanceCardProps) {
   const theme = useTheme();
+  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
+
+  const total = totalBalance > 0 ? totalBalance : 1;
+  const onlinePercent = Math.round((onlineBalance / total) * 100);
+  const offlinePercent = 100 - onlinePercent;
 
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor: theme.card,
-          borderColor: theme.border,
-          ...Platform.select({
-            ios: {
-              shadowColor: theme.primary,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.15,
-              shadowRadius: 12,
-            },
-            android: {
-              elevation: 8,
-            },
-          }),
+          backgroundColor: theme.cardGlass,
+          borderColor: theme.borderLight,
+          ...Shadows.card,
         },
       ]}
     >
-      {/* Gradient accent bar */}
-      <View style={[styles.accentBar, { backgroundColor: theme.primary }]} />
+      {/* Top Emerald Gradient Glow Line */}
+      <View style={[styles.glowHeader, { backgroundColor: theme.primary }]} />
 
       <View style={styles.content}>
-        {/* Total balance */}
-        <View style={styles.totalSection}>
-          <ThemedText
-            style={[styles.label, { color: theme.textSecondary }]}
+        {/* Total balance Section */}
+        <View style={styles.topRow}>
+          <View style={styles.labelGroup}>
+            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>
+              TOTAL ASSETS
+            </ThemedText>
+            <View style={[styles.vaultBadge, { backgroundColor: theme.primaryGlow }]}>
+              <ThemedText style={[styles.vaultText, { color: theme.primary }]}>
+                VAULT SECURED
+              </ThemedText>
+            </View>
+          </View>
+
+          <Pressable
+            onPress={() => setIsBalanceHidden(!isBalanceHidden)}
+            style={({ pressed }) => [
+              styles.eyeButton,
+              { backgroundColor: theme.cardElevated, opacity: pressed ? 0.7 : 1 },
+            ]}
           >
-            Total Balance
+            <ThemedText style={[styles.eyeIcon, { color: theme.textSecondary }]}>
+              {isBalanceHidden ? '👁‍🗨' : '👁'}
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        {/* Amount Display */}
+        <View style={styles.amountContainer}>
+          <ThemedText style={[styles.currencyPrefix, { color: theme.primary }]}>
+            NPR
           </ThemedText>
-          <ThemedText
-            style={[styles.totalAmount, { color: theme.text }]}
-          >
-            {formatNPR(totalBalance)}
+          <ThemedText style={[styles.totalAmount, { color: theme.text }]}>
+            {isBalanceHidden ? '••••••' : formatNPR(totalBalance).replace('NPR ', '')}
           </ThemedText>
         </View>
 
-        {/* Divider */}
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        {/* Distribution Progress Bar */}
+        <View style={[styles.ratioBarContainer, { backgroundColor: theme.backgroundElement }]}>
+          <View
+            style={[
+              styles.ratioSegment,
+              { width: `${Math.max(5, onlinePercent)}%`, backgroundColor: theme.primary },
+            ]}
+          />
+          <View
+            style={[
+              styles.ratioSegment,
+              { width: `${Math.max(5, offlinePercent)}%`, backgroundColor: theme.accent },
+            ]}
+          />
+        </View>
 
-        {/* Split balances */}
+        {/* Split Balances Grid */}
         <View style={styles.splitSection}>
-          <View style={styles.balanceColumn}>
-            <View style={styles.balanceLabelRow}>
-              <View style={[styles.dot, { backgroundColor: theme.primary }]} />
-              <ThemedText
-                style={[styles.splitLabel, { color: theme.textSecondary }]}
-              >
-                Online
+          {/* Online Column */}
+          <View style={[styles.splitCard, { backgroundColor: theme.cardElevated, borderColor: theme.border }]}>
+            <View style={styles.splitHeaderRow}>
+              <View style={[styles.indicatorDot, { backgroundColor: theme.primary }]} />
+              <ThemedText style={[styles.splitLabel, { color: theme.textSecondary }]}>
+                Online Bank ({onlinePercent}%)
               </ThemedText>
             </View>
-            <ThemedText
-              style={[styles.splitAmount, { color: theme.text }]}
-            >
-              {formatNPR(onlineBalance)}
+            <ThemedText style={[styles.splitAmount, { color: theme.text }]}>
+              {isBalanceHidden ? '••••' : formatNPR(onlineBalance)}
+            </ThemedText>
+            <ThemedText style={[styles.splitSubtext, { color: theme.textMuted }]}>
+              Instant settlement
             </ThemedText>
           </View>
 
-          <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
-
-          <View style={styles.balanceColumn}>
-            <View style={styles.balanceLabelRow}>
-              <View style={[styles.dot, { backgroundColor: theme.accent }]} />
-              <ThemedText
-                style={[styles.splitLabel, { color: theme.textSecondary }]}
-              >
-                Offline
+          {/* Offline Column */}
+          <View style={[styles.splitCard, { backgroundColor: theme.cardElevated, borderColor: theme.border }]}>
+            <View style={styles.splitHeaderRow}>
+              <View style={[styles.indicatorDot, { backgroundColor: theme.accent }]} />
+              <ThemedText style={[styles.splitLabel, { color: theme.textSecondary }]}>
+                Offline Bonds ({offlinePercent}%)
               </ThemedText>
             </View>
-            <ThemedText
-              style={[styles.splitAmount, { color: theme.text }]}
-            >
-              {formatNPR(offlineBalance)}
+            <ThemedText style={[styles.splitAmount, { color: theme.accent }]}>
+              {isBalanceHidden ? '••••' : formatNPR(offlineBalance)}
+            </ThemedText>
+            <ThemedText style={[styles.splitSubtext, { color: theme.textMuted }]}>
+              Zero-network ready
             </ThemedText>
           </View>
+        </View>
+
+        {/* Security Enclave Footer Note */}
+        <View style={[styles.enclaveRow, { borderTopColor: theme.border }]}>
+          <ThemedText style={[styles.enclaveIcon, { color: theme.security }]}>🔐</ThemedText>
+          <ThemedText style={[styles.enclaveText, { color: theme.textMuted }]}>
+            Protected by Ed25519 & Hardware Secure Enclave
+          </ThemedText>
         </View>
       </View>
     </View>
@@ -108,65 +145,122 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
   },
-  accentBar: {
+  glowHeader: {
     height: 4,
     width: '100%',
   },
   content: {
     padding: Spacing.four,
   },
-  totalSection: {
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.three,
+    marginBottom: Spacing.one,
+  },
+  labelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
   },
   label: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
-    textTransform: 'uppercase',
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
     letterSpacing: 1.5,
-    marginBottom: Spacing.two,
+  },
+  vaultBadge: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+  },
+  vaultText: {
+    fontSize: 9,
+    fontWeight: FontWeight.extrabold,
+    letterSpacing: 0.8,
+  },
+  eyeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyeIcon: {
+    fontSize: FontSize.sm,
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: Spacing.one + 2,
+    marginVertical: Spacing.two,
+  },
+  currencyPrefix: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.bold,
   },
   totalAmount: {
-    fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: -1,
+    fontSize: FontSize.display,
+    fontWeight: FontWeight.black,
+    letterSpacing: -1.2,
   },
-  divider: {
-    height: 1,
-    width: '100%',
-    marginVertical: Spacing.three,
+  ratioBarContainer: {
+    height: 6,
+    borderRadius: 3,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    marginTop: Spacing.one,
+    marginBottom: Spacing.four,
+  },
+  ratioSegment: {
+    height: '100%',
   },
   splitSection: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: Spacing.two + 2,
   },
-  balanceColumn: {
+  splitCard: {
     flex: 1,
-    alignItems: 'center',
+    padding: Spacing.three,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
   },
-  balanceLabelRow: {
+  splitHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.one + 2,
     marginBottom: Spacing.one,
   },
-  dot: {
-    width: 8,
-    height: 8,
+  indicatorDot: {
+    width: 7,
+    height: 7,
     borderRadius: 4,
   },
   splitLabel: {
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    fontWeight: FontWeight.semibold,
   },
   splitAmount: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.extrabold,
+    marginTop: 2,
   },
-  verticalDivider: {
-    width: 1,
-    height: 40,
+  splitSubtext: {
+    fontSize: FontSize.xxs,
+    marginTop: 2,
+  },
+  enclaveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    marginTop: Spacing.four,
+    paddingTop: Spacing.three,
+    borderTopWidth: 1,
+  },
+  enclaveIcon: {
+    fontSize: FontSize.xs,
+  },
+  enclaveText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
   },
 });

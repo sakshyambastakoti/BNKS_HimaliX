@@ -7,12 +7,12 @@
  *   - Modal screens for send, receive, scan, etc.
  */
 
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
-import { Colors } from '@/constants/theme';
+import { Colors, FontWeight, FontSize } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -22,10 +22,10 @@ export default function RootLayout() {
   const theme = Colors[scheme];
 
   useEffect(() => {
-    // Hide splash after a short delay to ensure layout is ready
+    // Hide splash after layout is mounted
     const timer = setTimeout(() => {
       SplashScreen.hideAsync();
-    }, 500);
+    }, 400);
     return () => clearTimeout(timer);
   }, []);
 
@@ -55,6 +55,10 @@ export default function RootLayout() {
             headerTitle: 'Send Money',
             headerStyle: { backgroundColor: theme.background },
             headerTintColor: theme.text,
+            headerTitleStyle: {
+              fontWeight: FontWeight.bold,
+              fontSize: FontSize.md,
+            },
             headerShadowVisible: false,
           }}
         />
@@ -67,6 +71,10 @@ export default function RootLayout() {
             headerTitle: 'Receive Money',
             headerStyle: { backgroundColor: theme.background },
             headerTintColor: theme.text,
+            headerTitleStyle: {
+              fontWeight: FontWeight.bold,
+              fontSize: FontSize.md,
+            },
             headerShadowVisible: false,
           }}
         />
@@ -75,11 +83,7 @@ export default function RootLayout() {
           options={{
             presentation: 'fullScreenModal',
             animation: 'slide_from_bottom',
-            headerShown: true,
-            headerTitle: 'Scan QR Code',
-            headerStyle: { backgroundColor: '#000' },
-            headerTintColor: '#fff',
-            headerShadowVisible: false,
+            headerShown: false,
           }}
         />
         <Stack.Screen
@@ -88,9 +92,13 @@ export default function RootLayout() {
             presentation: 'modal',
             animation: 'slide_from_bottom',
             headerShown: true,
-            headerTitle: 'Payment Confirmation',
+            headerTitle: 'Settlement Receipt',
             headerStyle: { backgroundColor: theme.background },
             headerTintColor: theme.text,
+            headerTitleStyle: {
+              fontWeight: FontWeight.bold,
+              fontSize: FontSize.md,
+            },
             headerShadowVisible: false,
           }}
         />
@@ -100,9 +108,13 @@ export default function RootLayout() {
             presentation: 'modal',
             animation: 'slide_from_bottom',
             headerShown: true,
-            headerTitle: 'Developer Logs',
+            headerTitle: 'Live Telemetry Logs',
             headerStyle: { backgroundColor: theme.background },
             headerTintColor: theme.text,
+            headerTitleStyle: {
+              fontWeight: FontWeight.bold,
+              fontSize: FontSize.md,
+            },
             headerShadowVisible: false,
           }}
         />

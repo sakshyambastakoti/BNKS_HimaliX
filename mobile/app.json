@@ -8,31 +8,28 @@
     "scheme": "offpay",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.offpay.mobile"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0A0F",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#07090E",
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       },
       "package": "com.offpay.mobile",
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/offpay-mark.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0A0A0F",
+          "backgroundColor": "#07090E",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ]
     ],

@@ -2,7 +2,7 @@
 # Generates commits spread over a specified time period (Default: 100 commits over 1 hour)
 
 param(
-    [int]$CommitCount = 100,
+    [int]$CommitCount = 180,
     [double]$Hours = 1,
     [string]$Branch = "main",
     [string]$LogFile = "activity_log.txt"

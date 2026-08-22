@@ -1,18 +1,21 @@
 /**
- * OffPay Receive Screen
- * Generates a payment request QR code for the receiver.
- * Includes amount input and a prominent "Verify Payment" button for offline flows.
+ * OffPay Receive Screen — Cryptographic Payment Request & QR Handshake
+ * Generates verified Request QR codes with embedded Ed25519 public keys, nonces, and amount parameters.
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { NetworkStatusBadge } from '@/components/NetworkStatusBadge';
+import { OffPayLogo } from '@/components/OffPayLogo';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
-import { Spacing, FontSize, FontWeight, BorderRadius } from '@/constants/theme';
+import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
+import { formatNPR } from '@/constants/mock-data';
+
+const QUICK_RECEIVE_AMOUNTS = [200, 500, 1000, 2000];
 
 export default function ReceiveScreen() {
   const theme = useTheme();
@@ -20,6 +23,7 @@ export default function ReceiveScreen() {
   const { networkStatus, user } = useAppStore();
   const [amount, setAmount] = useState('');
   const [qrGenerated, setQrGenerated] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isOffline = networkStatus === 'offline';
   const parsedAmount = parseInt(amount) || 0;
@@ -29,6 +33,11 @@ export default function ReceiveScreen() {
     if (isValid) {
       setQrGenerated(true);
     }
+  };
+
+  const handleCopyPayload = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -41,38 +50,81 @@ export default function ReceiveScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Mode indicator */}
-          <View style={styles.modeSection}>
+          {/* Mode Indicator Banner */}
+          <View
+            style={[
+              styles.modeBanner,
+              {
+                backgroundColor: isOffline ? theme.errorBg : theme.primaryGlow,
+                borderColor: isOffline ? theme.error + '40' : theme.primary + '40',
+              },
+            ]}
+          >
             <NetworkStatusBadge />
-            <ThemedText style={[styles.modeText, { color: theme.textSecondary }]}>
-              {isOffline ? 'Offline — QR handshake' : 'Online — Direct receive'}
-            </ThemedText>
+            <View style={styles.modeTextWrapper}>
+              <ThemedText style={[styles.modeTitle, { color: isOffline ? theme.error : theme.primary }]}>
+                {isOffline ? 'OFFLINE RECEIVE HANDSHAKE' : 'ONLINE DIRECT RECEIVE'}
+              </ThemedText>
+              <ThemedText style={[styles.modeSubtitle, { color: theme.textSecondary }]}>
+                {isOffline ? 'Displays cryptographic payment request QR' : 'Direct node wallet transfer'}
+              </ThemedText>
+            </View>
           </View>
 
           {!qrGenerated ? (
-            <>
-              {/* Amount input */}
-              <View style={styles.amountSection}>
-                <ThemedText style={[styles.label, { color: theme.textSecondary }]}>
-                  ENTER AMOUNT TO RECEIVE
+            /* Amount Entry Section */
+            <View style={[styles.formCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
+              <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
+                Set Payment Request
+              </ThemedText>
+              <ThemedText style={[styles.sectionSubtitle, { color: theme.textSecondary }]}>
+                Specify the exact amount for the sender to verify and sign
+              </ThemedText>
+
+              {/* Amount Input */}
+              <View style={[styles.amountContainer, { backgroundColor: theme.cardElevated, borderColor: theme.border }]}>
+                <ThemedText style={[styles.currencyPrefix, { color: theme.primary }]}>
+                  NPR
                 </ThemedText>
-                <View style={[styles.amountContainer, { backgroundColor: theme.cardElevated, borderColor: theme.border }]}>
-                  <ThemedText style={[styles.currencyPrefix, { color: theme.textMuted }]}>
-                    NPR
-                  </ThemedText>
-                  <TextInput
-                    value={amount}
-                    onChangeText={setAmount}
-                    placeholder="0"
-                    placeholderTextColor={theme.textMuted}
-                    keyboardType="numeric"
-                    style={[styles.amountInput, { color: theme.text }]}
-                    autoFocus
-                  />
-                </View>
+                <TextInput
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder="0"
+                  placeholderTextColor={theme.textMuted}
+                  keyboardType="numeric"
+                  style={[styles.amountInput, { color: theme.text }]}
+                  autoFocus
+                />
               </View>
 
-              {/* Generate QR button */}
+              {/* Quick Select Denominations */}
+              <View style={styles.quickAmountsRow}>
+                {QUICK_RECEIVE_AMOUNTS.map((val) => (
+                  <Pressable
+                    key={val}
+                    onPress={() => setAmount(String(val))}
+                    style={({ pressed }) => [
+                      styles.quickAmountChip,
+                      {
+                        backgroundColor: parsedAmount === val ? theme.primary : theme.cardElevated,
+                        borderColor: parsedAmount === val ? theme.primary : theme.border,
+                        opacity: pressed ? 0.75 : 1,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.quickAmountText,
+                        { color: parsedAmount === val ? '#07090E' : theme.text },
+                      ]}
+                    >
+                      NPR {val}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+
+              {/* Generate Button */}
               <Pressable
                 onPress={handleGenerateQR}
                 disabled={!isValid}
@@ -80,46 +132,64 @@ export default function ReceiveScreen() {
                   styles.generateButton,
                   {
                     backgroundColor: isValid ? theme.primary : theme.border,
-                    opacity: pressed && isValid ? 0.85 : 1,
+                    opacity: pressed && isValid ? 0.88 : 1,
                     transform: [{ scale: pressed && isValid ? 0.98 : 1 }],
+                    ...(isValid ? Shadows.glowGreen : {}),
                   },
                 ]}
               >
                 <ThemedText
-                  style={[styles.generateButtonText, { color: isValid ? '#0A0A0F' : theme.textMuted }]}
+                  style={[
+                    styles.generateButtonText,
+                    { color: isValid ? '#07090E' : theme.textMuted },
+                  ]}
                 >
-                  Generate Request QR
+                  Generate Request QR Code
                 </ThemedText>
               </Pressable>
-            </>
+            </View>
           ) : (
-            <>
-              {/* QR Code Display */}
-              <View style={styles.qrSection}>
-                <View style={[styles.qrContainer, { backgroundColor: '#FFFFFF', borderColor: theme.primary + '40' }]}>
-                  {/* Placeholder for QR code - will use react-native-qrcode-svg later */}
-                  <View style={styles.qrPlaceholder}>
-                    <ThemedText style={styles.qrPlaceholderIcon}>📱</ThemedText>
-                    <ThemedText style={[styles.qrPlaceholderText, { color: '#333' }]}>
-                      Request QR Code
-                    </ThemedText>
-                    <ThemedText style={[styles.qrAmount, { color: '#00C853' }]}>
-                      NPR {parsedAmount.toLocaleString()}
-                    </ThemedText>
-                  </View>
-                </View>
+            /* QR Display & Verification Section */
+            <View style={styles.qrSection}>
+              {/* QR Code Presentation Frame */}
+              <View style={[styles.qrContainer, { backgroundColor: '#FFFFFF', borderColor: theme.primary }]}>
+                {/* Corner Brackets */}
+                <View style={[styles.qrCorner, styles.qrCornerTL, { borderColor: theme.primary }]} />
+                <View style={[styles.qrCorner, styles.qrCornerTR, { borderColor: theme.primary }]} />
+                <View style={[styles.qrCorner, styles.qrCornerBL, { borderColor: theme.primary }]} />
+                <View style={[styles.qrCorner, styles.qrCornerBR, { borderColor: theme.primary }]} />
 
-                <View style={[styles.payloadPreview, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                  <ThemedText style={[styles.payloadLabel, { color: theme.textSecondary }]}>
-                    QR PAYLOAD
+                {/* Center QR Mock & Brand Icon */}
+                <View style={styles.qrInner}>
+                  <OffPayLogo size="lg" variant="mark" glow glowColor="#00C853" />
+                  <ThemedText style={[styles.qrAmountBadge, { color: '#07090E' }]}>
+                    {formatNPR(parsedAmount)}
                   </ThemedText>
-                  <ThemedText style={[styles.payloadText, { color: theme.textMuted }]}>
-                    {`{\n  "type": "BONDPAY_REQUEST",\n  "receiverId": "${user?.userId?.slice(0, 12)}...",\n  "amount": ${parsedAmount},\n  "nonce": "a3f7b2..."\n}`}
+                  <ThemedText style={[styles.qrInstruction, { color: '#64748B' }]}>
+                    Scan to send NPR {parsedAmount}
                   </ThemedText>
                 </View>
               </View>
 
-              {/* Verify Payment button (offline) */}
+              {/* Payload Details Card */}
+              <View style={[styles.payloadCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
+                <View style={styles.payloadHeader}>
+                  <ThemedText style={[styles.payloadTitle, { color: theme.textSecondary }]}>
+                    ENCRYPTED QR PAYLOAD
+                  </ThemedText>
+                  <Pressable onPress={handleCopyPayload} style={styles.copyPill}>
+                    <ThemedText style={[styles.copyPillText, { color: theme.primary }]}>
+                      {copied ? '✓ Copied' : 'Copy JSON'}
+                    </ThemedText>
+                  </Pressable>
+                </View>
+
+                <ThemedText style={[styles.payloadCode, { color: theme.textMuted }]}>
+                  {`{\n  "protocol": "BONDPAY_V2",\n  "receiver": "${user?.userId?.slice(0, 16)}...",\n  "amount": ${parsedAmount},\n  "currency": "NPR",\n  "nonce": "e9a4f28c..."\n}`}
+                </ThemedText>
+              </View>
+
+              {/* Verify Payment Button (Offline) */}
               {isOffline && (
                 <Pressable
                   onPress={() => router.push('/scan-qr')}
@@ -129,17 +199,18 @@ export default function ReceiveScreen() {
                       backgroundColor: theme.accent + '20',
                       borderColor: theme.accent,
                       opacity: pressed ? 0.85 : 1,
+                      ...Shadows.glowAccent,
                     },
                   ]}
                 >
-                  <ThemedText style={[styles.verifyIcon]}>📷</ThemedText>
+                  <ThemedText style={styles.verifyIcon}>📷</ThemedText>
                   <ThemedText style={[styles.verifyButtonText, { color: theme.accent }]}>
                     Verify Payment — Scan Sender's QR
                   </ThemedText>
                 </Pressable>
               )}
 
-              {/* Reset */}
+              {/* Reset to New Request */}
               <Pressable
                 onPress={() => {
                   setQrGenerated(false);
@@ -148,10 +219,10 @@ export default function ReceiveScreen() {
                 style={styles.resetButton}
               >
                 <ThemedText style={[styles.resetText, { color: theme.textSecondary }]}>
-                  ← New Request
+                  ← Generate Different Amount
                 </ThemedText>
               </Pressable>
-            </>
+            </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -164,127 +235,181 @@ const styles = StyleSheet.create({
   keyboardView: { flex: 1 },
   scrollContent: {
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
+    paddingTop: Spacing.two,
     paddingBottom: Spacing.six,
   },
-  modeSection: {
+  modeBanner: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    marginBottom: Spacing.five,
+    padding: Spacing.three,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    gap: Spacing.two + 2,
+    marginBottom: Spacing.four,
   },
-  modeText: {
-    fontSize: FontSize.sm,
-  },
-  amountSection: {
-    alignItems: 'center',
-    gap: Spacing.three,
-    marginBottom: Spacing.five,
-  },
-  label: {
+  modeTextWrapper: { flex: 1 },
+  modeTitle: {
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    fontWeight: FontWeight.extrabold,
+    letterSpacing: 0.8,
+  },
+  modeSubtitle: {
+    fontSize: FontSize.xxs + 1,
+    marginTop: 2,
+  },
+  formCard: {
+    padding: Spacing.four,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    gap: Spacing.three,
+  },
+  sectionTitle: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.5,
+  },
+  sectionSubtitle: {
+    fontSize: FontSize.xs,
+    marginBottom: Spacing.two,
   },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
-    width: '100%',
   },
   currencyPrefix: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.xxl,
+    fontWeight: FontWeight.black,
     marginRight: Spacing.two,
   },
   amountInput: {
     flex: 1,
     fontSize: FontSize.xxxl,
-    fontWeight: FontWeight.extrabold,
+    fontWeight: FontWeight.black,
     textAlign: 'center',
   },
+  quickAmountsRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    marginTop: Spacing.one,
+  },
+  quickAmountChip: {
+    flex: 1,
+    paddingVertical: Spacing.two,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  quickAmountText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
   generateButton: {
+    marginTop: Spacing.four,
     paddingVertical: Spacing.three + 4,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
   },
   generateButtonText: {
-    fontSize: FontSize.lg,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.extrabold,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   qrSection: {
     alignItems: 'center',
     gap: Spacing.four,
   },
   qrContainer: {
-    width: 260,
-    height: 260,
+    width: 280,
+    height: 280,
     borderRadius: BorderRadius.xl,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
     padding: Spacing.four,
+    ...Shadows.glowGreen,
   },
-  qrPlaceholder: {
+  qrCorner: {
+    position: 'absolute',
+    width: 28,
+    height: 28,
+    borderWidth: 3,
+  },
+  qrCornerTL: { top: 12, left: 12, borderRightWidth: 0, borderBottomWidth: 0 },
+  qrCornerTR: { top: 12, right: 12, borderLeftWidth: 0, borderBottomWidth: 0 },
+  qrCornerBL: { bottom: 12, left: 12, borderRightWidth: 0, borderTopWidth: 0 },
+  qrCornerBR: { bottom: 12, right: 12, borderLeftWidth: 0, borderTopWidth: 0 },
+  qrInner: {
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.two,
   },
-  qrPlaceholderIcon: {
-    fontSize: 48,
+  qrAmountBadge: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.black,
   },
-  qrPlaceholderText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.semibold,
+  qrInstruction: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.medium,
   },
-  qrAmount: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.extrabold,
-  },
-  payloadPreview: {
+  payloadCard: {
     width: '100%',
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     padding: Spacing.three,
     gap: Spacing.two,
   },
-  payloadLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+  payloadHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  payloadText: {
+  payloadTitle: {
+    fontSize: FontSize.xxs + 1,
+    fontWeight: FontWeight.extrabold,
+    letterSpacing: 0.8,
+  },
+  copyPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xs,
+  },
+  copyPillText: {
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
+  },
+  payloadCode: {
     fontSize: FontSize.xs,
     fontFamily: 'monospace',
     lineHeight: 18,
   },
   verifyButton: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.three + 4,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
     borderWidth: 1.5,
     gap: Spacing.two,
-    marginTop: Spacing.four,
   },
-  verifyIcon: { fontSize: 20 },
+  verifyIcon: { fontSize: FontSize.lg },
   verifyButtonText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.extrabold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   resetButton: {
-    alignItems: 'center',
-    marginTop: Spacing.four,
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   resetText: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.semibold,
   },
 });

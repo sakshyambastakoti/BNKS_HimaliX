@@ -1,5 +1,5 @@
 /**
- * OffPay Developer Logs Screen
+ * OffPay Developer Logs Screen — Live Cryptographic & Node Telemetry
  * Color-coded log viewer (INFO/WARN/ERROR) for debugging
  * crypto operations, signature verification, and sync events.
  */
@@ -17,7 +17,7 @@ export default function LogsScreen() {
   const theme = useTheme();
   const { logs, addLog, clearLogs } = useLogStore();
 
-  // Seed mock logs on first render
+  // Seed mock logs on first render if empty
   useEffect(() => {
     if (logs.length === 0) {
       MOCK_LOG_ENTRIES.forEach((entry) => {
@@ -33,12 +33,12 @@ export default function LogsScreen() {
   };
 
   const renderLogEntry = ({ item }: { item: LogEntry }) => (
-    <View style={[logStyles.entry, { borderLeftColor: levelColors[item.level] }]}>
+    <View style={[logStyles.entry, { backgroundColor: theme.cardGlass, borderLeftColor: levelColors[item.level] }]}>
       <View style={logStyles.header}>
         <View
           style={[
             logStyles.levelBadge,
-            { backgroundColor: levelColors[item.level] + '20' },
+            { backgroundColor: levelColors[item.level] + '20', borderColor: levelColors[item.level] + '40' },
           ]}
         >
           <ThemedText
@@ -60,24 +60,30 @@ export default function LogsScreen() {
   return (
     <ThemedView style={styles.container}>
       {/* Controls */}
-      <View style={[styles.controls, { borderBottomColor: theme.border }]}>
+      <View style={[styles.controls, { borderBottomColor: theme.border, backgroundColor: theme.cardGlass }]}>
         <View style={styles.controlLeft}>
           <ThemedText style={[styles.logCount, { color: theme.textSecondary }]}>
-            {logs.length} entries
+            {logs.length} live telemetry entries
           </ThemedText>
         </View>
         <View style={styles.controlRight}>
           <Pressable
-            onPress={() => addLog('INFO', 'Manual log entry test')}
-            style={[styles.controlButton, { backgroundColor: theme.info + '20' }]}
+            onPress={() => addLog('INFO', `[MANUAL_PROBE] Pinged local validator at ${new Date().toLocaleTimeString()}`)}
+            style={({ pressed }) => [
+              styles.controlButton,
+              { backgroundColor: theme.primaryGlow, borderColor: theme.primary, opacity: pressed ? 0.7 : 1 },
+            ]}
           >
-            <ThemedText style={[styles.controlButtonText, { color: theme.info }]}>
-              + Add
+            <ThemedText style={[styles.controlButtonText, { color: theme.primary }]}>
+              + Probe
             </ThemedText>
           </Pressable>
           <Pressable
             onPress={clearLogs}
-            style={[styles.controlButton, { backgroundColor: theme.error + '20' }]}
+            style={({ pressed }) => [
+              styles.controlButton,
+              { backgroundColor: theme.errorBg, borderColor: theme.error + '40', opacity: pressed ? 0.7 : 1 },
+            ]}
           >
             <ThemedText style={[styles.controlButtonText, { color: theme.error }]}>
               Clear
@@ -93,17 +99,15 @@ export default function LogsScreen() {
         renderItem={renderLogEntry}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => (
-          <View style={[styles.separator, { backgroundColor: theme.border }]} />
-        )}
+        ItemSeparatorComponent={() => <View style={{ height: Spacing.two }} />}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
             <ThemedText style={styles.emptyIcon}>📋</ThemedText>
-            <ThemedText style={[styles.emptyText, { color: theme.textMuted }]}>
-              No log entries yet
+            <ThemedText style={[styles.emptyText, { color: theme.text }]}>
+              No log traces recorded
             </ThemedText>
             <ThemedText style={[styles.emptyHint, { color: theme.textMuted }]}>
-              Crypto and sync events will appear here
+              Ed25519 cryptography and peer sync events will stream here live.
             </ThemedText>
           </View>
         }
@@ -118,8 +122,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
     borderBottomWidth: 1,
   },
   controlLeft: {},
@@ -128,46 +132,48 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   logCount: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.medium,
+    fontSize: FontSize.xs,
+    fontWeight: FontWeight.bold,
   },
   controlButton: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one + 2,
     borderRadius: BorderRadius.sm,
+    borderWidth: 1,
   },
   controlButtonText: {
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.extrabold,
   },
   listContent: {
-    paddingHorizontal: Spacing.three,
+    padding: Spacing.four,
     paddingBottom: Spacing.six,
-  },
-  separator: {
-    height: 1,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.six,
+    paddingHorizontal: Spacing.four,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
     gap: Spacing.two,
   },
   emptyIcon: { fontSize: 40 },
   emptyText: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.medium,
+    fontWeight: FontWeight.bold,
   },
   emptyHint: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs,
+    textAlign: 'center',
   },
 });
 
 const logStyles = StyleSheet.create({
   entry: {
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    borderLeftWidth: 3,
+    padding: Spacing.three,
+    borderRadius: BorderRadius.md,
+    borderLeftWidth: 3.5,
     gap: Spacing.one + 2,
   },
   header: {
@@ -178,10 +184,11 @@ const logStyles = StyleSheet.create({
   levelBadge: {
     paddingHorizontal: Spacing.two,
     paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
+    borderRadius: BorderRadius.xs,
+    borderWidth: 1,
   },
   levelText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: FontWeight.extrabold,
     fontFamily: 'monospace',
     letterSpacing: 0.5,
@@ -191,8 +198,8 @@ const logStyles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   message: {
-    fontSize: FontSize.sm,
+    fontSize: FontSize.xs + 1,
     fontFamily: 'monospace',
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });
