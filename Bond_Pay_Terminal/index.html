@@ -3432,22 +3432,6 @@
                 currentModalState = 'PAYMENT';
                 overlay.classList.add('active');
 
-                let cardSelectHtml = '';
-                if (allCards.length > 0) {
-                    cardSelectHtml = `
-                        <div class="sim-action-banner">
-                            <div>
-                                <span style="font-weight:800;font-size:0.78rem;color:var(--black);">Simulate Card Tap</span>
-                                <div style="color:var(--gray-500);font-size:0.7rem;">Test instant real-time RFID debit</div>
-                            </div>
-                            <select class="form-input" id="sim-card-select" style="width:auto;padding:5px 8px;font-size:0.75rem;" onchange="if(this.value){simulateCardTap(this.value);this.value='';}">
-                                <option value="">Tap a Card...</option>
-                                ${allCards.map(c => `<option value="${esc(c.uid)}">${esc(c.name)} (NPR ${c.balance})</option>`).join('')}
-                            </select>
-                        </div>
-                    `;
-                }
-
                 modal.innerHTML = `
                     <div class="modal-logo-banner">
                         <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay" class="modal-logo-img">
@@ -3485,8 +3469,6 @@
                         </div>
                     </div>
                     <p style="color:var(--gray-600);font-size:0.78rem;margin-bottom:12px;" id="tap-instruction-text">Hold smart card or keyfob against reader</p>
-
-                    ${cardSelectHtml}
 
                     <button class="btn btn-outline" id="payment-cancel-btn" onclick="cancelAction('payment')" style="width:100%;margin-top:16px;">Cancel</button>
                 `;
