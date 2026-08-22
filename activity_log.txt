@@ -32,3 +32,4 @@
 [2026-08-22 12:18:31] Commit #32: feat(receipt): generate settlement cryptogram export utility
 [2026-08-22 12:20:40] Commit #33: feat(auth): create Login screen with glowing hero logo and biometric unlock
 [2026-08-22 12:22:49] Commit #34: feat(auth): build Signup screen with Secure Enclave key generation flow
+[2026-08-22 12:24:57] Commit #35: feat(auth): add hardware enclave binding and non-exportable key notice
