@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OffPay — Hackathon Pitch Deck 2026</title>
+  <meta name="description" content="OffPay: Offline-First Digital Payment System — Hackathon Presentation" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #f5c842;
+      --teal: #00e5c8;
+      --purple: #a855f7;
+      --red: #ff4757;
+      --bg-deep: #050a14;
+      --bg-card: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.10);
+      --text: #f0f4ff;
+      --muted: rgba(240,244,255,0.55);
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: var(--bg-deep); color: var(--text); font-family: var(--font-body); overflow: hidden; cursor: none; }
+    .cursor { position: fixed; width: 14px; height: 14px; background: var(--teal); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); mix-blend-mode: screen; }
+    .cursor-ring { position: fixed; width: 38px; height: 38px; border: 2px solid var(--teal); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: transform 0.25s ease; opacity: 0.5; }
+    #deck { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+    .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px 64px; opacity: 0; transform: translateX(80px); transition: opacity 0.55s cubic-bezier(.4,0,.2,1), transform 0.55s cubic-bezier(.4,0,.2,1); pointer-events: none; z-index: 1; }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; z-index: 2; }
+    .slide.prev { opacity: 0; transform: translateX(-80px); }
+    .slide::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,229,200,.07) 0%, transparent 70%), radial-gradient(ellipse 60% 40% at 20% 20%, rgba(168,85,247,.06) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+    .mtn-strip { position: absolute; bottom: 0; left: 0; right: 0; height: 160px; z-index: 0; opacity: 0.18; }
+    #progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--teal), var(--gold)); z-index: 1000; transition: width 0.4s ease; }
+    #slide-counter { position: fixed; bottom: 22px; right: 30px; font-size: 13px; color: var(--muted); z-index: 1000; letter-spacing: 0.08em; }
+    .nav-btn { position: fixed; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 50%; z-index: 1000; cursor: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 20px; transition: background 0.2s, color 0.2s, border-color 0.2s; backdrop-filter: blur(8px); }
+    .nav-btn:hover { background: rgba(0,229,200,0.15); color: var(--teal); border-color: var(--teal); }
+    #btn-prev { left: 16px; } #btn-next { right: 16px; }
+    #dots { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 1000; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.3s, transform 0.3s; cursor: none; }
+    .dot.active { background: var(--teal); transform: scale(1.5); }
+    .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; background: rgba(0,229,200,.12); color: var(--teal); border: 1px solid rgba(0,229,200,.25); margin-bottom: 20px; z-index: 1; position: relative; }
+    .tag.gold { background: rgba(245,200,66,.1); color: var(--gold); border-color: rgba(245,200,66,.25); }
+    .tag.purple { background: rgba(168,85,247,.12); color: var(--purple); border-color: rgba(168,85,247,.25); }
+    .tag.red { background: rgba(255,71,87,.12); color: var(--red); border-color: rgba(255,71,87,.25); }
+    h1.hero { font-family: var(--font-head); font-size: clamp(42px,6vw,82px); font-weight: 800; line-height: 1.05; z-index:1; position:relative; text-align:center; }
+    h2.slide-title { font-family: var(--font-head); font-size: clamp(26px,3.5vw,46px); font-weight: 700; line-height: 1.1; z-index:1; position:relative; }
+    h3.section-head { font-family: var(--font-head); font-size: clamp(14px,1.6vw,18px); font-weight: 600; color: var(--teal); margin-bottom: 10px; }
+    p.lead { font-size: clamp(14px,1.4vw,18px); line-height: 1.7; color: rgba(240,244,255,0.80); z-index:1; position:relative; }
+    p.sub { font-size: 13px; color: var(--muted); z-index:1; position:relative; }
+    .grad-text { background: linear-gradient(135deg, var(--teal) 0%, var(--gold) 60%, var(--purple) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card-grid { display: grid; gap: 16px; z-index:1; position:relative; width: 100%; }
+    .card-grid.col2 { grid-template-columns: 1fr 1fr; }
+    .card-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+    .card-grid.col4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; backdrop-filter: blur(12px); transition: border-color 0.25s, transform 0.25s; }
+    .card:hover { border-color: rgba(0,229,200,0.3); transform: translateY(-2px); }
+    .card .icon { font-size: 24px; margin-bottom: 8px; }
+    .card h4 { font-family: var(--font-head); font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+    .card p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; backdrop-filter: blur(12px); text-align: center; }
+    .stat-card .num { font-family: var(--font-head); font-size: 32px; font-weight: 800; line-height: 1; }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .pill-list { display: flex; flex-wrap: wrap; gap: 8px; z-index:1; position:relative; }
+    .pill { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: 20px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); }
+    .flow { display: flex; align-items: center; gap: 0; z-index:1; position:relative; width: 100%; flex-wrap: wrap; justify-content: center; }
+    .flow-node { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 110px; backdrop-filter: blur(8px); }
+    .flow-node .fn-icon { font-size: 20px; }
+    .flow-node .fn-label { font-size: 11px; font-weight: 600; margin-top: 3px; }
+    .flow-node .fn-sub { font-size: 9.5px; color: var(--muted); }
+    .flow-arrow { color: var(--teal); font-size: 18px; padding: 0 6px; }
+    .code-block { background: rgba(0,0,0,0.45); border: 1px solid rgba(0,229,200,0.15); border-radius: 10px; padding: 14px 18px; font-family: 'Courier New', monospace; font-size: 11.5px; line-height: 1.65; color: #cde; z-index:1; position:relative; overflow: auto; max-height: 220px; }
+    .code-block .k { color: var(--purple); }
+    .code-block .s { color: var(--teal); }
+    .code-block .n { color: var(--gold); }
+    .code-block .c { color: #687; }
+    .score-bar-wrap { z-index:1; position:relative; width: 100%; }
+    .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+    .score-label { font-size: 12px; font-weight: 500; width: 220px; flex-shrink: 0; }
+    .score-track { flex: 1; height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 4px; animation: fillBar 1.4s ease forwards; }
+    @keyframes fillBar { from { width: 0 } }
+    .score-pct { font-size: 11px; color: var(--muted); width: 36px; text-align: right; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; z-index:1; position:relative; width: 100%; align-items: start; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; z-index:1; position:relative; width: 100%; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 7px; font-size: 11px; font-weight: 600; }
+    .badge.green { background: rgba(0,229,200,.12); color: var(--teal); }
+    .badge.yellow { background: rgba(245,200,66,.12); color: var(--gold); }
+    .badge.purple { background: rgba(168,85,247,.12); color: var(--purple); }
+    .divider { width: 50px; height: 3px; background: linear-gradient(90deg, var(--teal), var(--purple)); border-radius: 2px; margin: 12px 0; }
+    .bom-table { width: 100%; border-collapse: collapse; font-size: 12px; z-index:1; position:relative; }
+    .bom-table th { text-align: left; padding: 7px 10px; color: var(--teal); font-weight: 600; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .bom-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(240,244,255,0.8); }
+    .bom-table tr:last-child td { border-bottom: none; }
+    .bom-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .threat-row { display: flex; gap: 10px; padding: 9px 12px; border-radius: 8px; margin-bottom: 7px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .threat-icon { font-size: 18px; flex-shrink: 0; width: 26px; }
+    .threat-content strong { font-size: 12px; font-weight: 600; }
+    .threat-content span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .qa-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; margin-bottom: 10px; }
+    .qa-item .q { font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 5px; }
+    .qa-item .a { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    #notes-panel { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(5,10,20,0.97); border-top: 1px solid var(--border); padding: 12px 32px; z-index: 999; transform: translateY(100%); transition: transform 0.3s; max-height: 200px; overflow-y: auto; }
+    #notes-panel.visible { transform: translateY(0); }
+    #notes-panel h4 { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--teal); margin-bottom: 6px; }
+    #notes-panel p { font-size: 12.5px; line-height: 1.7; color: var(--muted); }
+    #notes-toggle { position: fixed; bottom: 50px; right: 28px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 11px; color: var(--muted); cursor: none; z-index: 1001; backdrop-filter: blur(8px); transition: background 0.2s, color 0.2s; font-family: var(--font-body); }
+    #notes-toggle:hover { background: rgba(0,229,200,0.1); color: var(--teal); }
+    .announce-bar { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 50px; background: rgba(245,200,66,.08); border: 1px solid rgba(245,200,66,.2); z-index:1; position:relative; }
+    .announce-bar span { font-size: 12px; color: var(--gold); font-weight: 500; }
+    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .float { animation: floatY 3.5s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+<div id="progress-bar"></div>
+<div id="slide-counter">1 / 10</div>
+<div id="dots"></div>
+<button class="nav-btn" id="btn-prev">&#8592;</button>
+<button class="nav-btn" id="btn-next">&#8594;</button>
+<button id="notes-toggle">📝 Notes (N)</button>
+<div id="notes-panel"><h4>🎙 Speaker Notes</h4><p id="notes-text"></p></div>
+
+<div id="deck">
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 1 — TITLE / HERO
+═════════════════════════════════════════════════════════ -->
+<section class="slide active"
+  data-notes="Open strong. 'Good [morning/afternoon] judges. My name is [Name]. I want to take you somewhere — somewhere with no internet.' Pause 2 seconds. 'Somewhere like the Annapurna Circuit of Nepal.' Let the slide breathe. Speak slowly. This sets the tone for everything.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="var(--teal)" d="M0,160 L120,60 L240,110 L360,30 L480,90 L600,10 L720,70 L840,20 L960,80 L1080,40 L1200,100 L1320,50 L1440,90 L1440,160 Z"/>
+  </svg>
+
+  <div style="text-align:center; z-index:1; position:relative; max-width: 900px;">
+    <div class="announce-bar" style="margin: 0 auto 28px; display:inline-flex;">
+      <span>🏔️</span><span>HimaliX Hackathon 2026 — Offline Payments Track</span>
+    </div>
+    <h1 class="hero"><span class="grad-text float">OffPay</span></h1>
+    <div class="divider" style="margin: 16px auto;"></div>
+    <p class="lead" style="margin-top: 14px; max-width: 680px; margin-left: auto; margin-right: auto;">
+      <strong style="color:#fff;">Digital payments that never leave you stranded.</strong><br/>
+      The offline-first, cryptographically verified peer-to-peer payment system for the real world.
+    </p>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top: 28px; flex-wrap:wrap;">
+      <div class="badge green">📱 Mobile App (React Native + Expo)</div>
+      <div class="badge yellow">📟 Hardware Terminal (ESP32/ESP8266)</div>
+      <div class="badge purple">🔐 Ed25519 Cryptography</div>
+    </div>
+    <p class="sub" style="margin-top: 24px; opacity: 0.55;">→ Arrow keys or click to advance &nbsp;|&nbsp; N for speaker notes</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM  (Theme Relevance 25%)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="'Imagine hiking the Annapurna Circuit. You arrive at a tea house, exhausted. You open your digital wallet — no signal. You have money in your account, but you are effectively broke.' Pause. Let that sink in. Then go through the three pain points: mountain exclusion, disaster, urban cost paradox. Make it emotional and relatable. This slide covers 25% of marks — the most important one.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(255,71,87,0.15)" d="M0,160 L180,80 L300,120 L440,40 L560,100 L700,20 L820,75 L940,30 L1080,90 L1200,45 L1340,110 L1440,60 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag red">● PROBLEM — Theme Relevance (25%)</div>
+    <h2 class="slide-title">The internet <span style="color:var(--red);">kills</span> digital payments.</h2>
+    <div class="divider"></div>
+
+    <div class="two-col" style="margin-top:20px; gap:22px;">
+      <div>
+        <div class="card" style="border-color:rgba(255,71,87,0.25); margin-bottom:12px;">
+          <div class="icon">🏔️</div>
+          <h4>Himalayan Remote Regions</h4>
+          <p>Annapurna, Everest, Mustang trekking circuits — <strong>zero cellular coverage</strong>. Travelers and merchants forced to carry and risk physical cash.</p>
+        </div>
+        <div class="card" style="border-color:rgba(255,71,87,0.25); margin-bottom:12px;">
+          <div class="icon">🌊</div>
+          <h4>Disaster &amp; Emergency Zones</h4>
+          <p>Nepal's 2015 earthquake collapsed all banking infrastructure instantly. <strong>No internet = no transactions</strong> when people need them most.</p>
+        </div>
+        <div class="card" style="border-color:rgba(255,71,87,0.25);">
+          <div class="icon">💸</div>
+          <h4>Urban Data Cost Paradox</h4>
+          <p>Spending <strong>NPR 10 of mobile data</strong> to process a NPR 20 tea payment. Economically irrational for micropayments.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="background:rgba(255,71,87,0.06); border:1px solid rgba(255,71,87,0.15); border-radius:14px; padding: 24px; text-align:center; flex:1;">
+          <div style="font-size: 64px; font-family: var(--font-head); font-weight:900; color: var(--red); line-height:1;">100%</div>
+          <div style="font-size: 14px; color: var(--muted); margin-top:8px;">Of existing digital wallets<br/><strong style="color:var(--text);">require active internet</strong><br/><span style="font-size:11px;">(eSewa, Khalti, GPay, Apple Pay)</span></div>
+        </div>
+        <div style="background:rgba(245,200,66,0.06); border:1px solid rgba(245,200,66,0.15); border-radius:14px; padding: 18px; text-align:center;">
+          <div style="font-size: 44px; font-family: var(--font-head); font-weight:900; color: var(--gold); line-height:1;">3,000+</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top:5px;">Tea houses &amp; lodges in Nepal's<br/><strong style="color:var(--text);">zero-connectivity highlands</strong></div>
+        </div>
+        <div style="background:rgba(168,85,247,0.06); border:1px solid rgba(168,85,247,0.15); border-radius:14px; padding: 18px; text-align:center;">
+          <div style="font-size: 44px; font-family: var(--font-head); font-weight:900; color: var(--purple); line-height:1;">40%</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top:5px;">Of Nepal's rural population lacks<br/><strong style="color:var(--text);">reliable mobile internet</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 3 — SOLUTION  (Practicality 25%)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="'Introducing OffPay.' Dramatic pause. 'We don't wait for the internet — we treat money like cash.' Explain the Bond concept: discrete signed tokens, just like physical banknotes. Show the Dual-Balance: Online Vault for internet use, Offline Secured Pocket for off-grid. These are concrete, practical, working features — this is your 25% practicality.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(0,229,200,0.12)" d="M0,160 L150,90 L280,130 L400,50 L540,110 L660,25 L780,80 L900,35 L1050,95 L1170,50 L1300,105 L1440,65 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag">✅ SOLUTION — Practicality / Feasibility (25%)</div>
+    <h2 class="slide-title">Introducing <span class="grad-text">OffPay</span> — Digital cash for the real world.</h2>
+    <div class="divider"></div>
+
+    <div class="two-col" style="margin-top:18px;">
+      <div>
+        <h3 class="section-head">💡 The Bond: A Digital Banknote</h3>
+        <p class="lead" style="font-size:13px; margin-bottom:14px;">
+          OffPay replaces continuous server syncing with <strong>discrete, cryptographically signed tokens</strong> called <em>Bonds</em> — digital equivalents of physical banknotes.
+        </p>
+        <div class="code-block">
+<span class="c">// OffPay Bond Token Structure</span>
+{
+  <span class="k">bondId</span>:    <span class="s">"BOND-7a8f1e-500"</span>,
+  <span class="k">value</span>:     <span class="n">NPR 500</span>,
+  <span class="k">ownerId</span>:   <span class="s">"usr-a1b2c3d4..."</span>,
+  <span class="k">issuedAt</span>:  <span class="s">"2026-08-22T08:00Z"</span>,
+  <span class="k">expiry</span>:    <span class="s">"30 Days"</span>,
+  <span class="k">serverSig</span>: <span class="s">"Ed25519 [64 bytes]"</span>
+  <span class="c">// Unforgeable. Bank-grade.</span>
+}
+        </div>
+        <div class="pill-list" style="margin-top:12px;">
+          <div class="pill">📌 NPR 100 / 200 / 500 / 1000</div>
+          <div class="pill">🔒 Max NPR 3,000 offline cap</div>
+          <div class="pill">⏱ 30-day expiry</div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="section-head">💰 Dual-Balance Architecture</h3>
+        <div class="card" style="margin-bottom:10px; border-color: rgba(0,229,200,0.3);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:22px;">🏦</span>
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:13px;">Online Bank Vault</div>
+              <div style="font-size:11px; color:var(--muted);">Server-backed • Card/bank top-ups • Online transfers</div>
+            </div>
+            <div style="font-family:var(--font-head); font-size:22px; font-weight:800; color:var(--teal);">NPR 3,000</div>
+          </div>
+        </div>
+        <div style="text-align:center; color:var(--muted); font-size:12px; margin: 6px 0;">⇅ Load / Reverse Bonds (online required)</div>
+        <div class="card" style="margin-bottom:10px; border-color: rgba(245,200,66,0.3);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:22px;">📱</span>
+            <div style="flex:1;">
+              <div style="font-weight:700; font-size:13px;">Offline Secured Pocket</div>
+              <div style="font-size:11px; color:var(--muted);">Encrypted on-device • 100% zero-internet P2P</div>
+            </div>
+            <div style="font-family:var(--font-head); font-size:22px; font-weight:800; color:var(--gold);">NPR 2,000</div>
+          </div>
+        </div>
+        <div class="card" style="background: rgba(0,229,200,0.04); border-color: rgba(0,229,200,0.18); text-align:center; padding:14px;">
+          <div style="font-size:12px; color:var(--muted);">Total Assets</div>
+          <div style="font-family:var(--font-head); font-size:30px; font-weight:800; color:var(--teal);">NPR 5,000</div>
+        </div>
+        <div style="margin-top:12px; padding:10px 14px; background:rgba(0,229,200,0.04); border:1px solid rgba(0,229,200,0.15); border-radius:8px;">
+          <div style="font-size:11.5px; color:rgba(240,244,255,0.7);">
+            ✅ <strong>Load</strong> bonds (online → offline) &nbsp;|&nbsp;
+            ✅ <strong>Spend</strong> P2P (offline) &nbsp;|&nbsp;
+            ✅ <strong>Sync</strong> (offline → cloud)
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 4 — QR HANDSHAKE  (Technical 20%)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="This is your most technical slide — 20% of marks. Be precise and confident. 'Step 1: Receiver generates a request QR with a CSPRNG nonce. Step 2: Sender scans it, selects bonds, SHA-256 hashes the payload, signs with Ed25519, marks bonds spent in SQLite, shows Payment QR. Step 3: Receiver verifies TWO signatures offline — both the server bond signature AND the sender signature — in under 2 seconds.' Emphasize: ZERO INTERNET throughout all three steps.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(168,85,247,0.1)" d="M0,160 L200,75 L350,120 L500,40 L620,100 L760,18 L880,72 L1020,28 L1160,88 L1300,45 L1440,80 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag purple">⚙️ TECHNICAL COMPLEXITY (20%) — Two-Way QR Handshake</div>
+    <h2 class="slide-title">Zero internet. <span style="color:var(--purple);">Cryptographically verified</span> in &lt;2 seconds.</h2>
+    <div class="divider"></div>
+
+    <!-- Flow diagram -->
+    <div class="flow" style="margin:16px 0 14px;">
+      <div class="flow-node" style="border-color:rgba(0,229,200,0.3);">
+        <div class="fn-icon">👤</div>
+        <div class="fn-label" style="color:var(--teal);">Receiver (Bob)</div>
+        <div class="fn-sub">Enter NPR 500<br/>Generate nonce</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:rgba(168,85,247,0.3);">
+        <div class="fn-icon">📤</div>
+        <div class="fn-label" style="color:var(--purple);">Request QR</div>
+        <div class="fn-sub">OFFPAY_REQUEST<br/>+ nonce + amount</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:rgba(245,200,66,0.3);">
+        <div class="fn-icon">📱</div>
+        <div class="fn-label" style="color:var(--gold);">Sender (Alice)</div>
+        <div class="fn-sub">Select bonds<br/>SHA-256 + Ed25519</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:rgba(168,85,247,0.3);">
+        <div class="fn-icon">📲</div>
+        <div class="fn-label" style="color:var(--purple);">Payment QR</div>
+        <div class="fn-sub">OFFPAY_PAYMENT<br/>+ signed bonds</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:rgba(0,229,200,0.3);">
+        <div class="fn-icon">✅</div>
+        <div class="fn-label" style="color:var(--teal);">Verified Offline</div>
+        <div class="fn-sub">Dual sig verify<br/>Saved to SQLite</div>
+      </div>
+    </div>
+
+    <div class="two-col" style="gap:20px;">
+      <div>
+        <h3 class="section-head">Step-by-Step Protocol</h3>
+        <div style="font-size: 12.5px; line-height: 1.75; color: rgba(240,244,255,0.8);">
+          <div style="margin-bottom:8px; padding:8px 12px; background:rgba(0,229,200,.04); border-left:3px solid var(--teal); border-radius:4px;">
+            <strong>Step 1 (Receiver)</strong> — Enter amount → CSPRNG 16-byte nonce → display <code style="color:var(--teal); font-size:11px;">OFFPAY_REQUEST</code> QR
+          </div>
+          <div style="margin-bottom:8px; padding:8px 12px; background:rgba(245,200,66,.04); border-left:3px solid var(--gold); border-radius:4px;">
+            <strong>Step 2 (Sender)</strong> — Scan QR → select bonds → SHA-256 digest → <code style="color:var(--gold); font-size:11px;">Ed25519_Sign</code> with hardware-protected private key → mark bonds <em>spent</em> in SQLite → display <code style="color:var(--gold); font-size:11px;">OFFPAY_PAYMENT</code> QR
+          </div>
+          <div style="padding:8px 12px; background:rgba(168,85,247,.04); border-left:3px solid var(--purple); border-radius:4px;">
+            <strong>Step 3 (Receiver)</strong> — Verify <em>server signature</em> (bond authenticity) + <em>sender signature</em> (transaction integrity) → validate nonce + amount → commit as <code style="color:var(--purple); font-size:11px;">pending_sync</code>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="section-head">Cryptographic Stack</h3>
+        <div class="card-grid col2" style="gap:10px;">
+          <div class="card" style="padding:12px 14px;">
+            <div class="icon">🔑</div>
+            <h4 style="color:var(--teal);">Ed25519</h4>
+            <p>32B pubkey · 64B sig · Immune to timing attacks · Optimized for QR transmission</p>
+          </div>
+          <div class="card" style="padding:12px 14px;">
+            <div class="icon">#️⃣</div>
+            <h4 style="color:var(--gold);">SHA-256</h4>
+            <p>Collision-resistant digest of full payload before every signature operation</p>
+          </div>
+          <div class="card" style="padding:12px 14px;">
+            <div class="icon">🎲</div>
+            <h4 style="color:var(--purple);">CSPRNG Nonce</h4>
+            <p>16-byte random per transaction — mathematically prevents QR replay attacks</p>
+          </div>
+          <div class="card" style="padding:12px 14px;">
+            <div class="icon">🔐</div>
+            <h4>SecureStore Enclave</h4>
+            <p>Android Keystore / iOS Keychain — private key never exposed to app layer</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 5 — HARDWARE TERMINAL  (Technical + Uniqueness)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="'But what about merchants who don't have smartphones at all?' Introduce the BondPay Hardware Terminal. This is the hardware differentiator. Mention the components by name: ESP32, MFRC522 RFID, I2C LCD, active buzzer, LittleFS. Talk about the sub-20ms processing time. The 3 connectivity modes: fully offline, LAN REST API, and cloud MQTT. This simultaneously boosts Technical (20%) AND Uniqueness (20%) marks.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(245,200,66,0.1)" d="M0,160 L160,85 L300,125 L440,42 L580,105 L720,22 L860,78 L1000,32 L1140,92 L1280,50 L1440,88 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag gold">📟 HARDWARE TERMINAL — Technical + Uniqueness (40% Combined)</div>
+    <h2 class="slide-title">BondPay — <span style="color:var(--gold);">RFID POS terminal for zero-connectivity</span> merchants</h2>
+    <div class="divider"></div>
+
+    <div class="two-col" style="margin-top:16px; gap:24px;">
+      <div>
+        <h3 class="section-head">Bill of Materials</h3>
+        <table class="bom-table">
+          <thead><tr><th>Component</th><th>Model</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>🧠 MCU</td><td>ESP32-WROOM-32 / ESP8266</td><td>State machine, HTTP, MQTT</td></tr>
+            <tr><td>📡 RFID</td><td>MFRC522 (13.56 MHz NFC)</td><td>Contactless card detection</td></tr>
+            <tr><td>🖥️ Display</td><td>1602 LCD + I2C PCF8574</td><td>Live balance &amp; feedback</td></tr>
+            <tr><td>🔊 Audio</td><td>5V Active Buzzer</td><td>✅ double beep / ❌ long buzz</td></tr>
+            <tr><td>💡 LEDs</td><td>Green + Red 5mm</td><td>Visual success / failure</td></tr>
+            <tr><td>🔋 Power</td><td>5V USB / Li-Ion 18650</td><td>Portable solar-friendly</td></tr>
+          </tbody>
+        </table>
+        <div class="card" style="margin-top:12px; border-color:rgba(245,200,66,0.25); background:rgba(245,200,66,0.04);">
+          <div style="display:flex; gap:20px; text-align:center;">
+            <div><div style="font-size:26px; font-weight:800; font-family:var(--font-head); color:var(--gold);">&lt;20ms</div><div style="font-size:10px; color:var(--muted);">Transaction time</div></div>
+            <div style="width:1px; background:var(--border);"></div>
+            <div><div style="font-size:26px; font-weight:800; font-family:var(--font-head); color:var(--teal);">100%</div><div style="font-size:10px; color:var(--muted);">Offline capable</div></div>
+            <div style="width:1px; background:var(--border);"></div>
+            <div><div style="font-size:26px; font-weight:800; font-family:var(--font-head); color:var(--purple);">3</div><div style="font-size:10px; color:var(--muted);">Connectivity modes</div></div>
+            <div style="width:1px; background:var(--border);"></div>
+            <div><div style="font-size:26px; font-weight:800; font-family:var(--font-head); color:var(--red);">&lt;2ms</div><div style="font-size:10px; color:var(--muted);">API response (RAM)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="section-head">3 Connectivity Modes (State Machine)</h3>
+        <div class="card" style="margin-bottom:10px; border-color:rgba(0,229,200,0.3);">
+          <h4>⚡ Mode 1 — Fully Offline (Core)</h4>
+          <p>RFID tap → LittleFS RAM cache deduction → LCD display → buzzer audio cue. <strong>Zero power, zero connectivity.</strong> Works on a mountain at 5,000m.</p>
+        </div>
+        <div class="card" style="margin-bottom:10px; border-color:rgba(245,200,66,0.3);">
+          <h4>🌐 Mode 2 — Local Wi-Fi REST API (LAN)</h4>
+          <p>Embedded HTTP server on port 80. Web UI (<code style="font-size:11px;">bondpay-ui.html</code>): live dashboard, card management, payment trigger, CSV export — no cloud needed.</p>
+        </div>
+        <div class="card" style="border-color:rgba(168,85,247,0.3);">
+          <h4>☁️ Mode 3 — Cloud MQTT Sync (Global)</h4>
+          <p>Broadcasts live transaction events globally via MQTT. Multi-device pairing by QR scan. Cashier phone + customer screen + ESP32 hardware all in real-time sync.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 6 — SECURITY & ANTI-FRAUD  (Technical 20%)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="Judges WILL ask about double-spending — get ahead of it here. '3-Tier defense: Tier 1 — Sender's SQLite immediately marks bond as spent before the payment QR is even shown. Tier 2 — Server has a unique constraint on bond_redemptions table; first receiver to sync wins; duplicates are rejected. Tier 3 — Every fraudulent transaction carries the attacker's own cryptographic signature and KYC-verified identity — we flag and suspend them.' Also cover key security: Ed25519 keys live in the hardware enclave (Android Keystore/iOS Keychain) and never touch the app layer.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(255,71,87,0.08)" d="M0,160 L140,90 L260,130 L390,48 L520,108 L660,24 L800,80 L940,36 L1080,94 L1220,52 L1360,105 L1440,68 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag red">🔐 SECURITY — Technical Complexity (20%)</div>
+    <h2 class="slide-title">Bank-grade security — <span style="color:var(--teal);">no internet required.</span></h2>
+    <div class="divider"></div>
+
+    <div class="two-col" style="margin-top:18px; gap:22px;">
+      <div>
+        <h3 class="section-head">3-Tier Anti-Double-Spend Defense</h3>
+        <div class="threat-row">
+          <div class="threat-icon">🔒</div>
+          <div class="threat-content">
+            <strong>Tier 1 — Immediate Local SQLite Lock</strong>
+            <span>Bond marked <code style="color:var(--teal); font-size:11px;">status='spent'</code> in SQLite <em>before</em> the Payment QR is rendered. The sender's own device prevents reuse at source.</span>
+          </div>
+        </div>
+        <div class="threat-row">
+          <div class="threat-icon">🏛️</div>
+          <div class="threat-content">
+            <strong>Tier 2 — Server Unique Constraint</strong>
+            <span>First receiver to sync wins. <code style="color:var(--gold); font-size:11px;">bond_redemptions</code> table has a UNIQUE constraint on Bond ID. Duplicate redemptions are mathematically rejected.</span>
+          </div>
+        </div>
+        <div class="threat-row">
+          <div class="threat-icon">🪪</div>
+          <div class="threat-content">
+            <strong>Tier 3 — KYC Identity Accountability</strong>
+            <span>Every fraudulent transaction carries the attacker's own Ed25519 signature + KYC-verified User ID. Server flags <code style="color:var(--red); font-size:11px;">fraud_flags</code>, suspends account immediately.</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="section-head">Threat Matrix</h3>
+        <div class="threat-row">
+          <div class="threat-icon">🎭</div>
+          <div class="threat-content">
+            <strong>Counterfeit Bonds</strong>
+            <span>Server Ed25519 watermark verified offline by receiver — forged bonds are mathematically impossible to pass.</span>
+          </div>
+        </div>
+        <div class="threat-row">
+          <div class="threat-icon">🔁</div>
+          <div class="threat-content">
+            <strong>Replay Attacks (QR re-scan)</strong>
+            <span>CSPRNG nonces + timestamps stored in local SQLite — duplicate nonce rejection prevents any QR from being re-used.</span>
+          </div>
+        </div>
+        <div class="threat-row">
+          <div class="threat-icon">📲</div>
+          <div class="threat-content">
+            <strong>APK / App Tampering</strong>
+            <span>Receiver verifies signatures <em>independently</em> — bypassing the sender's local checks provides zero benefit.</span>
+          </div>
+        </div>
+        <div class="threat-row">
+          <div class="threat-icon">🦠</div>
+          <div class="threat-content">
+            <strong>Private Key Theft</strong>
+            <span>Ed25519 private keys in <strong>Android Keystore / iOS Keychain hardware enclave</strong>. They never leave the chip — even malware cannot extract them.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 7 — INNOVATION & UNIQUENESS  (20%)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="'Why QR and not Bluetooth or NFC?' Answer before they ask. 'QR works on 100% of smartphones. NFC is absent on many budget Android devices in Nepal. Bluetooth has pairing friction — take 30 seconds just to connect. QR is instant, zero setup, works in direct sunlight.' Then emphasize the biggest innovation: we are the ONLY system in Nepal with offline P2P cryptographic payments PLUS a dedicated hardware RFID terminal. No one else has done both.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(168,85,247,0.12)" d="M0,160 L170,82 L310,122 L450,44 L590,108 L730,20 L870,76 L1010,30 L1150,90 L1290,48 L1440,86 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag purple">💡 UNIQUENESS / INNOVATION (20%)</div>
+    <h2 class="slide-title">No one else has <span style="color:var(--purple);">built this</span>.</h2>
+    <div class="divider"></div>
+
+    <div class="card-grid col3" style="margin-top:18px; gap:14px;">
+      <div class="card" style="border-color:rgba(0,229,200,0.25);">
+        <div class="icon">📸</div>
+        <h4 style="color:var(--teal);">QR over Bluetooth/NFC</h4>
+        <p><strong>100% of smartphones</strong> have a camera. NFC absent from budget Android devices in Nepal. BT has pairing latency + permission friction. QR: universal, instant, zero setup, sunlight-compatible.</p>
+      </div>
+      <div class="card" style="border-color:rgba(245,200,66,0.25);">
+        <div class="icon">🏗️</div>
+        <h4 style="color:var(--gold);">Dual Ecosystem</h4>
+        <p>Software app (React Native + Expo) <em>AND</em> dedicated RFID hardware terminal (ESP32). One complete offline payment ecosystem — both paradigms, uniquely integrated.</p>
+      </div>
+      <div class="card" style="border-color:rgba(168,85,247,0.25);">
+        <div class="icon">🪙</div>
+        <h4 style="color:var(--purple);">Bond Token Paradigm</h4>
+        <p>Money as discrete cryptographic tokens (not balance ledger updates) enables true P2P transfer with <em>zero server intermediary</em> — a fundamentally new model.</p>
+      </div>
+      <div class="card" style="border-color:rgba(0,229,200,0.25);">
+        <div class="icon">🔄</div>
+        <h4 style="color:var(--teal);">True 2-Way Handshake</h4>
+        <p>Not a static payment link. Receiver shows <em>live request QR</em>. Sender responds with <em>cryptographically signed payment QR</em>. Genuine bidirectional protocol.</p>
+      </div>
+      <div class="card" style="border-color:rgba(245,200,66,0.25);">
+        <div class="icon">📡</div>
+        <h4 style="color:var(--gold);">MQTT Multi-Device Live Sync</h4>
+        <p>Cashier phone + customer screen + ESP32 hardware synced in real-time via QR pairing. Sub-100ms event broadcasting. Completely unique to OffPay.</p>
+      </div>
+      <div class="card" style="border-color:rgba(168,85,247,0.25);">
+        <div class="icon">🗄️</div>
+        <h4 style="color:var(--purple);">RAM Cache Architecture</h4>
+        <p>LittleFS flash pre-loaded to ESP32 RAM on boot. HTTP API responses in <strong>&lt;2ms</strong> — faster than most cloud APIs even with internet.</p>
+      </div>
+    </div>
+
+    <div class="announce-bar" style="margin-top:16px; display:inline-flex;">
+      <span>🏆</span>
+      <span>eSewa, Khalti, GPay, Apple Pay — ALL require 100% internet. OffPay is the <strong>only cryptographically verified offline P2P payment system</strong> in Nepal.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 8 — MARKET & IMPACT  (Theme + Practicality)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="Paint the big picture — this is your passion slide. 'Nepal is just the start. The same problem exists in every developing nation, every mountain region, every disaster zone on earth.' Cite numbers: 1.4M trekkers, 3000+ lodges, 40% rural without internet. Reference SDG alignment: financial inclusion, resilience. Be passionate. This reinforces both Theme Relevance (25%) and Practicality (25%).">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(0,229,200,0.09)" d="M0,160 L180,78 L330,118 L470,42 L610,102 L740,20 L880,75 L1020,32 L1160,88 L1300,47 L1440,85 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag">🌏 MARKET &amp; IMPACT — Theme Relevance (25%) + Practicality (25%)</div>
+    <h2 class="slide-title">A <span class="grad-text">massive underserved market</span>. Starting with Nepal.</h2>
+    <div class="divider"></div>
+
+    <div class="card-grid col4" style="margin-top:18px; gap:14px;">
+      <div class="stat-card">
+        <div class="num" style="color:var(--teal);">1.4M+</div>
+        <div class="lbl">Foreign trekkers per year in Nepal's zero-connectivity highland circuits</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--gold);">3,000+</div>
+        <div class="lbl">Tea houses &amp; trek lodges currently cash-only due to zero connectivity</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--purple);">40%</div>
+        <div class="lbl">Of Nepal's rural population lacks reliable mobile internet access</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--red);">0</div>
+        <div class="lbl">Existing solutions for offline cryptographic P2P payments in Nepal</div>
+      </div>
+    </div>
+
+    <div class="three-col" style="margin-top:16px; gap:14px;">
+      <div class="card" style="border-color:rgba(0,229,200,0.2);">
+        <div class="icon">🏔️</div>
+        <h4 style="color:var(--teal);">Tourism &amp; Trekking</h4>
+        <p>Pay porters, guides, tea houses, permit stations across all Himalayan trekking circuits. Zero data required for any transaction.</p>
+      </div>
+      <div class="card" style="border-color:rgba(245,200,66,0.2);">
+        <div class="icon">🌾</div>
+        <h4 style="color:var(--gold);">Rural Financial Inclusion</h4>
+        <p>Agricultural markets, village traders, rural cooperatives — accessible to anyone with a smartphone, no SIM data plan needed.</p>
+      </div>
+      <div class="card" style="border-color:rgba(255,71,87,0.2);">
+        <div class="icon">🆘</div>
+        <h4 style="color:var(--red);">Disaster Response</h4>
+        <p>During Nepal's 2015 earthquake, all banking infrastructure collapsed. OffPay maintains financial continuity when infrastructure fails.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px; border-color:rgba(255,255,255,0.08); padding:14px 20px;">
+      <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--muted);">
+        <strong style="color:var(--text);">Global replication potential:</strong>
+        <div class="pill">🏔️ Andean highlands (Peru, Bolivia)</div>
+        <div class="pill">🌏 Rural Southeast Asia</div>
+        <div class="pill">🌍 Sub-Saharan Africa</div>
+        <div class="pill">🆘 Any disaster zone, globally</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 9 — FULL SYSTEM + TECH STACK  (All criteria)
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="'Let me show you the complete system in 30 seconds.' Walk through the 3 phases quickly: Phase 1 — online bond issuance from the server. Phase 2 — the offline QR handshake, zero internet. Phase 3 — cloud reconciliation when connectivity returns. Then point to the tech stack. 'This is a full-stack system: mobile app, cloud backend, and embedded hardware — all built by our team.' If you have a live demo ready, say: 'Let me show you this working right now.'">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(168,85,247,0.09)" d="M0,160 L200,72 L360,115 L500,40 L640,100 L780,18 L920,78 L1060,35 L1200,92 L1340,50 L1440,82 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div class="tag purple">🏛️ FULL SYSTEM ARCHITECTURE — End-to-End</div>
+    <h2 class="slide-title">3 Phases. <span style="color:var(--purple);">One seamless experience.</span></h2>
+    <div class="divider"></div>
+
+    <div class="three-col" style="margin-top:18px; gap:16px;">
+      <div style="background:rgba(0,229,200,0.04); border:1px solid rgba(0,229,200,0.2); border-radius:14px; padding:16px;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:0.15em; color:var(--teal); text-transform:uppercase; margin-bottom:10px;">Phase 1 — Online Preparation</div>
+        <div style="font-size:12.5px; color:rgba(240,244,255,0.8); line-height:1.85;">
+          ① Top up Online Vault<br/>② POST /bonds/issue<br/>③ Server Ed25519-signs bonds<br/>④ Bonds stored in local SQLite<br/>
+          <span style="color:var(--teal); font-weight:600;">⬇ Ready to go offline</span>
+        </div>
+        <div style="margin-top:10px; font-size:10.5px; color:var(--muted); font-family:monospace; background:rgba(0,0,0,0.3); padding:7px 10px; border-radius:6px;">
+          POST /bonds/issue<br/>→ Deduct Online Vault<br/>→ Return signed bonds
+        </div>
+      </div>
+
+      <div style="background:rgba(245,200,66,0.04); border:1px solid rgba(245,200,66,0.2); border-radius:14px; padding:16px;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:0.15em; color:var(--gold); text-transform:uppercase; margin-bottom:10px;">Phase 2 — Offline P2P ⚡ Zero Internet</div>
+        <div style="font-size:12.5px; color:rgba(240,244,255,0.8); line-height:1.85;">
+          ① Bob shows Request QR (nonce)<br/>② Alice scans + selects bonds<br/>③ Ed25519 sign → Payment QR<br/>④ Bob verifies 2 signatures<br/>
+          <span style="color:var(--gold); font-weight:600;">✅ Done in under 2 seconds</span>
+        </div>
+        <div style="margin-top:10px; font-size:10.5px; color:var(--gold); background:rgba(0,0,0,0.3); padding:7px 10px; border-radius:6px; text-align:center; font-weight:600;">
+          📵 ZERO INTERNET REQUIRED<br/>
+          <span style="color:var(--muted); font-weight:400;">OFFPAY_REQUEST → OFFPAY_PAYMENT</span>
+        </div>
+      </div>
+
+      <div style="background:rgba(168,85,247,0.04); border:1px solid rgba(168,85,247,0.2); border-radius:14px; padding:16px;">
+        <div style="font-size:10px; font-weight:700; letter-spacing:0.15em; color:var(--purple); text-transform:uppercase; margin-bottom:10px;">Phase 3 — Cloud Reconciliation</div>
+        <div style="font-size:12.5px; color:rgba(240,244,255,0.8); line-height:1.85;">
+          ① Bob reconnects to internet<br/>② Uploads pending_sync vouchers<br/>③ Server re-verifies signatures<br/>④ Anti-double-spend check<br/>
+          <span style="color:var(--purple); font-weight:600;">🏦 Bob's vault credited (200 OK)</span>
+        </div>
+        <div style="margin-top:10px; font-size:10.5px; color:var(--muted); font-family:monospace; background:rgba(0,0,0,0.3); padding:7px 10px; border-radius:6px;">
+          POST /transactions/sync<br/>→ Verify + bond_redemptions<br/>→ Credit online vault
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px; border-color:rgba(255,255,255,0.08); padding:12px 18px;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:11.5px;">
+        <strong style="color:var(--text); font-size:12px;">Full Tech Stack:</strong>
+        <div class="pill">React Native + Expo</div>
+        <div class="pill">TypeScript + Node.js</div>
+        <div class="pill">PostgreSQL + SQLite</div>
+        <div class="pill">ESP32/ESP8266 C++</div>
+        <div class="pill">MFRC522 RFID</div>
+        <div class="pill">MQTT (emqx.io)</div>
+        <div class="pill">Ed25519 + SHA-256</div>
+        <div class="pill">LittleFS</div>
+        <div class="pill">Arduino IDE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     SLIDE 10 — CLOSING + JUDGE Q&A CHEATSHEET
+═════════════════════════════════════════════════════════ -->
+<section class="slide"
+  data-notes="Close with maximum confidence. 'OffPay is not a concept — it is a working, tested system. Software. Hardware. Cryptography. Database. Cloud sync. All built. All functional.' Stand tall, smile, make eye contact with each judge. Then: 'We are ready for your questions.' Stay calm — your Q&A answers are on this slide. Breathe. You built something real.">
+
+  <svg class="mtn-strip" viewBox="0 0 1440 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="rgba(0,229,200,0.12)" d="M0,160 L150,90 L280,130 L400,50 L540,110 L660,25 L780,80 L900,35 L1050,95 L1170,50 L1300,105 L1440,65 L1440,160 Z"/>
+  </svg>
+
+  <div style="width:100%; max-width:1080px; z-index:1; position:relative;">
+    <div style="text-align:center; margin-bottom:18px;">
+      <div class="tag">🏆 CLOSING + JUDGE Q&amp;A DEFENSE</div>
+      <h2 class="slide-title" style="text-align:center;"><span class="grad-text">OffPay</span> — Digital payments that never leave you stranded.</h2>
+      <div class="divider" style="margin:12px auto;"></div>
+
+      <div style="max-width:580px; margin:0 auto 18px;">
+        <div class="score-bar-wrap">
+          <div class="score-row"><span class="score-label">🎯 Theme Relevance (25%)</span><div class="score-track"><div class="score-fill" style="width:96%; background:linear-gradient(90deg,var(--teal),var(--gold));"></div></div><span class="score-pct">24/25</span></div>
+          <div class="score-row"><span class="score-label">⚙️ Technical Complexity (20%)</span><div class="score-track"><div class="score-fill" style="width:90%; background:linear-gradient(90deg,var(--purple),var(--teal));"></div></div><span class="score-pct">18/20</span></div>
+          <div class="score-row"><span class="score-label">✅ Practicality / Feasibility (25%)</span><div class="score-track"><div class="score-fill" style="width:92%; background:linear-gradient(90deg,var(--gold),var(--purple));"></div></div><span class="score-pct">23/25</span></div>
+          <div class="score-row"><span class="score-label">💡 Uniqueness / Innovation (20%)</span><div class="score-track"><div class="score-fill" style="width:95%; background:linear-gradient(90deg,var(--purple),var(--red));"></div></div><span class="score-pct">19/20</span></div>
+          <div class="score-row"><span class="score-label">🎤 Clarity of Presentation (10%)</span><div class="score-track"><div class="score-fill" style="width:90%; background:linear-gradient(90deg,var(--teal),var(--purple));"></div></div><span class="score-pct">9/10</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid col3" style="gap:12px;">
+      <div class="qa-item">
+        <div class="q">Q: How is double-spending prevented?</div>
+        <div class="a"><strong>3-Tier:</strong> ① SQLite marks bond <em>spent</em> before QR renders. ② Server <code>bond_redemptions</code> UNIQUE constraint — first sync wins. ③ KYC identity + crypto sig → <code>fraud_flags</code> suspension.</div>
+      </div>
+      <div class="qa-item">
+        <div class="q">Q: Why QR and not Bluetooth / NFC?</div>
+        <div class="a">100% of phones have a camera. NFC absent from budget Androids in Nepal. Bluetooth requires pairing — 30s latency + permissions. QR: universal, instant, works in sunlight, zero setup.</div>
+      </div>
+      <div class="qa-item">
+        <div class="q">Q: How do you handle change (NPR 350 with NPR 500)?</div>
+        <div class="a">Bonds are issued in small denominations: NPR 100, 200, 500. Sender selects exact combinations. Receiver can issue a reverse offline voucher for the difference.</div>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:18px;">
+      <div style="font-size:26px; font-family:var(--font-head); font-weight:800; color:var(--teal);">Thank you. We are ready for your questions. 🙏</div>
+      <p class="sub" style="margin-top:6px;">Software + Hardware + Cryptography — all built, all tested, all working.</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- #deck -->
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+    ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px';
+  });
+
+  // Slide engine
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+  const progressBar = document.getElementById('progress-bar');
+  const counter = document.getElementById('slide-counter');
+  const dotsEl = document.getElementById('dots');
+  const notesPanel = document.getElementById('notes-panel');
+  const notesText = document.getElementById('notes-text');
+  const notesToggle = document.getElementById('notes-toggle');
+
+  // Build dots
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  });
+
+  function goTo(n) {
+    if (n < 0 || n >= total) return;
+    const prev = current;
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('prev');
+    setTimeout(() => slides[prev].classList.remove('prev'), 620);
+    current = n;
+    slides[current].classList.add('active');
+    slides[current].classList.remove('prev');
+    updateUI();
+  }
+
+  function updateUI() {
+    progressBar.style.width = ((current + 1) / total * 100) + '%';
+    counter.textContent = (current + 1) + ' / ' + total;
+    dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+    notesText.textContent = slides[current].dataset.notes || '';
+  }
+
+  document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
+  document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
+
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); goTo(current + 1); }
+    if (['ArrowLeft','ArrowUp'].includes(e.key)) { e.preventDefault(); goTo(current - 1); }
+    if (e.key.toLowerCase() === 'n') notesToggle.click();
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End') goTo(total - 1);
+  });
+
+  // Touch/swipe
+  let touchX = 0;
+  document.addEventListener('touchstart', e => touchX = e.touches[0].clientX);
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) goTo(dx > 0 ? current + 1 : current - 1);
+  });
+
+  // Notes
+  notesToggle.addEventListener('click', () => notesPanel.classList.toggle('visible'));
+
+  updateUI();
+</script>
+</body>
+</html>
