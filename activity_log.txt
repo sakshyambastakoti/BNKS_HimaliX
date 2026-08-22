@@ -38,3 +38,4 @@
 [2026-08-22 12:31:23] Commit #38: feat(store): implement offline balance and total balance computed state
 [2026-08-22 12:33:31] Commit #39: feat(store): add mock bond fixtures with available and spent statuses
 [2026-08-22 12:35:40] Commit #40: feat(logs): upgrade developer logs screen with color-coded telemetry badges
+[2026-08-22 12:37:49] Commit #41: feat(logs): add manual validator probe ping trigger and clear controls
