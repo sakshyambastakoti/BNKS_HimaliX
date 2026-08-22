@@ -24,3 +24,4 @@
 [2026-08-22 12:01:23] Commit #24: feat(send): add quick NPR denomination chips (+100, +500, +1000, MAX)
 [2026-08-22 12:03:31] Commit #25: feat(send): add allocated offline bond tokens breakdown preview
 [2026-08-22 12:05:40] Commit #26: feat(receive): build cryptographic payment request QR generator
+[2026-08-22 12:07:49] Commit #27: feat(receive): implement 1-tap copy and share for encrypted handshake payload
