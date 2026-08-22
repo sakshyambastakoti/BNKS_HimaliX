@@ -1384,6 +1384,120 @@
             border-top: 2px dashed #09090b;
         }
 
+        /* ── LIVE PAYMENT AUTHORIZATION MODAL ─────────────────── */
+        .payment-radar-wrap {
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        .radar-beacon {
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 14px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-beacon .radar-wave {
+            position: absolute;
+            inset: 0;
+            border: 2px solid var(--brand-green);
+            opacity: 0;
+            animation: radar-expand 2s infinite cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .radar-beacon .radar-wave:nth-child(2) {
+            animation-delay: 0.6s;
+        }
+
+        .radar-beacon .radar-wave:nth-child(3) {
+            animation-delay: 1.2s;
+        }
+
+        @keyframes radar-expand {
+            0% { transform: scale(0.4); opacity: 0.9; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        .radar-icon-center {
+            width: 48px;
+            height: 48px;
+            background: var(--brand-green-soft);
+            border: 2px solid var(--brand-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-green-dark);
+            z-index: 2;
+            box-shadow: 0 0 20px var(--brand-green-glow);
+        }
+
+        .pipeline-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 16px 0;
+            text-align: left;
+            border: 1px solid var(--gray-200);
+            background: var(--bg-subtle);
+            padding: 12px 14px;
+        }
+
+        .pipeline-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.78rem;
+            color: var(--gray-500);
+            transition: all 0.2s ease;
+        }
+
+        .pipeline-step.active {
+            color: var(--black);
+            font-weight: 700;
+        }
+
+        .pipeline-step.done {
+            color: var(--brand-green-dark);
+            font-weight: 700;
+        }
+
+        .step-dot {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--gray-400);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-white);
+            flex-shrink: 0;
+        }
+
+        .pipeline-step.active .step-dot {
+            border-color: var(--brand-green);
+            background: var(--brand-green-soft);
+            color: var(--brand-green-dark);
+            box-shadow: 0 0 8px var(--brand-green-glow);
+        }
+
+        .pipeline-step.done .step-dot {
+            background: var(--brand-green-dark);
+            border-color: var(--brand-green-dark);
+            color: #ffffff;
+        }
+
+        .sim-card-bar {
+            background: var(--bg-white);
+            border: 1px solid var(--gray-300);
+            padding: 12px;
+            margin-top: 14px;
+            text-align: left;
+        }
+
         /* ── Toast Notifications ───────────────────────────────── */
         .toast {
             position: fixed;
@@ -2805,18 +2919,156 @@
         // ══════════════════════════════════════════════════════════════
         // ── USER ACTIONS (PAYMENT, CARDS, SYNC) ──────────────────────
         // ══════════════════════════════════════════════════════════════
+        let activePaymentAmount = 0;
+
         function startPayment(e) {
             if (e) e.preventDefault();
             playAudioTone('click');
             const amt = parseFloat(document.getElementById('pay-amount').value);
             if (isNaN(amt) || amt <= 0) return toast('Enter a valid payment amount', 'er');
 
+            activePaymentAmount = amt;
+            terminalStatus.mode = 'PAYMENT';
+            terminalStatus.activeAmount = amt;
+
             if (connMode === 'mqtt') {
                 mqttSendCmd('start_payment', { amount: amt });
-                toast(`Payment initialized for NPR ${amt.toFixed(2)} — Tap RFID Card`, 'ok');
-            } else {
-                toast(`Direct LAN Payment: Tap RFID Card on hardware terminal`, 'ok');
             }
+
+            // Open Real-time Payment Feedback Modal
+            showPaymentWaitingModal(amt);
+        }
+
+        function showPaymentWaitingModal(amt) {
+            const overlay = document.getElementById('overlay');
+            const modal = document.getElementById('modal-content');
+            overlay.classList.add('active');
+
+            const cardOptions = allCards.map(c => 
+                `<option value="${esc(c.uid)}">${esc(c.name)} (Vault: NPR ${parseFloat(c.balance || 0).toFixed(2)})</option>`
+            ).join('');
+
+            modal.innerHTML = `
+                <div class="payment-radar-wrap">
+                    <div class="radar-beacon">
+                        <div class="radar-wave"></div>
+                        <div class="radar-wave"></div>
+                        <div class="radar-wave"></div>
+                        <div class="radar-icon-center">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19"/></svg>
+                        </div>
+                    </div>
+
+                    <div style="font-size:0.72rem; font-weight:800; letter-spacing:1.5px; color:var(--brand-green-dark); text-transform:uppercase; font-family:'JetBrains Mono',monospace; margin-bottom:2px;">
+                        Awaiting Contactless Card Tap
+                    </div>
+                    <div style="font-size:1.9rem; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--black); letter-spacing:-0.5px; margin-bottom:4px;">
+                        NPR ${amt.toFixed(2)}
+                    </div>
+                    <p style="font-size:0.76rem; color:var(--gray-500); margin-bottom:14px;">
+                        Hold RFID card near reader or simulate tap below
+                    </p>
+
+                    <!-- Real-time Step Pipeline -->
+                    <div class="pipeline-steps">
+                        <div class="pipeline-step done" id="step-1">
+                            <span class="step-dot">&#10003;</span>
+                            <span>Terminal POS Ready & Listening</span>
+                        </div>
+                        <div class="pipeline-step active" id="step-2">
+                            <span class="step-dot" id="step-2-dot">2</span>
+                            <span id="step-2-text">Detecting RFID / NFC Chip...</span>
+                        </div>
+                        <div class="pipeline-step" id="step-3">
+                            <span class="step-dot" id="step-3-dot">3</span>
+                            <span>Cryptographic Vault Balance Verification</span>
+                        </div>
+                        <div class="pipeline-step" id="step-4">
+                            <span class="step-dot" id="step-4-dot">4</span>
+                            <span>Offline Ledger Settle & Supabase Sync</span>
+                        </div>
+                    </div>
+
+                    <!-- Web Test Tap Simulator -->
+                    <div class="sim-card-bar">
+                        <div style="font-size:0.7rem; font-weight:800; letter-spacing:1px; color:var(--gray-600); margin-bottom:6px; font-family:'JetBrains Mono',monospace;">
+                            SELECT CARD TO TAP (WEB SIMULATOR):
+                        </div>
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <select id="sim-card-select" class="form-input" style="padding:6px 8px; font-size:0.78rem;">
+                                ${cardOptions}
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-black btn-full" onclick="executeSimulatedTap()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14"/></svg>
+                            <span>Simulate RFID Card Tap</span>
+                        </button>
+                    </div>
+
+                    <div style="margin-top:12px;">
+                        <button type="button" class="btn btn-outline btn-full" onclick="cancelPaymentAction()">Cancel Payment</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function executeSimulatedTap() {
+            const select = document.getElementById('sim-card-select');
+            if (!select) return;
+            const uid = select.value;
+            const card = allCards.find(c => c.uid === uid);
+            if (!card) return toast('Card not found', 'er');
+
+            playAudioTone('click');
+
+            const s2 = document.getElementById('step-2');
+            const s3 = document.getElementById('step-3');
+            const s4 = document.getElementById('step-4');
+
+            if (s2) {
+                s2.className = 'pipeline-step done';
+                document.getElementById('step-2-dot').innerHTML = '&#10003;';
+                document.getElementById('step-2-text').innerText = `Card Detected: ${card.name} (${card.uid})`;
+            }
+
+            if (s3) s3.className = 'pipeline-step active';
+
+            setTimeout(() => {
+                const amt = activePaymentAmount;
+                const isApproved = card.balance >= amt;
+
+                if (s3) {
+                    s3.className = isApproved ? 'pipeline-step done' : 'pipeline-step active';
+                    document.getElementById('step-3-dot').innerHTML = isApproved ? '&#10003;' : '!';
+                }
+
+                if (s4 && isApproved) s4.className = 'pipeline-step active';
+
+                setTimeout(() => {
+                    const eventPayload = {
+                        id: Date.now() % 100000,
+                        uid: card.uid,
+                        name: card.name,
+                        amount: amt,
+                        prevBal: card.balance,
+                        remBal: isApproved ? (card.balance - amt) : card.balance,
+                        status: isApproved ? 'Success' : 'Declined',
+                        message: isApproved ? 'Approved' : 'Insufficient Balance',
+                        timestamp: new Date().toLocaleTimeString()
+                    };
+
+                    handleRemoteEvent(eventPayload);
+                }, 450);
+            }, 450);
+        }
+
+        function cancelPaymentAction() {
+            playAudioTone('click');
+            if (connMode === 'mqtt') {
+                mqttSendCmd('cancel', { type: 'payment' });
+            }
+            closeOverlay();
+            toast('Payment cancelled', 'ok');
         }
 
         function registerCard(e) {
