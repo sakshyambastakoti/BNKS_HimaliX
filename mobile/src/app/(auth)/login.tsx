@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { OffPayLogo } from '@/components/OffPayLogo';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { MOCK_USER } from '@/constants/mock-data';
@@ -49,7 +50,7 @@ export default function LoginScreen() {
           </View>
 
           {/* Form Card */}
-          <View style={[styles.formCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
+          <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
             <ThemedText style={[styles.formTitle, { color: theme.text }]}>
               Unlock Offline Vault
             </ThemedText>
@@ -68,7 +69,7 @@ export default function LoginScreen() {
                 onFocus={() => setIsPhoneFocused(true)}
                 onBlur={() => setIsPhoneFocused(false)}
                 placeholder="+977-98XXXXXXXX"
-                placeholderTextColor={theme.textMuted}
+                placeholderTextColor={theme.textSecondary}
                 keyboardType="phone-pad"
                 style={[
                   styles.input,
@@ -92,7 +93,7 @@ export default function LoginScreen() {
                 onFocus={() => setIsPasswordFocused(true)}
                 onBlur={() => setIsPasswordFocused(false)}
                 placeholder="Enter passphrase"
-                placeholderTextColor={theme.textMuted}
+                placeholderTextColor={theme.textSecondary}
                 secureTextEntry
                 style={[
                   styles.input,
@@ -111,23 +112,22 @@ export default function LoginScreen() {
               style={({ pressed }) => [
                 styles.loginButton,
                 {
-                  backgroundColor: theme.primary,
+                  backgroundColor: theme.primaryDark,
                   opacity: pressed ? 0.88 : 1,
                   transform: [{ scale: pressed ? 0.98 : 1 }],
-                  ...Shadows.glowGreen,
                 },
               ]}
             >
               <ThemedText style={styles.loginButtonText}>
-                Authenticate Vault
+                Unlock Node Vault
               </ThemedText>
             </Pressable>
 
-            {/* Biometric Quick Unlock */}
+            {/* Biometric Trigger */}
             <Pressable
               onPress={handleLogin}
               style={({ pressed }) => [
-                styles.bioButton,
+                styles.biometricButton,
                 {
                   backgroundColor: theme.cardElevated,
                   borderColor: theme.border,
@@ -135,30 +135,30 @@ export default function LoginScreen() {
                 },
               ]}
             >
-              <ThemedText style={[styles.bioIcon]}>🔐</ThemedText>
-              <ThemedText style={[styles.bioText, { color: theme.text }]}>
+              <SvgIcon name="shield" size={16} color={theme.primary} />
+              <ThemedText style={[styles.biometricText, { color: theme.text }]}>
                 Quick Biometric Key Unlock
               </ThemedText>
             </Pressable>
-
-            {/* Signup Link */}
-            <View style={styles.signupRow}>
-              <ThemedText style={[styles.signupText, { color: theme.textSecondary }]}>
-                New to OffPay?{' '}
-              </ThemedText>
-              <Pressable onPress={() => router.push('/(auth)/signup')}>
-                <ThemedText style={[styles.signupLink, { color: theme.primary }]}>
-                  Generate Node Keys
-                </ThemedText>
-              </Pressable>
-            </View>
           </View>
 
-          {/* Security Note */}
-          <View style={[styles.securityNote, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-            <ThemedText style={styles.securityIcon}>🛡</ThemedText>
-            <ThemedText style={[styles.securityText, { color: theme.textMuted }]}>
-              Ed25519 private keys are permanently isolated inside your phone's hardware Secure Enclave.
+          {/* Signup Link */}
+          <View style={styles.signupPrompt}>
+            <ThemedText style={[styles.promptText, { color: theme.textSecondary }]}>
+              Don't have an OffPay node keypair?
+            </ThemedText>
+            <Pressable onPress={() => router.push('/(auth)/signup')}>
+              <ThemedText style={[styles.signupLink, { color: theme.primary }]}>
+                Generate New Keys
+              </ThemedText>
+            </Pressable>
+          </View>
+
+          {/* Trust Seal */}
+          <View style={[styles.trustSeal, { borderColor: theme.border }]}>
+            <SvgIcon name="lock" size={14} color={theme.primary} />
+            <ThemedText style={[styles.trustText, { color: theme.textSecondary }]}>
+              Secured by Ed25519 Cryptography & Secure Enclave
             </ThemedText>
           </View>
         </ScrollView>
@@ -171,59 +171,59 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: Spacing.four,
+    padding: Spacing.four,
     justifyContent: 'center',
-    paddingVertical: Spacing.six,
+    minHeight: '100%',
+    paddingBottom: Spacing.six,
   },
   logoSection: {
     alignItems: 'center',
     marginBottom: Spacing.five,
+    marginTop: Spacing.four,
   },
   formCard: {
-    padding: Spacing.four,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    gap: Spacing.three,
+    padding: Spacing.four,
+    gap: Spacing.four,
   },
   formTitle: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.black,
-    letterSpacing: -0.5,
+    fontSize: FontSize.lg,
+    fontWeight: FontWeight.bold,
   },
   formSubtitle: {
     fontSize: FontSize.xs,
-    marginBottom: Spacing.two,
+    marginTop: -4,
   },
   inputGroup: {
-    gap: Spacing.one,
+    gap: Spacing.one + 2,
   },
   inputLabel: {
-    fontSize: FontSize.xxs + 1,
+    fontSize: FontSize.xxs,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   input: {
     borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-    paddingHorizontal: Spacing.three,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
   },
   loginButton: {
-    paddingVertical: Spacing.three + 4,
+    paddingVertical: Spacing.four,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: Spacing.two,
   },
   loginButtonText: {
-    color: '#07090E',
-    fontSize: FontSize.md,
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
-  bioButton: {
+  biometricButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -232,38 +232,36 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: Spacing.two,
   },
-  bioIcon: {
-    fontSize: FontSize.md,
+  biometricText: {
+    fontSize: FontSize.xs + 1,
+    fontWeight: FontWeight.bold,
   },
-  bioText: {
+  signupPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    marginTop: Spacing.five,
+  },
+  promptText: {
+    fontSize: FontSize.xs,
+  },
+  signupLink: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
   },
-  signupRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: Spacing.two,
-  },
-  signupText: {
-    fontSize: FontSize.sm,
-  },
-  signupLink: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extrabold,
-  },
-  securityNote: {
+  trustSeal: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.two,
-    padding: Spacing.three,
-    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.two,
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
-    marginTop: Spacing.four,
+    marginTop: Spacing.five,
   },
-  securityIcon: { fontSize: FontSize.md },
-  securityText: {
-    flex: 1,
-    fontSize: FontSize.xxs + 1,
-    lineHeight: 16,
+  trustText: {
+    fontSize: 10,
+    fontWeight: FontWeight.medium,
   },
 });
