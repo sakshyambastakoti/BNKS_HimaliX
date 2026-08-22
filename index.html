@@ -2185,11 +2185,11 @@
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Supabase Project URL</label>
-                            <input type="text" class="form-input mono" id="supabase-url" placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
+                            <input type="text" class="form-input mono" id="supabase-url" value="https://hlglhhfzpwqivikraesy.supabase.co" placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Supabase Anon Public API Key</label>
-                            <input type="password" class="form-input mono" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
+                            <input type="password" class="form-input mono" id="supabase-key" value="sb_publishable_wOvKzI9TgbOmpHBBfiQY0A_lqqgOGeu" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
                         </div>
                     </div>
 
@@ -2362,9 +2362,12 @@
         let lastPingTimestamp = 0;
         let knownPeers = new Map(); // clientId -> { name, lastSeen, isCurrent }
 
-        // Supabase PostgreSQL Cloud Database Configuration
-        let supabaseUrl = localStorage.getItem('offpay_supabase_url') || '';
-        let supabaseKey = localStorage.getItem('offpay_supabase_key') || '';
+        // Supabase PostgreSQL Cloud Database Configuration (Pre-configured Live Database)
+        const DEFAULT_SUPABASE_URL = "https://hlglhhfzpwqivikraesy.supabase.co";
+        const DEFAULT_SUPABASE_KEY = "sb_publishable_wOvKzI9TgbOmpHBBfiQY0A_lqqgOGeu";
+
+        let supabaseUrl = localStorage.getItem('offpay_supabase_url') || DEFAULT_SUPABASE_URL;
+        let supabaseKey = localStorage.getItem('offpay_supabase_key') || DEFAULT_SUPABASE_KEY;
         let supabaseAutoSync = localStorage.getItem('offpay_supabase_autosync') !== 'false';
         let supabaseClient = null;
 
