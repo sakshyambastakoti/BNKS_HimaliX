@@ -1551,6 +1551,109 @@
             100% { transform: translateX(350%); width: 30%; }
         }
 
+        /* ── Payment Celebration & Bouncy Animations ──────────── */
+        .celebration-wrap {
+            position: relative;
+            text-align: center;
+            padding: 10px 0;
+            overflow: hidden;
+        }
+
+        .success-circle-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--brand-green-soft);
+            border: 2px solid var(--brand-green);
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px var(--brand-green-glow);
+            animation: bounce-scale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes bounce-scale {
+            0% { transform: scale(0.3); opacity: 0; }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-check-svg {
+            stroke-dasharray: 48;
+            stroke-dashoffset: 48;
+            animation: stroke-draw 0.4s 0.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+
+        @keyframes stroke-draw {
+            100% { stroke-dashoffset: 0; }
+        }
+
+        /* ── High-End Thermal Bill Receipt Styling ────────────── */
+        .thermal-receipt {
+            background: #ffffff !important;
+            color: #09090b !important;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            padding: 24px 20px;
+            border: 1px dashed #71717a;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .receipt-brand-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #09090b;
+        }
+
+        .bill-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            background: #09090b;
+            color: #ffffff;
+            padding: 3px 8px;
+            margin-top: 4px;
+        }
+
+        .bill-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.76rem;
+            margin: 10px 0;
+        }
+
+        .bill-table th {
+            text-align: left;
+            border-bottom: 1px dashed #09090b;
+            padding: 4px 0;
+            background: transparent;
+            font-size: 0.7rem;
+            color: #09090b;
+            font-weight: 800;
+        }
+
+        .bill-table td {
+            padding: 5px 0;
+            border-bottom: 1px dotted #e4e4e7;
+            font-size: 0.76rem;
+            color: #09090b;
+        }
+
+        .bill-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.05rem;
+            font-weight: 800;
+            border-top: 2px dashed #09090b;
+            border-bottom: 2px dashed #09090b;
+            padding: 8px 0;
+            margin: 10px 0;
+        }
+
         /* ── Toast Notifications ───────────────────────────────── */
         .toast {
             position: fixed;
@@ -2600,6 +2703,7 @@
                     }
                     if (showAlert) toast('Supabase Cloud Database Connected!', 'ok');
                     fetchCardsFromSupabase();
+                    subscribeToSupabaseRealtime();
                 }
             } catch (err) {
                 if (badge) {
@@ -2607,6 +2711,60 @@
                     badge.style.background = 'var(--danger-bg)';
                     badge.style.color = 'var(--danger)';
                 }
+            }
+        }
+
+        function subscribeToSupabaseRealtime() {
+            if (!supabaseClient) return;
+            try {
+                supabaseClient
+                    .channel('public:realtime_cards_txns')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, payload => {
+                        console.log('[Supabase Realtime] Card event:', payload);
+                        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                            const c = payload.new;
+                            const idx = allCards.findIndex(card => (card.uid || '').toLowerCase() === (c.uid || '').toLowerCase());
+                            if (idx !== -1) {
+                                allCards[idx].name = c.name;
+                                allCards[idx].userId = c.user_id || 'USR';
+                                allCards[idx].balance = parseFloat(c.balance || 0);
+                            } else {
+                                allCards.push({ uid: c.uid, name: c.name, userId: c.user_id || 'USR', balance: parseFloat(c.balance || 0) });
+                            }
+                        } else if (payload.eventType === 'DELETE') {
+                            const oldUid = (payload.old && payload.old.uid) ? payload.old.uid : '';
+                            if (oldUid) {
+                                allCards = allCards.filter(card => (card.uid || '').toLowerCase() !== oldUid.toLowerCase());
+                            }
+                        }
+                        localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+                        renderCardsSidebar(allCards);
+                        updateStatsCounters();
+                    })
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'transactions' }, payload => {
+                        console.log('[Supabase Realtime] Txn inserted:', payload);
+                        const rt = payload.new;
+                        if (!allTransactions.some(t => t.id === rt.transaction_id || (t.timestamp === rt.timestamp && t.uid === rt.card_uid))) {
+                            allTransactions.push({
+                                id: rt.transaction_id || (allTransactions.length + 1),
+                                timestamp: rt.timestamp || rt.created_at,
+                                uid: rt.card_uid,
+                                name: rt.cardholder_name,
+                                amount: parseFloat(rt.amount || 0),
+                                prevBal: parseFloat(rt.prev_balance || 0),
+                                remBal: parseFloat(rt.remaining_balance || 0),
+                                status: rt.status || 'Success',
+                                synced: true
+                            });
+                            localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+                            renderTransactions(allTransactions);
+                            renderRecent(allTransactions);
+                            updateStatsCounters();
+                        }
+                    })
+                    .subscribe();
+            } catch (err) {
+                console.warn('[Supabase Realtime] Subscribe failed:', err);
             }
         }
 
@@ -2786,40 +2944,78 @@
             if (!txn) return toast('Transaction not found', 'er');
 
             const isOk = (txn.status || '').toLowerCase().includes('success');
-            const maskedUid = txn.uid ? (txn.uid.substring(0, 5) + ' ** **') : '--';
-            const authHash = 'AUTH-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const amt = parseFloat(txn.amount || 0).toFixed(2);
+            const prev = parseFloat(txn.prevBal || 0).toFixed(2);
+            const rem = parseFloat(txn.remBal !== undefined ? txn.remBal : txn.prevBal || 0).toFixed(2);
+            const authHash = 'SHA256-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            const stationName = localStorage.getItem('offpay_station_name') || 'OffPay Station 1';
 
             const modal = document.getElementById('thermal-receipt-content');
             modal.innerHTML = `
-                <div class="receipt-header-box">
-                    <div class="receipt-brand-title">OFFPAY POS TERMINAL</div>
-                    <div style="font-size:0.68rem; color:#52525b; margin-top:2px;">OFFLINE CRYPTOGRAPHIC LEDGER</div>
-                    <div style="font-size:0.68rem; color:#52525b;">${esc(localStorage.getItem('offpay_station_name') || 'Station 01')}</div>
+                <div class="receipt-title-box" style="text-align:center; border-bottom:2px dashed #09090b; padding-bottom:12px; margin-bottom:12px;">
+                    <div style="font-size:1.25rem; font-weight:800; letter-spacing:2px; color:#09090b;">OFFPAY TERMINAL</div>
+                    <div style="font-size:0.68rem; font-weight:700; color:#52525b; margin-top:2px;">OFFLINE CRYPTOGRAPHIC POS SETTLEMENT</div>
+                    <div style="font-size:0.68rem; color:#52525b;">${esc(stationName)} &bull; NODE #01</div>
+                    <div class="bill-badge">TAX INVOICE & CASH BILL</div>
                 </div>
 
-                <div class="receipt-row"><span>TXN NUMBER:</span><span class="mono">#${txn.id}</span></div>
-                <div class="receipt-row"><span>DATE & TIME:</span><span class="mono">${esc(txn.timestamp)}</span></div>
-                <div class="receipt-row"><span>CARDHOLDER:</span><strong>${esc(txn.name)}</strong></div>
-                <div class="receipt-row"><span>RFID UID:</span><span class="mono">${maskedUid}</span></div>
-                <div class="receipt-row"><span>STATUS:</span><strong style="color:${isOk ? '#059669' : '#dc2626'}">${esc(txn.status)}</strong></div>
-
-                <div class="receipt-total-box">
-                    <span>CHARGED AMOUNT:</span>
-                    <span>NPR ${parseFloat(txn.amount || 0).toFixed(2)}</span>
+                <div style="font-size:0.75rem; margin-bottom:10px;">
+                    <div class="receipt-row"><span>INVOICE NO:</span><strong class="mono">#TXN-${String(txn.id).padStart(6, '0')}</strong></div>
+                    <div class="receipt-row"><span>DATE / TIME:</span><span class="mono">${esc(txn.timestamp)}</span></div>
+                    <div class="receipt-row"><span>PAYMENT MODE:</span><strong>OFFLINE NFC VAULT</strong></div>
+                    <div class="receipt-row"><span>STATUS:</span><strong style="color:${isOk ? '#059669' : '#dc2626'}">${isOk ? '✓ APPROVED / PAID' : '✗ DECLINED'}</strong></div>
                 </div>
 
-                <div class="receipt-row"><span>PREVIOUS BALANCE:</span><span>NPR ${parseFloat(txn.prevBal || 0).toFixed(2)}</span></div>
-                <div class="receipt-row"><span>REMAINING VAULT:</span><strong>NPR ${parseFloat(txn.remBal || 0).toFixed(2)}</strong></div>
-                <div class="receipt-row" style="margin-top:6px; font-size:0.68rem; color:#71717a;"><span>AUTH HASH:</span><span>${authHash}</span></div>
+                <div style="border-top:1px dashed #09090b; border-bottom:1px dashed #09090b; padding:8px 0; margin-bottom:10px; font-size:0.75rem;">
+                    <div class="receipt-row"><span>CARDHOLDER:</span><strong>${esc(txn.name)}</strong></div>
+                    <div class="receipt-row"><span>CHIP UID:</span><span class="mono">${esc(txn.uid)}</span></div>
+                </div>
 
-                <div class="receipt-barcode">
-                    <div style="font-size:1.6rem; letter-spacing:4px; font-family:'Share Tech Mono',monospace;">||| | |||| || ||| |||| |</div>
-                    <div style="font-size:0.62rem; color:#71717a; margin-top:4px;">VERIFIED OFFLINE CRYPTOGRAPHIC RECEIPT</div>
+                <table class="bill-table">
+                    <thead>
+                        <tr>
+                            <th>DESCRIPTION</th>
+                            <th style="text-align:center;">QTY</th>
+                            <th style="text-align:right;">RATE</th>
+                            <th style="text-align:right;">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Vault POS Settlement</td>
+                            <td style="text-align:center;">1</td>
+                            <td style="text-align:right;">${amt}</td>
+                            <td style="text-align:right; font-weight:700;">NPR ${amt}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="font-size:0.74rem; border-top:1px dashed #09090b; padding-top:6px; margin-top:6px;">
+                    <div class="receipt-row"><span>SUBTOTAL:</span><span>NPR ${amt}</span></div>
+                    <div class="receipt-row"><span>TAX / VAT (0%):</span><span>NPR 0.00</span></div>
+                    <div class="receipt-row"><span>NETWORK FEE:</span><span>NPR 0.00 (OFFLINE)</span></div>
+                </div>
+
+                <div class="bill-total-row">
+                    <span>GRAND TOTAL:</span>
+                    <span>NPR ${amt}</span>
+                </div>
+
+                <div style="background:#f4f4f5; border:1px solid #e4e4e7; padding:8px 10px; font-size:0.72rem; margin-bottom:12px;">
+                    <div class="receipt-row" style="margin-bottom:3px;"><span>PREV BALANCE:</span><span class="mono">NPR ${prev}</span></div>
+                    <div class="receipt-row" style="margin-bottom:3px;"><span>AMOUNT DEDUCTED:</span><strong class="mono" style="color:#09090b;">- NPR ${amt}</strong></div>
+                    <div class="receipt-row" style="border-top:1px dashed #d4d4d8; padding-top:3px;"><span>REMAINING VAULT:</span><strong class="mono" style="color:#059669;">NPR ${rem}</strong></div>
+                </div>
+
+                <div style="text-align:center; margin-top:8px;">
+                    <div style="font-size:0.62rem; color:#71717a; word-break:break-all;">AUTH HASH: ${authHash}</div>
+                    <div style="font-size:1.8rem; letter-spacing:4px; font-family:'Share Tech Mono',monospace; margin-top:4px;">||| | |||| || ||| |||| |</div>
+                    <div style="font-size:0.62rem; color:#71717a; margin-top:2px;">*** THANK YOU FOR BANKING OFFLINE ***</div>
                 </div>
 
                 <div style="display:flex; gap:8px; margin-top:16px;">
-                    <button class="btn btn-black btn-full" onclick="window.print()">Print Receipt</button>
-                    <button class="btn btn-outline btn-full" onclick="closeReceiptModal()">Close</button>
+                    <button class="btn btn-black btn-full" onclick="window.print()">🖨️ Print Bill Receipt</button>
+                    <button class="btn btn-outline btn-full" onclick="closeReceiptModal()">Done</button>
                 </div>
             `;
 
@@ -3163,31 +3359,48 @@
 
             if (ok) {
                 modal.innerHTML = `
-                    <div style="text-align:center; padding:8px 0;">
-                        <div style="width:52px;height:52px;background:var(--brand-green-soft);border:1px solid var(--brand-green-border);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-dark)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <div class="celebration-wrap">
+                        <div class="success-circle-icon">
+                            <svg class="success-check-svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-dark)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
                         </div>
-                        <h2 style="font-size:1.35rem;font-weight:800;color:var(--brand-green-dark);margin-bottom:2px;">Payment Approved</h2>
-                        <p style="font-weight:800;font-size:1rem;color:var(--black);margin-bottom:2px;">${esc(ev.name || 'Cardholder')}</p>
-                        <p style="font-size:0.75rem;color:var(--gray-500);font-family:'JetBrains Mono',monospace;margin-bottom:12px;">${esc(ev.uid)}</p>
-
-                        <div style="margin-bottom:12px;">${cloudBadge}</div>
-
-                        <div style="border:1px solid var(--gray-200);background:var(--bg-subtle);padding:14px;text-align:left;margin-bottom:14px;">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-600)">Charged</span><strong class="mono" style="color:var(--black);">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
-                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-600)">Previous</span><span class="mono">NPR ${parseFloat(ev.prevBal || 0).toFixed(2)}</span></div>
-                            <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px dashed var(--gray-300);font-size:0.84rem;"><span style="color:var(--gray-600)">Remaining</span><strong class="mono" style="color:var(--brand-green-dark);">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
+                        <div style="font-size:0.7rem; font-weight:800; letter-spacing:2px; color:var(--brand-green-dark); text-transform:uppercase; font-family:'JetBrains Mono',monospace; margin-bottom:2px;">
+                            TRANSACTION AUTHORIZED
                         </div>
+                        <h2 style="font-size:1.45rem; font-weight:800; color:var(--black); margin-bottom:2px; letter-spacing:-0.5px;">Payment Approved!</h2>
+                        <p style="font-weight:800; font-size:1.05rem; color:var(--black); margin-bottom:2px;">${esc(ev.name || 'Cardholder')}</p>
+                        <p style="font-size:0.75rem; color:var(--gray-500); font-family:'JetBrains Mono',monospace; margin-bottom:12px;">${esc(ev.uid)}</p>
+
+                        <div style="margin-bottom:14px;">${cloudBadge}</div>
+
+                        <div style="border:1px solid var(--gray-200); background:var(--bg-subtle); padding:14px; text-align:left; margin-bottom:14px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.84rem;">
+                                <span style="color:var(--gray-600)">Amount Paid</span>
+                                <strong class="mono" style="color:var(--black); font-size:1rem;">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.84rem;">
+                                <span style="color:var(--gray-600)">Previous Vault</span>
+                                <span class="mono">NPR ${parseFloat(ev.prevBal || 0).toFixed(2)}</span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding-top:6px; border-top:1px dashed var(--gray-300); font-size:0.84rem;">
+                                <span style="color:var(--gray-600)">Remaining Vault</span>
+                                <strong class="mono" style="color:var(--brand-green-dark); font-size:0.95rem;">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong>
+                            </div>
+                        </div>
+
                         <div style="display:flex; gap:8px;">
-                            <button class="btn btn-outline btn-full" onclick="openReceiptModal(${ev.id || (allTransactions.length ? allTransactions[allTransactions.length-1].id : 101)})">View Receipt</button>
-                            <button class="btn btn-black btn-full" onclick="closeOverlay()">Done</button>
+                            <button class="btn btn-black btn-full" onclick="openReceiptModal(${ev.id || (allTransactions.length ? allTransactions[allTransactions.length-1].id : 101)})">
+                                <span>🧾 View Thermal Bill</span>
+                            </button>
+                            <button class="btn btn-outline btn-full" onclick="closeOverlay()">Done</button>
                         </div>
                     </div>
                 `;
             } else {
                 modal.innerHTML = `
                     <div style="text-align:center; padding:8px 0;">
-                        <div style="width:52px;height:52px;background:var(--danger-bg);border:1px solid var(--danger-border);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;">
+                        <div style="width:56px; height:56px; background:var(--danger-bg); border:2px solid var(--danger-border); margin:0 auto 12px; display:flex; align-items:center; justify-content:center; border-radius:50%;">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </div>
                         <h2 style="font-size:1.35rem;font-weight:800;color:var(--danger);margin-bottom:2px;">Payment Declined</h2>
