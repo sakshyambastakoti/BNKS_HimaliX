@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BankingHeader } from '@/components/BankingHeader';
 import { TransactionItem } from '@/components/TransactionItem';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
 import { MOCK_TRANSACTIONS, formatNPR } from '@/constants/mock-data';
@@ -27,9 +28,6 @@ export default function HistoryScreen() {
   const theme = useTheme();
   const [activeFilter, setActiveFilter] = useState<FilterTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const totalSent = MOCK_TRANSACTIONS.filter((t) => t.type === 'sent').reduce((acc, t) => acc + t.amount, 0);
-  const totalReceived = MOCK_TRANSACTIONS.filter((t) => t.type === 'received' || t.type === 'topup').reduce((acc, t) => acc + t.amount, 0);
 
   const filteredTransactions = MOCK_TRANSACTIONS.filter((tx) => {
     let matchesTab = true;
@@ -53,7 +51,7 @@ export default function HistoryScreen() {
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <View style={[styles.searchInputWrapper, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.subtle }]}>
-            <ThemedText style={styles.searchIcon}>🔍</ThemedText>
+            <SvgIcon name="search" size={16} color={theme.textSecondary} />
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -63,7 +61,7 @@ export default function HistoryScreen() {
             />
             {searchQuery.length > 0 && (
               <Pressable onPress={() => setSearchQuery('')}>
-                <ThemedText style={[styles.clearSearch, { color: theme.textSecondary }]}>✕</ThemedText>
+                <SvgIcon name="close" size={14} color={theme.textSecondary} />
               </Pressable>
             )}
           </View>
@@ -81,8 +79,8 @@ export default function HistoryScreen() {
                   style={({ pressed }) => [
                     styles.filterTab,
                     {
-                      backgroundColor: isActive ? '#0F4A3C' : theme.card,
-                      borderColor: isActive ? '#0F4A3C' : theme.border,
+                      backgroundColor: isActive ? theme.primaryDark : theme.card,
+                      borderColor: isActive ? theme.primaryDark : theme.border,
                       opacity: pressed ? 0.8 : 1,
                       ...Shadows.subtle,
                     },
@@ -114,7 +112,7 @@ export default function HistoryScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={[styles.emptyState, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <ThemedText style={styles.emptyIcon}>📋</ThemedText>
+              <SvgIcon name="cards" size={36} color={theme.textSecondary} />
               <ThemedText style={[styles.emptyText, { color: theme.text }]}>
                 No transactions found
               </ThemedText>
@@ -142,16 +140,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: Spacing.two,
   },
-  searchIcon: {
-    fontSize: FontSize.sm,
-  },
   searchInput: {
     flex: 1,
     fontSize: FontSize.sm,
-  },
-  clearSearch: {
-    fontSize: FontSize.xs,
-    padding: Spacing.one,
   },
   filterContainer: {
     paddingVertical: Spacing.two + 2,
@@ -185,9 +176,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginTop: Spacing.four,
     gap: Spacing.two,
-  },
-  emptyIcon: {
-    fontSize: 36,
   },
   emptyText: {
     fontSize: FontSize.sm,
