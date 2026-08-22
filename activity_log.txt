@@ -40,3 +40,4 @@
 [2026-08-22 12:35:40] Commit #40: feat(logs): upgrade developer logs screen with color-coded telemetry badges
 [2026-08-22 12:37:49] Commit #41: feat(logs): add manual validator probe ping trigger and clear controls
 [2026-08-22 12:39:57] Commit #42: feat(crypto): configure Ed25519 keypair generation in device keystore
+[2026-08-22 12:42:06] Commit #43: feat(crypto): implement SHA-256 voucher hashing and nonces
