@@ -1,178 +1,170 @@
 /**
- * OffPay Account Screen — Cryptographic Identity & Hardware Vault
+ * OffPay Account Screen — "All Accounts & Summary" (Matching Reference Screen 3)
  * Displays:
- * - User Profile & Verified Node status
- * - Cryptographic Key Management (Ed25519 Public Key, User UUID)
- * - Offline Bond Vault Health & Local SQLite Storage
- * - Developer tools and diagnostics
+ * - Summary Header with dual overlapping card illustration
+ * - Total Available Balance ($2,799.00 / NPR 30,000.00)
+ * - "All Accounts" Card List (Primary Account, Saving Account, Offline Bond Vault)
+ * - Prominent "Create Account / Load Bond" primary button
  */
 
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert, Platform } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BrandHeader } from '@/components/BrandHeader';
+import { BankingHeader } from '@/components/BankingHeader';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
-import { MOCK_BONDS } from '@/constants/mock-data';
+import { formatNPR, MOCK_BONDS } from '@/constants/mock-data';
 
 export default function AccountScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { user, offlineBalance } = useAppStore();
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-
-  const initials = user?.fullName
-    ? user.fullName
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-    : 'OP';
+  const { user, onlineBalance, offlineBalance, totalBalance } = useAppStore();
 
   const activeBondsCount = MOCK_BONDS.filter((b) => b.status === 'available').length;
-
-  const handleCopy = (field: string, text: string) => {
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <BrandHeader showProfile={false} />
+        {/* Top Header */}
+        <BankingHeader />
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* User Profile Hero */}
-          <View style={[styles.profileCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-            <View style={[styles.avatar, { backgroundColor: theme.primaryGlow, borderColor: theme.primary }]}>
-              <ThemedText style={[styles.avatarText, { color: theme.primary }]}>{initials}</ThemedText>
-            </View>
-            <ThemedText style={[styles.name, { color: theme.text }]}>
-              {user?.fullName ?? 'HimaliX Node'}
+          {/* Summary Card with Overlapping Visual Tiles (Matching Reference Screen 3) */}
+          <View style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
+            <ThemedText style={[styles.summaryHeaderTitle, { color: theme.text }]}>
+              Summary
             </ThemedText>
-            <ThemedText style={[styles.phone, { color: theme.textSecondary }]}>
-              {user?.phone ?? '+977-9801234567'}
+            <ThemedText style={[styles.summaryTimestamp, { color: theme.textSecondary }]}>
+              Last update: Today 10:00 Am
             </ThemedText>
 
-            <View style={[styles.nodeBadge, { backgroundColor: theme.primary + '18', borderColor: theme.primary + '40' }]}>
-              <ThemedText style={[styles.nodeBadgeText, { color: theme.primary }]}>
-                ✓ VERIFIED OFFLINE NODE
-              </ThemedText>
-            </View>
-          </View>
-
-          {/* Copy Toast */}
-          {copiedField && (
-            <View style={[styles.copyToast, { backgroundColor: theme.primary }]}>
-              <ThemedText style={styles.copyToastText}>✓ Copied {copiedField} to clipboard!</ThemedText>
-            </View>
-          )}
-
-          {/* Cryptographic Identity Section */}
-          <View style={styles.section}>
-            <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-              CRYPTOGRAPHIC IDENTITY
-            </ThemedText>
-
-            <View style={styles.cardsSection}>
-              <IdentityCard
-                label="Node UUID"
-                value={user?.userId ?? 'user-8f92-a4c1-b0e3-99d8'}
-                icon="🔑"
-                theme={theme}
-                onCopy={() => handleCopy('Node UUID', user?.userId ?? '')}
-              />
-              <IdentityCard
-                label="Ed25519 Public Key"
-                value={user?.publicKey ?? 'ed25519_pk_7b3f91a0c4e8d2567491bbcd3e...'}
-                icon="🔐"
-                theme={theme}
-                truncate
-                onCopy={() => handleCopy('Public Key', user?.publicKey ?? '')}
-              />
-              <IdentityCard
-                label="Secure Enclave Level"
-                value="Hardware Tier 3 (FIPS 140-2 Level 3)"
-                icon="🛡"
-                theme={theme}
-                highlight
-              />
-            </View>
-          </View>
-
-          {/* Offline Vault & Storage Health */}
-          <View style={styles.section}>
-            <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-              VAULT & STORAGE HEALTH
-            </ThemedText>
-
-            <View style={[styles.vaultStatusCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-              <View style={styles.vaultRow}>
-                <ThemedText style={[styles.vaultLabel, { color: theme.textSecondary }]}>
-                  Offline Bond Units
-                </ThemedText>
-                <ThemedText style={[styles.vaultValue, { color: theme.accent }]}>
-                  {activeBondsCount} Units (NPR {offlineBalance})
-                </ThemedText>
+            <View style={styles.summaryBody}>
+              {/* Dual Overlapping Card Visual */}
+              <View style={styles.overlapCardGraphic}>
+                <View style={[styles.overlapTile, styles.overlapTileGreen, { backgroundColor: '#0F4A3C' }]} />
+                <View style={[styles.overlapTile, styles.overlapTileCoral, { backgroundColor: '#FF5B5B' }]} />
               </View>
-              <View style={[styles.vaultDivider, { backgroundColor: theme.borderLight }]} />
-              <View style={styles.vaultRow}>
-                <ThemedText style={[styles.vaultLabel, { color: theme.textSecondary }]}>
-                  Local SQLite Ledger
+
+              {/* Total Available Balance */}
+              <View style={styles.summaryBalanceGroup}>
+                <ThemedText style={[styles.summaryBalanceLabel, { color: theme.textSecondary }]}>
+                  Total Available Balance
                 </ThemedText>
-                <ThemedText style={[styles.vaultValue, { color: theme.success }]}>
-                  Healthy (2.4 MB)
-                </ThemedText>
-              </View>
-              <View style={[styles.vaultDivider, { backgroundColor: theme.borderLight }]} />
-              <View style={styles.vaultRow}>
-                <ThemedText style={[styles.vaultLabel, { color: theme.textSecondary }]}>
-                  Last Validator Sync
-                </ThemedText>
-                <ThemedText style={[styles.vaultValue, { color: theme.info }]}>
-                  Just now • 0 pending
+                <ThemedText style={[styles.summaryBalanceValue, { color: theme.text }]}>
+                  {formatNPR(totalBalance)}
                 </ThemedText>
               </View>
             </View>
           </View>
 
-          {/* Developer Tools */}
-          <View style={styles.section}>
-            <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-              DEVELOPER & DIAGNOSTICS
+          {/* Section: "All Accounts" */}
+          <View style={styles.accountsSection}>
+            <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
+              All Accounts
             </ThemedText>
 
-            <View style={styles.actionsSection}>
-              <ActionRow
-                icon="📋"
-                label="Developer Logs"
-                subtitle="Inspect live Ed25519 signing & sync traces"
-                theme={theme}
-                onPress={() => router.push('/logs')}
-              />
-              <ActionRow
-                icon="⬡"
-                label="Local Bond Wallet"
-                subtitle="Inspect unspent cryptographic vouchers"
-                theme={theme}
-                onPress={() => Alert.alert('Bond Wallet', `${activeBondsCount} active offline bonds available.`)}
-              />
-              <ActionRow
-                icon="💾"
-                label="Export Key Backup"
-                subtitle="Export encrypted keystore for offline recovery"
-                theme={theme}
-                onPress={() => Alert.alert('Export Keystore', 'Encrypted key backup generated securely.')}
-              />
+            {/* Account Card 1: Primary Account */}
+            <View style={[styles.accountItemCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
+              <View style={styles.accountCardLeft}>
+                <ThemedText style={[styles.accountItemTitle, { color: theme.text }]}>
+                  Account Name
+                </ThemedText>
+                <ThemedText style={[styles.accountItemNumber, { color: theme.textSecondary }]}>
+                  1234-5678-90
+                </ThemedText>
+                <View style={[styles.primaryPill, { backgroundColor: '#E6F6EE' }]}>
+                  <ThemedText style={[styles.primaryPillText, { color: '#00A859' }]}>Primary</ThemedText>
+                </View>
+              </View>
+
+              <View style={styles.accountCardRight}>
+                <View style={[styles.accountIconBox, { backgroundColor: '#E6F6EE' }]}>
+                  <ThemedText style={[styles.accountIcon, { color: '#0F4A3C' }]}>🏛</ThemedText>
+                </View>
+                <ThemedText style={[styles.accountBalanceLabel, { color: theme.textSecondary }]}>
+                  Available Balance
+                </ThemedText>
+                <ThemedText style={[styles.accountBalanceValue, { color: theme.text }]}>
+                  {formatNPR(onlineBalance)}
+                </ThemedText>
+              </View>
+            </View>
+
+            {/* Account Card 2: Saving Account */}
+            <View style={[styles.accountItemCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
+              <View style={styles.accountCardLeft}>
+                <ThemedText style={[styles.accountItemTitle, { color: theme.text }]}>
+                  Saving Account
+                </ThemedText>
+                <ThemedText style={[styles.accountItemNumber, { color: theme.textSecondary }]}>
+                  1234-5678-90
+                </ThemedText>
+              </View>
+
+              <View style={styles.accountCardRight}>
+                <View style={[styles.accountIconBox, { backgroundColor: '#E0F2FE' }]}>
+                  <ThemedText style={[styles.accountIcon, { color: '#0284C7' }]}>💼</ThemedText>
+                </View>
+                <ThemedText style={[styles.accountBalanceLabel, { color: theme.textSecondary }]}>
+                  Available Balance
+                </ThemedText>
+                <ThemedText style={[styles.accountBalanceValue, { color: theme.text }]}>
+                  NPR 50.00
+                </ThemedText>
+              </View>
+            </View>
+
+            {/* Account Card 3: Offline Bond Vault */}
+            <View style={[styles.accountItemCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
+              <View style={styles.accountCardLeft}>
+                <ThemedText style={[styles.accountItemTitle, { color: theme.text }]}>
+                  Offline Bond Vault
+                </ThemedText>
+                <ThemedText style={[styles.accountItemNumber, { color: theme.textSecondary }]}>
+                  {activeBondsCount} Signed Vouchers
+                </ThemedText>
+                <View style={[styles.primaryPill, { backgroundColor: '#FEF3C7' }]}>
+                  <ThemedText style={[styles.primaryPillText, { color: '#D97706' }]}>Zero-Network</ThemedText>
+                </View>
+              </View>
+
+              <View style={styles.accountCardRight}>
+                <View style={[styles.accountIconBox, { backgroundColor: '#FEF3C7' }]}>
+                  <ThemedText style={[styles.accountIcon, { color: '#D97706' }]}>🔒</ThemedText>
+                </View>
+                <ThemedText style={[styles.accountBalanceLabel, { color: theme.textSecondary }]}>
+                  Offline Capacity
+                </ThemedText>
+                <ThemedText style={[styles.accountBalanceValue, { color: theme.accent }]}>
+                  {formatNPR(offlineBalance)}
+                </ThemedText>
+              </View>
             </View>
           </View>
+
+          {/* Prominent "Create Account / Load Bond" Button (Matching Reference Screen 3) */}
+          <Pressable
+            onPress={() => Alert.alert('Create Account / Load Bond', 'Select bank account to link or allocate new offline bond vouchers.')}
+            style={({ pressed }) => [
+              styles.createAccountButton,
+              {
+                backgroundColor: '#0F4A3C',
+                opacity: pressed ? 0.88 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              },
+            ]}
+          >
+            <ThemedText style={styles.createAccountText}>
+              Create Account
+            </ThemedText>
+          </Pressable>
 
           <View style={{ height: 120 }} />
         </ScrollView>
@@ -181,264 +173,137 @@ export default function AccountScreen() {
   );
 }
 
-function IdentityCard({
-  label,
-  value,
-  icon,
-  theme,
-  truncate,
-  highlight,
-  onCopy,
-}: {
-  label: string;
-  value: string;
-  icon: string;
-  theme: any;
-  truncate?: boolean;
-  highlight?: boolean;
-  onCopy?: () => void;
-}) {
-  return (
-    <View style={[identityStyles.card, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-      <View style={identityStyles.cardTop}>
-        <View style={identityStyles.iconGroup}>
-          <ThemedText style={identityStyles.cardIcon}>{icon}</ThemedText>
-          <ThemedText style={[identityStyles.cardLabel, { color: theme.textSecondary }]}>
-            {label}
-          </ThemedText>
-        </View>
-        {onCopy && (
-          <Pressable
-            onPress={onCopy}
-            style={({ pressed }) => [
-              identityStyles.copyBtn,
-              { backgroundColor: theme.cardElevated, opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <ThemedText style={[identityStyles.copyBtnText, { color: theme.primary }]}>Copy</ThemedText>
-          </Pressable>
-        )}
-      </View>
-      <ThemedText
-        style={[
-          identityStyles.cardValue,
-          {
-            color: highlight ? theme.primary : theme.text,
-            fontFamily: highlight ? undefined : 'monospace',
-            fontWeight: highlight ? FontWeight.bold : FontWeight.medium,
-          },
-        ]}
-        numberOfLines={truncate ? 1 : undefined}
-      >
-        {value}
-      </ThemedText>
-    </View>
-  );
-}
-
-function ActionRow({
-  icon,
-  label,
-  subtitle,
-  theme,
-  onPress,
-}: {
-  icon: string;
-  label: string;
-  subtitle: string;
-  theme: any;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        actionStyles.row,
-        {
-          backgroundColor: pressed ? theme.backgroundSelected : theme.cardGlass,
-          borderColor: theme.border,
-        },
-      ]}
-    >
-      <View style={[actionStyles.iconBubble, { backgroundColor: theme.primaryGlow }]}>
-        <ThemedText style={actionStyles.icon}>{icon}</ThemedText>
-      </View>
-      <View style={actionStyles.textContainer}>
-        <ThemedText style={[actionStyles.label, { color: theme.text }]}>
-          {label}
-        </ThemedText>
-        <ThemedText style={[actionStyles.subtitle, { color: theme.textMuted }]}>
-          {subtitle}
-        </ThemedText>
-      </View>
-      <ThemedText style={[actionStyles.chevron, { color: theme.textMuted }]}>
-        ›
-      </ThemedText>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.four },
-  profileCard: {
-    alignItems: 'center',
-    paddingVertical: Spacing.five,
-    borderRadius: BorderRadius.xl,
+  scrollContent: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.one,
+  },
+  summaryCard: {
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    marginTop: Spacing.two,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.two,
-  },
-  avatarText: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
-  },
-  name: {
-    fontSize: FontSize.xl,
-    fontWeight: FontWeight.black,
-  },
-  phone: {
-    fontSize: FontSize.sm,
-    marginTop: 2,
-  },
-  nodeBadge: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    marginTop: Spacing.three,
-  },
-  nodeBadgeText: {
-    fontSize: 10,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: 0.8,
-  },
-  copyToast: {
-    paddingVertical: Spacing.two,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
+    padding: Spacing.four,
     marginVertical: Spacing.two,
   },
-  copyToastText: {
-    color: '#07090E',
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+  summaryHeaderTitle: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.3,
   },
-  section: {
-    marginTop: Spacing.four,
+  summaryTimestamp: {
+    fontSize: FontSize.xxs,
+    marginTop: 2,
+    marginBottom: Spacing.three,
   },
-  sectionTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: Spacing.two,
-    paddingHorizontal: Spacing.one,
-  },
-  cardsSection: {
-    gap: Spacing.two + 2,
-  },
-  vaultStatusCard: {
-    padding: Spacing.three,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    gap: Spacing.two,
-  },
-  vaultRow: {
+  summaryBody: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  vaultLabel: {
-    fontSize: FontSize.xs,
+  overlapCardGraphic: {
+    width: 80,
+    height: 50,
+    position: 'relative',
+  },
+  overlapTile: {
+    position: 'absolute',
+    width: 44,
+    height: 48,
+    borderRadius: 8,
+  },
+  overlapTileGreen: {
+    top: 0,
+    left: 0,
+  },
+  overlapTileCoral: {
+    top: 4,
+    left: 24,
+  },
+  summaryBalanceGroup: {
+    alignItems: 'flex-end',
+  },
+  summaryBalanceLabel: {
+    fontSize: FontSize.xxs,
     fontWeight: FontWeight.medium,
   },
-  vaultValue: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-  },
-  vaultDivider: {
-    height: 1,
-  },
-  actionsSection: {
-    gap: Spacing.two,
-  },
-});
-
-const identityStyles = StyleSheet.create({
-  card: {
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    padding: Spacing.three,
-    gap: Spacing.one + 2,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  iconGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  cardIcon: { fontSize: FontSize.sm },
-  cardLabel: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  copyBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  copyBtnText: {
-    fontSize: FontSize.xxs,
-    fontWeight: FontWeight.bold,
-  },
-  cardValue: {
-    fontSize: FontSize.xs + 1,
-  },
-});
-
-const actionStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    gap: Spacing.three,
-  },
-  iconBubble: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  icon: { fontSize: FontSize.md },
-  textContainer: { flex: 1 },
-  label: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-  },
-  subtitle: {
-    fontSize: FontSize.xs,
+  summaryBalanceValue: {
+    fontSize: FontSize.xl,
+    fontWeight: FontWeight.black,
     marginTop: 2,
   },
-  chevron: {
-    fontSize: FontSize.xl,
+  accountsSection: {
+    marginVertical: Spacing.two,
+    gap: Spacing.three,
+  },
+  sectionTitle: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.3,
+    paddingHorizontal: Spacing.one,
+  },
+  accountItemCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: Spacing.four,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+  },
+  accountCardLeft: {
+    gap: 3,
+    flex: 1,
+  },
+  accountItemTitle: {
+    fontSize: FontSize.xs + 1,
+    fontWeight: FontWeight.bold,
+  },
+  accountItemNumber: {
+    fontSize: FontSize.xxs + 1,
+  },
+  primaryPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  primaryPillText: {
+    fontSize: 10,
+    fontWeight: FontWeight.extrabold,
+  },
+  accountCardRight: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  accountIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  accountIcon: {
+    fontSize: FontSize.md,
+  },
+  accountBalanceLabel: {
+    fontSize: 9,
+    fontWeight: FontWeight.medium,
+  },
+  accountBalanceValue: {
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.black,
+  },
+  createAccountButton: {
+    paddingVertical: Spacing.three + 2,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    marginTop: Spacing.four,
+  },
+  createAccountText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
+    fontWeight: FontWeight.extrabold,
+    letterSpacing: 0.5,
   },
 });
