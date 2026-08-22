@@ -1,90 +1,86 @@
 /**
- * OffPay Scan QR Screen — Futuristic Cyberpunk HUD Viewfinder
- * Includes laser line sweep animation, corner reticles, torch toggle, and dual test triggers.
+ * OffPay QR Scanner Screen — HUD Cyber Reticle Viewfinder
+ * Reads Offline Bond Payment Tokens and Receiver Handshake QRs via Camera.
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Pressable, Animated } from 'react-native';
+import { View, StyleSheet, Pressable, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
 
 export default function ScanQRScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const [torchOn, setTorchOn] = useState(false);
-
-  // Animated laser scan line
-  const [scanAnim] = useState(new Animated.Value(0));
+  const [torch, setTorch] = useState(false);
+  const [scanLineAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    Animated.loop(
+    // Laser sweep animation loop
+    const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(scanAnim, {
+        Animated.timing(scanLineAnim, {
           toValue: 240,
           duration: 1800,
           useNativeDriver: true,
         }),
-        Animated.timing(scanAnim, {
+        Animated.timing(scanLineAnim, {
           toValue: 0,
           duration: 1800,
           useNativeDriver: true,
         }),
       ])
-    ).start();
-  }, [scanAnim]);
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
 
   return (
     <View style={styles.container}>
       {/* Top HUD Controls */}
       <View style={styles.topHUD}>
         <Pressable onPress={() => router.back()} style={styles.hudButton}>
-          <ThemedText style={styles.hudButtonText}>✕ Close</ThemedText>
+          <SvgIcon name="close" size={16} color="#FFFFFF" />
         </Pressable>
 
         <View style={styles.hudTitleBadge}>
-          <ThemedText style={styles.hudTitleText}>⚡ OFFLINE MESH SCANNER</ThemedText>
+          <ThemedText style={styles.hudTitleText}>
+            SCANNER ACTIVE
+          </ThemedText>
         </View>
 
-        <Pressable
-          onPress={() => setTorchOn(!torchOn)}
-          style={[styles.hudButton, torchOn && { backgroundColor: theme.warning + '30' }]}
-        >
-          <ThemedText style={[styles.hudButtonText, torchOn && { color: theme.warning }]}>
-            {torchOn ? '🔦 ON' : '🔦 Torch'}
-          </ThemedText>
+        <Pressable onPress={() => setTorch(!torch)} style={styles.hudButton}>
+          <SvgIcon name="torch" size={16} color={torch ? '#76FF03' : '#FFFFFF'} />
         </Pressable>
       </View>
 
-      {/* Center Viewfinder */}
+      {/* Cyber Reticle Viewfinder */}
       <View style={styles.viewfinder}>
         <View style={styles.frame}>
           {/* Neon Corner Brackets */}
-          <View style={[styles.corner, styles.topLeft, { borderColor: theme.primary }]} />
-          <View style={[styles.corner, styles.topRight, { borderColor: theme.primary }]} />
-          <View style={[styles.corner, styles.bottomLeft, { borderColor: theme.primary }]} />
-          <View style={[styles.corner, styles.bottomRight, { borderColor: theme.primary }]} />
+          <View style={[styles.corner, styles.tl]} />
+          <View style={[styles.corner, styles.tr]} />
+          <View style={[styles.corner, styles.bl]} />
+          <View style={[styles.corner, styles.br]} />
 
-          {/* Animated Laser Scanning Line */}
+          {/* Animated Laser Sweep Line */}
           <Animated.View
             style={[
               styles.laserLine,
               {
-                backgroundColor: theme.primary,
-                transform: [{ translateY: scanAnim }],
-                ...Shadows.glowGreen,
+                transform: [{ translateY: scanLineAnim }],
               },
             ]}
           />
 
-          {/* Center Target Reticle */}
+          {/* Center Aim Crosshair */}
           <View style={styles.reticle}>
-            <ThemedText style={[styles.reticleText, { color: theme.primary + '50' }]}>+</ThemedText>
+            <SvgIcon name="scan-pay" size={32} color="rgba(0, 230, 118, 0.4)" />
           </View>
         </View>
 
-        {/* Guidance Notice */}
         <View style={styles.instructions}>
           <ThemedText style={styles.instructionText}>
             Point camera at sender or receiver QR
@@ -97,7 +93,7 @@ export default function ScanQRScreen() {
 
       {/* Developer Testing Triggers */}
       <View style={[styles.testSection, { borderTopColor: '#1A2234' }]}>
-        <ThemedText style={[styles.testLabel, { color: theme.textMuted }]}>
+        <ThemedText style={[styles.testLabel, { color: '#94A3B8' }]}>
           SIMULATED QR SCANS (DEVELOPER MODE)
         </ThemedText>
 
@@ -137,19 +133,16 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.three,
   },
   hudButton: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: BorderRadius.full,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: '#151C2C',
-  },
-  hudButtonText: {
-    color: '#F8FAFC',
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   hudTitleBadge: {
-    paddingHorizontal: Spacing.two + 2,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 5,
     borderRadius: BorderRadius.full,
     backgroundColor: 'rgba(0, 230, 118, 0.15)',
     borderWidth: 1,
@@ -178,29 +171,27 @@ const styles = StyleSheet.create({
   },
   corner: {
     position: 'absolute',
-    width: 44,
-    height: 44,
-    borderWidth: 3.5,
+    width: 28,
+    height: 28,
+    borderColor: '#00E676',
   },
-  topLeft: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopLeftRadius: 16 },
-  topRight: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0, borderTopRightRadius: 16 },
-  bottomLeft: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0, borderBottomLeftRadius: 16 },
-  bottomRight: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0, borderBottomRightRadius: 16 },
+  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: 16 },
+  tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 16 },
+  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 16 },
+  br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 16 },
   laserLine: {
-    position: 'absolute',
-    left: '5%',
-    width: '90%',
+    width: '100%',
     height: 2.5,
-    borderRadius: 2,
+    backgroundColor: '#00E676',
+    shadowColor: '#00E676',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
   },
   reticle: {
     position: 'absolute',
-    top: '40%',
-    left: '42%',
-  },
-  reticleText: {
-    fontSize: 40,
-    fontWeight: FontWeight.regular,
+    top: '44%',
+    left: '44%',
   },
   instructions: {
     alignItems: 'center',
@@ -216,30 +207,30 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
   },
   testSection: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.four,
+    padding: Spacing.four,
     borderTopWidth: 1,
-    alignItems: 'center',
     gap: Spacing.two,
+    backgroundColor: '#0A0E17',
   },
   testLabel: {
-    fontSize: FontSize.xxs,
+    fontSize: 10,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   testButtonsRow: {
-    width: '100%',
+    flexDirection: 'row',
   },
   testBtn: {
+    flex: 1,
     paddingVertical: Spacing.three + 2,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   testBtnText: {
     color: '#07090E',
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    fontSize: FontSize.xs + 1,
+    fontWeight: FontWeight.black,
+    letterSpacing: 0.5,
   },
 });
