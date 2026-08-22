@@ -43,3 +43,4 @@
 [2026-08-22 12:42:06] Commit #43: feat(crypto): implement SHA-256 voucher hashing and nonces
 [2026-08-22 12:44:14] Commit #44: feat(crypto): add zero-knowledge proof verification pipeline
 [2026-08-22 12:46:23] Commit #45: feat(mesh): configure BLE and Wi-Fi Direct peer-to-peer discovery
+[2026-08-22 12:48:31] Commit #46: feat(mesh): implement local SQLite storage schema for offline transactions
