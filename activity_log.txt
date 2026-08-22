@@ -3,3 +3,4 @@
 [2026-08-22 11:16:23] Commit #3: feat(theme): configure obsidian dark and crisp white banking palettes
 [2026-08-22 11:18:31] Commit #4: feat(components): add SvgIcon library with vector banking graphics
 [2026-08-22 11:20:40] Commit #5: feat(header): implement BankingHeader with avatar, greeting, and date
+[2026-08-22 11:22:49] Commit #6: feat(header): add 1-tap sun/moon theme switcher to top navigation
