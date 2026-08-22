@@ -69,7 +69,8 @@
             --radius-none: 0px;
 
             /* Layout */
-            --sidebar-width: 420px;
+            --sidebar-width: 350px;
+            --cards-sidebar-width: 390px;
             --header-h: 66px;
 
             /* Sharp Shadows */
@@ -795,135 +796,465 @@
             transform: scale(0.99);
         }
 
-        /* ── Cards List in Sidebar ─────────────────────────────── */
-        .card-search-box {
-            margin-bottom: 12px;
+        /* ── Right Sidebar (Registered RFID Cards Vault Hub) ── */
+        .right-sidebar {
+            width: var(--cards-sidebar-width);
+            flex-shrink: 0;
+            background: var(--bg-sidebar);
+            border-left: 1px solid var(--gray-200);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            height: calc(100vh - var(--header-h));
+            position: sticky;
+            top: var(--header-h);
+            transition: background 0.2s ease, border-color 0.2s ease, right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 80;
+        }
+
+        .cards-vault-header-wrap {
+            padding: 16px 18px 12px 18px;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--bg-white);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .cards-vault-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .cards-vault-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cards-vault-live-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--brand-green);
+            border-radius: 50% !important;
+            box-shadow: 0 0 8px var(--brand-green);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .cards-vault-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: var(--black);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cards-vault-count-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 1px 6px;
+            background: var(--brand-green-soft);
+            color: var(--brand-green-dark);
+            border: 1px solid var(--brand-green-border);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Vault Summary Mini Bar */
+        .vault-summary-bar {
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-200);
+            padding: 9px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .vault-summary-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .vault-summary-label {
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .vault-summary-value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--brand-green-dark);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Modern Search Input Container */
+        .cards-search-container {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .cards-search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .cards-search-input {
+            width: 100%;
+            padding: 8px 30px 8px 32px !important;
+            font-size: 0.78rem;
+            background: var(--bg-white);
+            border: 1px solid var(--gray-300);
+            color: var(--black);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.15s ease;
+        }
+
+        .cards-search-input:focus {
+            outline: none;
+            border-color: var(--black);
+            box-shadow: 0 0 0 2px var(--brand-green-glow);
+        }
+
+        .cards-search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: none;
+        }
+
+        .cards-search-clear:hover { color: var(--black); }
+
+        /* Filter Chips */
+        .cards-filter-pills {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .cards-filter-pill {
+            background: transparent;
+            border: 1px solid var(--gray-200);
+            padding: 3px 8px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            color: var(--gray-600);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .cards-filter-pill:hover {
+            border-color: var(--gray-400);
+            color: var(--black);
+        }
+
+        .cards-filter-pill.active {
+            background: var(--black);
+            color: var(--text-white);
+            border-color: var(--black);
+        }
+
+        /* Cards List Scrollable Body */
+        .cards-scroll-body {
+            padding: 14px 16px 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
         }
 
         .card-list-wrapper {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            max-height: 280px;
-            overflow-y: auto;
-            margin-bottom: 12px;
-            padding-right: 2px;
         }
 
+        /* ── Ultra-Professional Smart Card Item ───────────────── */
         .smart-card-item {
             background: var(--bg-white);
             border: 1px solid var(--gray-200);
-            padding: 12px;
+            padding: 12px 14px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.15s ease;
+            flex-direction: column;
+            gap: 9px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
+            box-shadow: var(--shadow-subtle);
         }
 
         .smart-card-item:hover {
             border-color: var(--black);
-            box-shadow: var(--shadow-subtle);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+            transform: translateY(-1px);
         }
 
-        .smart-card-left {
+        .smart-card-item.active-charging {
+            border-color: var(--brand-green);
+            box-shadow: 0 0 0 2px var(--brand-green-glow), 0 4px 16px rgba(16, 185, 129, 0.18);
+        }
+
+        .smart-card-item-top {
             display: flex;
-            align-items: center;
+            justify-content: space-between;
+            align-items: flex-start;
             gap: 10px;
         }
 
+        .smart-card-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
         .smart-card-avatar {
-            width: 32px;
-            height: 32px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--gray-300);
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
+            border: 1px solid var(--gray-700);
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 800;
-            color: var(--black);
             font-family: 'JetBrains Mono', monospace;
+            position: relative;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
         }
 
-        .smart-card-name {
-            font-size: 0.84rem;
-            font-weight: 700;
-            color: var(--black);
-            margin-bottom: 2px;
+        .smart-card-avatar-pip {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: var(--brand-green);
+            border: 1.5px solid var(--bg-white);
+            border-radius: 50% !important;
         }
 
-        .smart-card-uid {
-            font-size: 0.68rem;
-            color: var(--gray-500);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .smart-card-right {
-            text-align: right;
+        .smart-card-info {
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
+            gap: 3px;
         }
 
-        .smart-card-balance {
-            font-size: 0.88rem;
-            font-weight: 800;
-            color: var(--brand-green-dark);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .card-actions-mini {
+        .smart-card-name-row {
             display: flex;
+            align-items: center;
             gap: 6px;
         }
 
-        .card-action-mini-btn {
-            background: transparent;
+        .smart-card-name {
+            font-size: 0.86rem;
+            font-weight: 800;
+            color: var(--black);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: -0.2px;
+        }
+
+        .smart-card-tag-pill {
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 1px 5px;
+            background: var(--bg-subtle);
             border: 1px solid var(--gray-300);
-            padding: 2px 6px;
-            font-size: 0.65rem;
-            font-weight: 700;
+            color: var(--gray-600);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .smart-card-uid-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.68rem;
+            font-family: 'JetBrains Mono', monospace;
             color: var(--gray-600);
             cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.15s;
+            transition: color 0.15s, border-color 0.15s;
+            background: var(--bg-subtle);
+            padding: 1px 5px;
+            border: 1px solid var(--gray-200);
+            width: fit-content;
         }
-        .card-action-mini-btn:hover {
+
+        .smart-card-uid-badge:hover {
+            color: var(--brand-green-dark);
+            border-color: var(--brand-green-border);
+        }
+
+        .smart-card-balance-box {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .smart-card-balance-lbl {
+            font-size: 0.56rem;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 1px;
+        }
+
+        .smart-card-balance-num {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--brand-green-dark);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.3px;
+        }
+
+        .smart-card-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px dashed var(--gray-200);
+            padding-top: 8px;
+            margin-top: 1px;
+        }
+
+        .smart-card-status-label {
+            font-size: 0.64rem;
+            font-weight: 700;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .card-actions-pro {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-action-btn-charge {
             background: var(--black);
             color: var(--text-white);
-            border-color: var(--black);
-        }
-
-        .add-card-toggle {
-            width: 100%;
-            background: transparent;
-            border: 1px dashed var(--gray-400);
-            padding: 10px;
-            color: var(--gray-700);
-            font-size: 0.78rem;
-            font-weight: 700;
+            border: 1px solid var(--black);
+            padding: 3px 9px;
+            font-size: 0.7rem;
+            font-weight: 800;
             cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             transition: all 0.15s ease;
-            text-align: center;
         }
 
-        .add-card-toggle:hover {
+        .card-action-btn-charge:hover {
+            background: var(--brand-green-dark);
+            border-color: var(--brand-green-dark);
+        }
+
+        .card-action-btn-edit {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--gray-700);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            transition: all 0.15s ease;
+        }
+
+        .card-action-btn-edit:hover {
+            background: var(--bg-hover);
             border-color: var(--black);
             color: var(--black);
+        }
+
+        .card-action-btn-del {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            padding: 3px 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--danger);
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.15s ease;
+        }
+
+        .card-action-btn-del:hover {
+            background: var(--danger-bg);
+            border-color: var(--danger);
+        }
+
+        /* Register Card Collapsible Box */
+        .add-card-card {
+            background: var(--bg-white);
+            border: 1px dashed var(--gray-400);
+            transition: all 0.2s ease;
+            margin-top: 4px;
+        }
+
+        .add-card-card:hover {
+            border-color: var(--black);
             background: var(--bg-hover);
         }
 
-        .add-card-form {
-            display: none;
-            background: var(--bg-subtle);
-            border: 1px solid var(--gray-300);
-            padding: 14px;
-            margin-top: 10px;
+        .add-card-toggle-btn {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 11px 14px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--black);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            text-align: left;
         }
 
-        .add-card-form.active {
+        .add-card-form-body {
+            display: none;
+            padding: 0 14px 14px 14px;
+            border-top: 1px solid var(--gray-200);
+            background: var(--bg-white);
+        }
+
+        .add-card-form-body.active {
             display: block;
         }
 
@@ -1681,14 +2012,26 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        /* ── Mobile Sidebar Toggle ─────────────────────────────── */
+        /* ── Header Cards Toggle & Mobile Controls ────────────── */
+        .header-cards-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+        }
+
+        .header-cards-btn-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
         .mobile-sidebar-toggle {
             display: none;
             position: fixed;
             bottom: 20px;
-            right: 20px;
-            width: 52px;
-            height: 52px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
             background: var(--black);
             color: var(--text-white);
             border: 1px solid var(--brand-green);
@@ -1701,6 +2044,27 @@
 
         .mobile-sidebar-toggle svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
 
+        @media (max-width: 1280px) {
+            .sidebar { width: 330px; }
+            .right-sidebar { width: 350px; }
+        }
+
+        @media (max-width: 1100px) {
+            .right-sidebar {
+                position: fixed;
+                right: -100%;
+                top: var(--header-h);
+                width: 100%;
+                max-width: 380px;
+                z-index: 120;
+                transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                height: calc(100vh - var(--header-h));
+                background: var(--bg-white);
+                box-shadow: var(--shadow-elevated);
+            }
+            .right-sidebar.open { right: 0; }
+        }
+
         @media (max-width: 960px) {
             .sidebar {
                 position: fixed;
@@ -1709,7 +2073,7 @@
                 width: 100%;
                 max-width: 360px;
                 z-index: 120;
-                transition: left 0.25s ease;
+                transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
                 height: calc(100vh - var(--header-h));
                 background: var(--bg-white);
                 box-shadow: var(--shadow-elevated);
@@ -1723,7 +2087,7 @@
 
         @media (max-width: 640px) {
             header { padding: 0 14px; }
-            .logo-tag, .header-clock { display: none; }
+            .logo-tag, .header-clock, .header-cards-btn-label { display: none; }
             .stat-row { grid-template-columns: 1fr; }
             .conn-mode-selector { grid-template-columns: 1fr; }
         }
@@ -1758,6 +2122,13 @@
             <button type="button" class="header-btn-tool" id="audio-toggle-btn" onclick="toggleSound()" title="Toggle Sound FX">
                 <svg id="audio-icon-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 <svg id="audio-icon-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+            </button>
+
+            <!-- RFID Cards Hub Sidebar Toggle -->
+            <button type="button" class="header-btn-tool header-cards-btn" id="header-cards-toggle-btn" onclick="toggleRightSidebar()" title="Toggle Registered RFID Cards">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <span class="header-cards-btn-label">Cards</span>
+                <span class="peer-badge" id="header-card-count">0</span>
             </button>
 
             <!-- Theme Switcher (Swiss White / Cyber Dark) -->
@@ -1898,46 +2269,16 @@
                 </button>
             </div>
 
-            <!-- Cards Hub Section -->
-            <div class="sidebar-section">
-                <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>Registered RFID Cards (<span id="sidebar-card-count" class="mono">3</span>)</span>
-                    <button type="button" class="btn btn-outline" style="padding:1px 6px; font-size:0.65rem; color:var(--danger); border-color:var(--danger-border);" onclick="clearAllCards()" title="Delete all cards at once">Clear All</button>
-                </div>
-
-                <!-- Instant Search Filter -->
-                <div class="card-search-box">
-                    <input type="text" class="form-input" id="card-search-input" placeholder="Search cardholder or UID..." oninput="filterCards()" style="padding:7px 10px; font-size:0.78rem;">
-                </div>
-
-                <div id="cards-sidebar-list" class="card-list-wrapper">
-                    <div class="empty-state">No cards registered</div>
-                </div>
-
-                <button class="add-card-toggle" id="add-card-toggle" onclick="toggleAddCard()">+ Register New RFID Card</button>
-                <div class="add-card-form" id="add-card-form">
-                    <form onsubmit="registerCard(event)">
-                        <div class="form-group">
-                            <label class="form-label">Customer Name</label>
-                            <input type="text" class="form-input" id="reg-name" required placeholder="e.g. Sakshyam Bastakoti">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">RFID Hardware UID</label>
-                            <div style="display:flex; gap:6px;">
-                                <input type="text" class="form-input mono" id="reg-uid" placeholder="e.g. A3 F8 12 B9" style="text-transform:uppercase;">
-                                <button type="button" class="btn btn-outline" onclick="generateFormUID()" style="padding:6px 10px; font-size:0.75rem;" title="Generate Random UID">Gen</button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">User ID / Tag Code</label>
-                            <input type="text" class="form-input" id="reg-userid" required placeholder="e.g. USR-001">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Initial Balance (NPR)</label>
-                            <input type="number" class="form-input" id="reg-balance" required min="0" value="1000" step="0.01">
-                        </div>
-                        <button type="submit" class="btn btn-black btn-full" style="margin-top:6px;">Register Card (Save to Supabase)</button>
-                    </form>
+                <!-- Terminal Status Quick Footer -->
+                <div style="margin-top:16px; padding:12px; background:var(--bg-subtle); border:1px solid var(--gray-200); font-size:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <span style="color:var(--gray-500); font-weight:700; font-family:'JetBrains Mono',monospace;">HARDWARE POS</span>
+                        <span class="badge badge-ok" style="font-size:0.62rem; padding:1px 6px;">READY</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; color:var(--gray-600); font-size:0.72rem; font-family:'JetBrains Mono',monospace;">
+                        <span>Target:</span>
+                        <span style="font-weight:700; color:var(--black);" id="terminal-target-display">OFFPAY VAULT POS</span>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -1950,6 +2291,10 @@
                 <button class="active" onclick="switchTab('dash')">
                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
                     Overview
+                </button>
+                <button onclick="switchTab('cards')">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Cards Vault (<span id="cards-tab-count" class="mono">0</span>)
                 </button>
                 <button onclick="switchTab('txn')">
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -2045,6 +2390,88 @@
                         <button class="btn btn-black btn-full" onclick="pushAllToSupabase()" style="margin-bottom:8px;">Push Local to Cloud</button>
                         <button class="btn btn-outline btn-full" onclick="pullFromSupabase()">Pull Remote from Cloud</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- ═══ CARDS VAULT DIRECTORY & ANALYTICS TAB ═══ -->
+            <div id="p-cards" class="panel">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title">RFID Cards Vault</h1>
+                        <p class="panel-subtitle">Cardholder directory, cryptographic UID registry & vault balances</p>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline" onclick="exportCardsCSV()" title="Export registered cards to CSV">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>Export CSV</span>
+                        </button>
+                        <button class="btn btn-black" onclick="toggleAddCard(); if(window.innerWidth<=1100)toggleRightSidebar();" title="Register a new RFID card">
+                            <span>+ Register Card</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cards KPI Metric Row -->
+                <div class="stat-row">
+                    <div class="stat-cell">
+                        <div class="stat-label">
+                            <span>Total Registered</span>
+                            <span>CARDS</span>
+                        </div>
+                        <div class="stat-value mono" id="tab-cards-total">0</div>
+                    </div>
+                    <div class="stat-cell" style="border-top-color: var(--brand-green);">
+                        <div class="stat-label">
+                            <span>Total Vault Pool</span>
+                            <span>NPR</span>
+                        </div>
+                        <div class="stat-value mono" id="tab-cards-balance" style="color:var(--brand-green-dark);">NPR 0.00</div>
+                    </div>
+                    <div class="stat-cell">
+                        <div class="stat-label">
+                            <span>Average Balance</span>
+                            <span>NPR</span>
+                        </div>
+                        <div class="stat-value mono" id="tab-cards-avg">NPR 0.00</div>
+                    </div>
+                    <div class="stat-cell" style="border-top-color: #3b82f6;">
+                        <div class="stat-label">
+                            <span>Cloud Sync State</span>
+                            <span style="color:#3b82f6;">POSTGRES</span>
+                        </div>
+                        <div class="stat-value mono" style="font-size:1.35rem; color:#2563eb;">ACTIVE</div>
+                    </div>
+                </div>
+
+                <!-- Cards Table Filter & Directory -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px;">
+                    <div style="flex:1; max-width:400px; position:relative;">
+                        <input type="text" class="form-input" id="tab-cards-search" placeholder="Search by name, UID, or user ID..." oninput="filterCardsTable()" style="padding-left:32px;">
+                        <svg style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; stroke:var(--gray-400); fill:none; stroke-width:2;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger-border);" onclick="clearAllCards()" title="Delete all cards">Clear All</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cardholder</th>
+                                <th>RFID UID</th>
+                                <th>User Tag ID</th>
+                                <th>Vault Balance</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tab-cards-table-body">
+                            <tr>
+                                <td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px;">No registered cards</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -2258,6 +2685,101 @@
             </div>
 
         </div><!-- /main-content -->
+
+        <!-- ── Right Sidebar: Registered RFID Cards Vault Hub ── -->
+        <aside class="right-sidebar cards-vault-sidebar" id="cards-sidebar">
+
+            <!-- Sticky Header -->
+            <div class="cards-vault-header-wrap">
+                <div class="cards-vault-top-row">
+                    <div class="cards-vault-title-group">
+                        <div class="cards-vault-live-dot"></div>
+                        <span class="cards-vault-title">RFID Cards Vault</span>
+                        <span class="cards-vault-count-badge mono" id="sidebar-card-count">0</span>
+                    </div>
+                    <div class="cards-vault-actions">
+                        <button type="button" class="btn btn-outline" style="padding:2px 8px; font-size:0.68rem; color:var(--danger); border-color:var(--danger-border);" onclick="clearAllCards()" title="Delete all cards at once">Clear All</button>
+                    </div>
+                </div>
+
+                <!-- Vault Reserve Summary Bar -->
+                <div class="vault-summary-bar">
+                    <div class="vault-summary-item">
+                        <span class="vault-summary-label">Total Vault Pool</span>
+                        <span class="vault-summary-value mono" id="vault-total-display">NPR 0.00</span>
+                    </div>
+                    <div class="vault-summary-item" style="text-align:right;">
+                        <span class="vault-summary-label">Cloud DB</span>
+                        <span style="font-size:0.72rem; font-weight:800; color:var(--brand-green-dark); font-family:'JetBrains Mono',monospace;">LIVE SYNC</span>
+                    </div>
+                </div>
+
+                <!-- Instant Search Box -->
+                <div class="cards-search-container">
+                    <span class="cards-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                    <input type="text" class="cards-search-input" id="card-search-input" placeholder="Search cardholder or UID... (/)" oninput="filterCards()" autocomplete="off">
+                    <button type="button" class="cards-search-clear" id="cards-search-clear-btn" onclick="clearCardsSearch()">&times;</button>
+                </div>
+
+                <!-- Quick Filter Pills -->
+                <div class="cards-filter-pills">
+                    <button type="button" class="cards-filter-pill active" onclick="filterCardsCategory('all', this)">All Cards</button>
+                    <button type="button" class="cards-filter-pill" onclick="filterCardsCategory('active', this)">Active Funds</button>
+                    <button type="button" class="cards-filter-pill" onclick="filterCardsCategory('low', this)">Low &lt; NPR 500</button>
+                </div>
+            </div>
+
+            <!-- Scrollable Cards Body -->
+            <div class="cards-scroll-body">
+                <div id="cards-sidebar-list" class="card-list-wrapper">
+                    <div class="empty-state">No cards registered</div>
+                </div>
+
+                <!-- Register New Card Section -->
+                <div class="add-card-card">
+                    <button type="button" class="add-card-toggle-btn" id="add-card-toggle" onclick="toggleAddCard()">
+                        <span style="display:flex; align-items:center; gap:8px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span>Register New RFID Card</span>
+                        </span>
+                        <svg id="add-card-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="add-card-form-body" id="add-card-form">
+                        <form onsubmit="registerCard(event)" style="padding-top:12px;">
+                            <div class="form-group">
+                                <label class="form-label">Customer / Cardholder Name</label>
+                                <input type="text" class="form-input" id="reg-name" required placeholder="e.g. Sakshyam Bastakoti">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">RFID Hardware UID</label>
+                                <div style="display:flex; gap:6px;">
+                                    <input type="text" class="form-input mono" id="reg-uid" placeholder="e.g. A3 F8 12 B9" style="text-transform:uppercase;">
+                                    <button type="button" class="btn btn-outline" onclick="generateFormUID()" style="padding:6px 10px; font-size:0.75rem;" title="Generate Random UID">Gen</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">User ID / Tag Code</label>
+                                <input type="text" class="form-input" id="reg-userid" required placeholder="e.g. USR-001">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Initial Balance (NPR)</label>
+                                <input type="number" class="form-input mono" id="reg-balance" required min="0" value="1000" step="0.01">
+                                <div style="display:flex; gap:5px; margin-top:6px;">
+                                    <button type="button" class="btn btn-outline" style="flex:1; padding:3px 0; font-size:0.7rem;" onclick="setRegBalance(500)">+500</button>
+                                    <button type="button" class="btn btn-outline" style="flex:1; padding:3px 0; font-size:0.7rem;" onclick="setRegBalance(1000)">+1,000</button>
+                                    <button type="button" class="btn btn-outline" style="flex:1; padding:3px 0; font-size:0.7rem;" onclick="setRegBalance(2500)">+2,500</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-black btn-full" style="margin-top:10px; background:linear-gradient(135deg, #09090b 0%, #064e3b 100%); border-color:#064e3b;">
+                                <span>Register & Save Card</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div><!-- /app-shell -->
 
     <!-- Mobile Sidebar Toggle -->
@@ -3197,60 +3719,236 @@
         // ══════════════════════════════════════════════════════════════
         // ── UI RENDERING & DATA MANAGEMENT ───────────────────────────
         // ══════════════════════════════════════════════════════════════
+        let activeCardFilter = 'all';
+        let currentActiveChargedUid = null;
+
         function updateStatsCounters() {
-            document.getElementById('s-cards').innerText = allCards.length;
-            document.getElementById('s-txn-count').innerText = allTransactions.length;
-            document.getElementById('sidebar-card-count').innerText = allCards.length;
+            const count = allCards.length;
             let total = 0;
             allCards.forEach(c => total += parseFloat(c.balance || 0));
-            document.getElementById('s-balance').innerText = 'NPR ' + total.toFixed(2);
+
+            // Sidebar & Overview Counters
+            if (document.getElementById('s-cards')) document.getElementById('s-cards').innerText = count;
+            if (document.getElementById('s-txn-count')) document.getElementById('s-txn-count').innerText = allTransactions.length;
+            if (document.getElementById('sidebar-card-count')) document.getElementById('sidebar-card-count').innerText = count;
+            if (document.getElementById('header-card-count')) document.getElementById('header-card-count').innerText = count;
+            if (document.getElementById('cards-tab-count')) document.getElementById('cards-tab-count').innerText = count;
+            if (document.getElementById('tab-cards-total')) document.getElementById('tab-cards-total').innerText = count;
+
+            const balStr = 'NPR ' + total.toFixed(2);
+            if (document.getElementById('s-balance')) document.getElementById('s-balance').innerText = balStr;
+            if (document.getElementById('vault-total-display')) document.getElementById('vault-total-display').innerText = balStr;
+            if (document.getElementById('tab-cards-balance')) document.getElementById('tab-cards-balance').innerText = balStr;
+
+            const avg = count > 0 ? (total / count) : 0;
+            if (document.getElementById('tab-cards-avg')) document.getElementById('tab-cards-avg').innerText = 'NPR ' + avg.toFixed(2);
+
+            renderCardsTable(allCards);
         }
 
         function renderCardsSidebar(cards) {
             const el = document.getElementById('cards-sidebar-list');
+            if (!el) return;
             if (!cards || !cards.length) {
-                el.innerHTML = '<div class="empty-state" style="padding:16px;text-align:center;font-size:0.78rem;color:var(--gray-500);">No cards registered</div>';
+                el.innerHTML = `
+                <div class="empty-state" style="padding:28px 16px;text-align:center;font-size:0.8rem;color:var(--gray-500);background:var(--bg-white);border:1px solid var(--gray-200);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.8" style="margin-bottom:8px;"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <div style="font-weight:700;color:var(--gray-700);margin-bottom:2px;">No RFID Cards Found</div>
+                    <div style="font-size:0.72rem;">Click "+ Register New RFID Card" below to enroll a card.</div>
+                </div>`;
                 return;
             }
 
             el.innerHTML = cards.map(c => {
                 const initials = (c.name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const bal = parseFloat(c.balance || 0);
+                const isLow = bal < 500;
+                const isSelected = currentActiveChargedUid && currentActiveChargedUid.toLowerCase() === (c.uid || '').toLowerCase();
+                const avatarHue = getAvatarColor(c.name || c.uid);
+
                 return `
-                <div class="smart-card-item">
-                    <div class="smart-card-left">
-                        <div class="smart-card-avatar">${initials}</div>
-                        <div>
-                            <div class="smart-card-name">${esc(c.name)}</div>
-                            <div class="smart-card-uid">${esc(c.uid)} &bull; ${esc(c.userId || 'USR')}</div>
+                <div class="smart-card-item ${isSelected ? 'active-charging' : ''}" id="card-item-${esc(c.uid)}">
+                    <div class="smart-card-item-top">
+                        <div class="smart-card-profile">
+                            <div class="smart-card-avatar" style="background:${avatarHue};">
+                                ${initials}
+                                <div class="smart-card-avatar-pip" style="background:${isLow ? '#ef4444' : 'var(--brand-green)'};" title="${isLow ? 'Low Balance' : 'Active'}"></div>
+                            </div>
+                            <div class="smart-card-info">
+                                <div class="smart-card-name-row">
+                                    <span class="smart-card-name" title="${esc(c.name)}">${esc(c.name)}</span>
+                                    <span class="smart-card-tag-pill">${esc(c.userId || 'USR')}</span>
+                                </div>
+                                <div class="smart-card-uid-badge" onclick="copyCardUID('${esc(c.uid)}', event)" title="Click to copy UID">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <span>${esc(c.uid)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="smart-card-balance-box">
+                            <div class="smart-card-balance-lbl">VAULT BALANCE</div>
+                            <div class="smart-card-balance-num" style="color:${isLow ? '#ef4444' : 'var(--brand-green-dark)'};">NPR ${bal.toFixed(2)}</div>
                         </div>
                     </div>
-                    <div class="smart-card-right">
-                        <div class="smart-card-balance">NPR ${parseFloat(c.balance || 0).toFixed(2)}</div>
-                        <div class="card-actions-mini">
-                            <button class="card-action-mini-btn" onclick="quickChargeCard('${esc(c.uid)}', '${esc(c.name)}', ${c.balance})" title="Select for Charge">Charge</button>
-                            <button class="card-action-mini-btn" onclick="openEditCardModal('${esc(c.uid)}')" title="Edit Cardholder & Balance">Edit</button>
-                            <button class="card-action-mini-btn" onclick="deleteCard('${esc(c.uid)}')" title="Delete" style="color:var(--danger);">&times;</button>
+
+                    <div class="smart-card-bottom-row">
+                        <span class="smart-card-status-label">
+                            <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${isLow ? '#ef4444' : '#10b981'};"></span>
+                            ${isLow ? 'Low Balance' : 'Ready to Tap'}
+                        </span>
+                        <div class="card-actions-pro">
+                            <button class="card-action-btn-charge" onclick="quickChargeCard('${esc(c.uid)}', '${esc(c.name)}', ${bal})" title="Select for Charge">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                <span>Charge</span>
+                            </button>
+                            <button class="card-action-btn-edit" onclick="openEditCardModal('${esc(c.uid)}')" title="Edit Cardholder & Balance">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <span>Edit</span>
+                            </button>
+                            <button class="card-action-btn-del" onclick="deleteCard('${esc(c.uid)}')" title="Delete Card">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
                         </div>
                     </div>
                 </div>
             `}).join('');
         }
 
+        function getAvatarColor(str) {
+            let hash = 0;
+            for (let i = 0; i < (str || '').length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            const gradients = [
+                'linear-gradient(135deg, #09090b 0%, #1e293b 100%)',
+                'linear-gradient(135deg, #064e3b 0%, #047857 100%)',
+                'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
+                'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
+                'linear-gradient(135deg, #701a75 0%, #c026d3 100%)'
+            ];
+            return gradients[Math.abs(hash) % gradients.length];
+        }
+
+        function copyCardUID(uid, e) {
+            if (e) e.stopPropagation();
+            playAudioTone('click');
+            navigator.clipboard.writeText(uid).then(() => {
+                toast(`UID ${uid} copied!`, 'ok');
+            }).catch(() => {
+                toast(`UID: ${uid}`, 'ok');
+            });
+        }
+
         function quickChargeCard(uid, name, balance) {
             playAudioTone('click');
+            currentActiveChargedUid = uid;
             document.getElementById('atm-target-cardholder').innerText = name.toUpperCase();
+            const termDisplay = document.getElementById('terminal-target-display');
+            if (termDisplay) termDisplay.innerText = name.toUpperCase() + ' (' + uid + ')';
             toast(`Selected ${name} (Vault: NPR ${balance.toFixed(2)})`, 'ok');
+            document.querySelectorAll('.smart-card-item').forEach(el => el.classList.remove('active-charging'));
+            const targetEl = document.getElementById('card-item-' + uid);
+            if (targetEl) targetEl.classList.add('active-charging');
             document.getElementById('pay-amount').focus();
         }
 
+        function filterCardsCategory(cat, btn) {
+            playAudioTone('click');
+            activeCardFilter = cat;
+            document.querySelectorAll('.cards-filter-pill').forEach(p => p.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            filterCards();
+        }
+
         function filterCards() {
-            const q = (document.getElementById('card-search-input').value || '').toLowerCase();
+            const q = (document.getElementById('card-search-input').value || '').toLowerCase().trim();
+            const clearBtn = document.getElementById('cards-search-clear-btn');
+            if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+            let filtered = allCards.filter(c => 
+                (c.name || '').toLowerCase().includes(q) || 
+                (c.uid || '').toLowerCase().includes(q) || 
+                (c.userId || '').toLowerCase().includes(q)
+            );
+
+            if (activeCardFilter === 'active') {
+                filtered = filtered.filter(c => parseFloat(c.balance || 0) > 0);
+            } else if (activeCardFilter === 'low') {
+                filtered = filtered.filter(c => parseFloat(c.balance || 0) < 500);
+            }
+
+            renderCardsSidebar(filtered);
+        }
+
+        function clearCardsSearch() {
+            document.getElementById('card-search-input').value = '';
+            filterCards();
+            document.getElementById('card-search-input').focus();
+        }
+
+        function renderCardsTable(cards) {
+            const el = document.getElementById('tab-cards-table-body');
+            if (!el) return;
+            if (!cards || !cards.length) {
+                el.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px;">No registered cards</td></tr>';
+                return;
+            }
+
+            el.innerHTML = cards.map(c => {
+                const bal = parseFloat(c.balance || 0);
+                const isLow = bal < 500;
+                return `
+                <tr>
+                    <td style="font-weight:700; color:var(--black);">${esc(c.name)}</td>
+                    <td class="mono" style="font-weight:700; color:var(--brand-green-dark);">${esc(c.uid)}</td>
+                    <td class="mono" style="color:var(--gray-600);">${esc(c.userId || 'USR')}</td>
+                    <td class="mono" style="font-weight:800; color:${isLow ? 'var(--danger)' : 'var(--brand-green-dark)'};">NPR ${bal.toFixed(2)}</td>
+                    <td><span class="badge ${isLow ? 'badge-err' : 'badge-ok'}">${isLow ? 'Low Balance' : 'Active'}</span></td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn btn-outline" style="padding:3px 8px; font-size:0.7rem;" onclick="quickChargeCard('${esc(c.uid)}', '${esc(c.name)}', ${bal}); switchTab('dash');">Charge</button>
+                            <button class="btn btn-outline" style="padding:3px 8px; font-size:0.7rem;" onclick="openEditCardModal('${esc(c.uid)}')">Edit</button>
+                            <button class="btn btn-outline" style="padding:3px 6px; font-size:0.7rem; color:var(--danger); border-color:var(--danger-border);" onclick="deleteCard('${esc(c.uid)}')">&times;</button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function filterCardsTable() {
+            const q = (document.getElementById('tab-cards-search').value || '').toLowerCase().trim();
             const filtered = allCards.filter(c => 
                 (c.name || '').toLowerCase().includes(q) || 
                 (c.uid || '').toLowerCase().includes(q) || 
                 (c.userId || '').toLowerCase().includes(q)
             );
-            renderCardsSidebar(filtered);
+            renderCardsTable(filtered);
+        }
+
+        function exportCardsCSV() {
+            playAudioTone('click');
+            if (!allCards.length) return toast('No cards to export', 'er');
+            let csv = 'Cardholder Name,Hardware UID,User Tag ID,Vault Balance (NPR)\n';
+            allCards.forEach(c => {
+                csv += `"${(c.name||'').replace(/"/g, '""')}","${c.uid}","${c.userId||''}",${parseFloat(c.balance||0).toFixed(2)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `offpay-rfid-cards-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            toast('Cards ledger exported as CSV', 'ok');
+        }
+
+        function setRegBalance(amt) {
+            playAudioTone('click');
+            const input = document.getElementById('reg-balance');
+            if (input) input.value = amt;
+        }
+
+        function toggleRightSidebar() {
+            playAudioTone('click');
+            const sb = document.getElementById('cards-sidebar');
+            if (sb) sb.classList.toggle('open');
         }
 
         function renderTransactions(txns) {
@@ -3873,9 +4571,18 @@
         function toggleAddCard() {
             playAudioTone('click');
             const form = document.getElementById('add-card-form');
+            const chevron = document.getElementById('add-card-chevron');
+            if (!form) return;
             form.classList.toggle('active');
+            if (chevron) {
+                chevron.style.transform = form.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
             if (form.classList.contains('active')) {
                 generateFormUID();
+                setTimeout(() => {
+                    const inp = document.getElementById('reg-name');
+                    if (inp) inp.focus();
+                }, 100);
             }
         }
 
@@ -4028,12 +4735,16 @@
         function switchTab(tab) {
             playAudioTone('click');
             currentTab = tab;
-            ['dash', 'txn', 'set'].forEach(t => {
-                document.getElementById('p-' + t).classList.toggle('active', t === tab);
+            ['dash', 'cards', 'txn', 'set'].forEach(t => {
+                const el = document.getElementById('p-' + t);
+                if (el) el.classList.toggle('active', t === tab);
             });
             document.querySelectorAll('.main-nav button').forEach((btn, idx) => {
-                btn.classList.toggle('active', ['dash', 'txn', 'set'][idx] === tab);
+                btn.classList.toggle('active', ['dash', 'cards', 'txn', 'set'][idx] === tab);
             });
+            if (tab === 'cards') {
+                renderCardsTable(allCards);
+            }
         }
 
         function toggleSidebar() {

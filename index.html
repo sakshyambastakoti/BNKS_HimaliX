@@ -5,10 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>OffPay — Offline Smart Terminal POS</title>
-    <meta name="description" content="OffPay — Clean Swiss-style offline RFID payment terminal & ledger management system">
+    <meta name="description"
+        content="OffPay — Clean Swiss-style offline RFID payment terminal & ledger management system">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
     <!-- MQTT over WebSockets, Supabase Cloud DB & QR Code Library -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -69,8 +72,7 @@
             --radius-none: 0px;
 
             /* Layout */
-            --sidebar-width: 350px;
-            --cards-sidebar-width: 390px;
+            --sidebar-width: 420px;
             --header-h: 66px;
 
             /* Sharp Shadows */
@@ -120,7 +122,8 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            border-radius: 0 !important; /* Enforce crisp sharp edges */
+            border-radius: 0 !important;
+            /* Enforce crisp sharp edges */
         }
 
         body {
@@ -135,10 +138,22 @@
         }
 
         /* ── Scrollbars ─────────────────────────────────────────── */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: var(--bg-subtle); }
-        ::-webkit-scrollbar-thumb { background: var(--gray-300); }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-subtle);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
 
         /* ── Header ────────────────────────────────────────────── */
         header {
@@ -182,7 +197,7 @@
             height: 38px;
             width: auto;
             object-fit: contain;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.06));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.06));
         }
 
         .logo-title-group {
@@ -328,9 +343,21 @@
         }
 
         @keyframes pulse-dot {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 4px var(--brand-green)); }
-            100% { transform: scale(0.95); opacity: 0.8; }
+            0% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+                filter: drop-shadow(0 0 4px var(--brand-green));
+            }
+
+            100% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
         }
 
         .header-clock {
@@ -418,7 +445,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 4px);
+            background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 4px);
             pointer-events: none;
         }
 
@@ -470,9 +497,20 @@
         }
 
         @keyframes radar-pulse {
-            0% { opacity: 0.7; transform: scale(0.98); }
-            50% { opacity: 1; transform: scale(1.04); }
-            100% { opacity: 0.7; transform: scale(0.98); }
+            0% {
+                opacity: 0.7;
+                transform: scale(0.98);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.04);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: scale(0.98);
+            }
         }
 
         .atm-card-body {
@@ -610,7 +648,10 @@
             padding: 2px 6px;
             transition: color 0.15s;
         }
-        .atm-clear-btn:hover { color: #ffffff; }
+
+        .atm-clear-btn:hover {
+            color: #ffffff;
+        }
 
         /* ATM Card Embossed Footer */
         .atm-card-footer {
@@ -730,7 +771,9 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .keypad-toggle-btn:hover { color: var(--black); }
+        .keypad-toggle-btn:hover {
+            color: var(--black);
+        }
 
         .pos-keypad {
             display: grid;
@@ -796,465 +839,136 @@
             transform: scale(0.99);
         }
 
-        /* ── Right Sidebar (Registered RFID Cards Vault Hub) ── */
-        .right-sidebar {
-            width: var(--cards-sidebar-width);
-            flex-shrink: 0;
-            background: var(--bg-sidebar);
-            border-left: 1px solid var(--gray-200);
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-            height: calc(100vh - var(--header-h));
-            position: sticky;
-            top: var(--header-h);
-            transition: background 0.2s ease, border-color 0.2s ease, right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 80;
-        }
-
-        .cards-vault-header-wrap {
-            padding: 16px 18px 12px 18px;
-            border-bottom: 1px solid var(--gray-200);
-            background: var(--bg-white);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            transition: background 0.2s ease, border-color 0.2s ease;
-        }
-
-        .cards-vault-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .cards-vault-title-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .cards-vault-live-dot {
-            width: 7px;
-            height: 7px;
-            background: var(--brand-green);
-            border-radius: 50% !important;
-            box-shadow: 0 0 8px var(--brand-green);
-            animation: pulse-dot 2s infinite;
-        }
-
-        .cards-vault-title {
-            font-size: 0.75rem;
-            font-weight: 800;
-            letter-spacing: 1.4px;
-            text-transform: uppercase;
-            color: var(--black);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .cards-vault-count-badge {
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 1px 6px;
-            background: var(--brand-green-soft);
-            color: var(--brand-green-dark);
-            border: 1px solid var(--brand-green-border);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Vault Summary Mini Bar */
-        .vault-summary-bar {
-            background: var(--bg-subtle);
-            border: 1px solid var(--gray-200);
-            padding: 9px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .vault-summary-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .vault-summary-label {
-            font-size: 0.6rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--gray-500);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .vault-summary-value {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--brand-green-dark);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Modern Search Input Container */
-        .cards-search-container {
-            position: relative;
-            margin-bottom: 8px;
-        }
-
-        .cards-search-icon {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-400);
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-        }
-
-        .cards-search-input {
-            width: 100%;
-            padding: 8px 30px 8px 32px !important;
-            font-size: 0.78rem;
-            background: var(--bg-white);
-            border: 1px solid var(--gray-300);
-            color: var(--black);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: all 0.15s ease;
-        }
-
-        .cards-search-input:focus {
-            outline: none;
-            border-color: var(--black);
-            box-shadow: 0 0 0 2px var(--brand-green-glow);
-        }
-
-        .cards-search-clear {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: var(--gray-400);
-            cursor: pointer;
-            padding: 2px 6px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            display: none;
-        }
-
-        .cards-search-clear:hover { color: var(--black); }
-
-        /* Filter Chips */
-        .cards-filter-pills {
-            display: flex;
-            gap: 5px;
-            overflow-x: auto;
-            padding-bottom: 2px;
-        }
-
-        .cards-filter-pill {
-            background: transparent;
-            border: 1px solid var(--gray-200);
-            padding: 3px 8px;
-            font-size: 0.66rem;
-            font-weight: 700;
-            color: var(--gray-600);
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            white-space: nowrap;
-            transition: all 0.15s ease;
-        }
-
-        .cards-filter-pill:hover {
-            border-color: var(--gray-400);
-            color: var(--black);
-        }
-
-        .cards-filter-pill.active {
-            background: var(--black);
-            color: var(--text-white);
-            border-color: var(--black);
-        }
-
-        /* Cards List Scrollable Body */
-        .cards-scroll-body {
-            padding: 14px 16px 24px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1;
+        /* ── Cards List in Sidebar ─────────────────────────────── */
+        .card-search-box {
+            margin-bottom: 12px;
         }
 
         .card-list-wrapper {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            padding-right: 2px;
         }
 
-        /* ── Ultra-Professional Smart Card Item ───────────────── */
         .smart-card-item {
             background: var(--bg-white);
             border: 1px solid var(--gray-200);
-            padding: 12px 14px;
+            padding: 12px;
             display: flex;
-            flex-direction: column;
-            gap: 9px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.15s ease;
             position: relative;
-            box-shadow: var(--shadow-subtle);
         }
 
         .smart-card-item:hover {
             border-color: var(--black);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
-            transform: translateY(-1px);
+            box-shadow: var(--shadow-subtle);
         }
 
-        .smart-card-item.active-charging {
-            border-color: var(--brand-green);
-            box-shadow: 0 0 0 2px var(--brand-green-glow), 0 4px 16px rgba(16, 185, 129, 0.18);
-        }
-
-        .smart-card-item-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .smart-card-profile {
+        .smart-card-left {
             display: flex;
             align-items: center;
             gap: 10px;
-            min-width: 0;
         }
 
         .smart-card-avatar {
-            width: 36px;
-            height: 36px;
-            flex-shrink: 0;
-            background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
-            border: 1px solid var(--gray-700);
-            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-300);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 800;
+            color: var(--black);
             font-family: 'JetBrains Mono', monospace;
-            position: relative;
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);
-        }
-
-        .smart-card-avatar-pip {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            width: 8px;
-            height: 8px;
-            background: var(--brand-green);
-            border: 1.5px solid var(--bg-white);
-            border-radius: 50% !important;
-        }
-
-        .smart-card-info {
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .smart-card-name-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .smart-card-name {
-            font-size: 0.86rem;
-            font-weight: 800;
+            font-size: 0.84rem;
+            font-weight: 700;
             color: var(--black);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            letter-spacing: -0.2px;
+            margin-bottom: 2px;
         }
 
-        .smart-card-tag-pill {
-            font-size: 0.6rem;
-            font-weight: 800;
-            padding: 1px 5px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--gray-300);
-            color: var(--gray-600);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .smart-card-uid-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+        .smart-card-uid {
             font-size: 0.68rem;
+            color: var(--gray-500);
             font-family: 'JetBrains Mono', monospace;
+        }
+
+        .smart-card-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .smart-card-balance {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--brand-green-dark);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .card-actions-mini {
+            display: flex;
+            gap: 6px;
+        }
+
+        .card-action-mini-btn {
+            background: transparent;
+            border: 1px solid var(--gray-300);
+            padding: 2px 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
             color: var(--gray-600);
             cursor: pointer;
-            transition: color 0.15s, border-color 0.15s;
-            background: var(--bg-subtle);
-            padding: 1px 5px;
-            border: 1px solid var(--gray-200);
-            width: fit-content;
-        }
-
-        .smart-card-uid-badge:hover {
-            color: var(--brand-green-dark);
-            border-color: var(--brand-green-border);
-        }
-
-        .smart-card-balance-box {
-            text-align: right;
-            flex-shrink: 0;
-        }
-
-        .smart-card-balance-lbl {
-            font-size: 0.56rem;
-            font-weight: 800;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            color: var(--gray-500);
             font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 1px;
+            transition: all 0.15s;
         }
 
-        .smart-card-balance-num {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--brand-green-dark);
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.3px;
-        }
-
-        .smart-card-bottom-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px dashed var(--gray-200);
-            padding-top: 8px;
-            margin-top: 1px;
-        }
-
-        .smart-card-status-label {
-            font-size: 0.64rem;
-            font-weight: 700;
-            color: var(--gray-500);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .card-actions-pro {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .card-action-btn-charge {
+        .card-action-mini-btn:hover {
             background: var(--black);
             color: var(--text-white);
-            border: 1px solid var(--black);
-            padding: 3px 9px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.15s ease;
-        }
-
-        .card-action-btn-charge:hover {
-            background: var(--brand-green-dark);
-            border-color: var(--brand-green-dark);
-        }
-
-        .card-action-btn-edit {
-            background: transparent;
-            border: 1px solid var(--gray-300);
-            padding: 3px 8px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--gray-700);
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            transition: all 0.15s ease;
-        }
-
-        .card-action-btn-edit:hover {
-            background: var(--bg-hover);
             border-color: var(--black);
-            color: var(--black);
         }
 
-        .card-action-btn-del {
-            background: transparent;
-            border: 1px solid var(--gray-300);
-            padding: 3px 6px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--danger);
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            transition: all 0.15s ease;
-        }
-
-        .card-action-btn-del:hover {
-            background: var(--danger-bg);
-            border-color: var(--danger);
-        }
-
-        /* Register Card Collapsible Box */
-        .add-card-card {
-            background: var(--bg-white);
-            border: 1px dashed var(--gray-400);
-            transition: all 0.2s ease;
-            margin-top: 4px;
-        }
-
-        .add-card-card:hover {
-            border-color: var(--black);
-            background: var(--bg-hover);
-        }
-
-        .add-card-toggle-btn {
+        .add-card-toggle {
             width: 100%;
             background: transparent;
-            border: none;
-            padding: 11px 14px;
+            border: 1px dashed var(--gray-400);
+            padding: 10px;
+            color: var(--gray-700);
             font-size: 0.78rem;
-            font-weight: 800;
-            color: var(--black);
+            font-weight: 700;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            text-align: left;
+            transition: all 0.15s ease;
+            text-align: center;
         }
 
-        .add-card-form-body {
+        .add-card-toggle:hover {
+            border-color: var(--black);
+            color: var(--black);
+            background: var(--bg-hover);
+        }
+
+        .add-card-form {
             display: none;
-            padding: 0 14px 14px 14px;
-            border-top: 1px solid var(--gray-200);
-            background: var(--bg-white);
+            background: var(--bg-subtle);
+            border: 1px solid var(--gray-300);
+            padding: 14px;
+            margin-top: 10px;
         }
 
-        .add-card-form-body.active {
+        .add-card-form.active {
             display: block;
         }
 
@@ -1524,7 +1238,9 @@
             background: var(--bg-hover);
         }
 
-        .btn-full { width: 100%; }
+        .btn-full {
+            width: 100%;
+        }
 
         .btn-danger {
             background: var(--danger);
@@ -1649,8 +1365,15 @@
         }
 
         @keyframes modal-pop {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .modal-close-btn {
@@ -1664,7 +1387,10 @@
             top: 16px;
             right: 18px;
         }
-        .modal-close-btn:hover { color: var(--black); }
+
+        .modal-close-btn:hover {
+            color: var(--black);
+        }
 
         /* Thermal POS Receipt Modal Styling */
         .thermal-receipt {
@@ -1673,7 +1399,7 @@
             font-family: 'JetBrains Mono', monospace;
             padding: 20px;
             border: 1px solid var(--gray-300);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             text-align: left;
         }
 
@@ -1748,8 +1474,15 @@
         }
 
         @keyframes radar-expand {
-            0% { transform: scale(0.4); opacity: 0.9; }
-            100% { transform: scale(1.6); opacity: 0; }
+            0% {
+                transform: scale(0.4);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
         }
 
         .radar-icon-center {
@@ -1851,7 +1584,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .sync-spinner-inner {
@@ -1877,9 +1612,19 @@
         }
 
         @keyframes sync-progress-anim {
-            0% { transform: translateX(-100%); width: 30%; }
-            50% { width: 60%; }
-            100% { transform: translateX(350%); width: 30%; }
+            0% {
+                transform: translateX(-100%);
+                width: 30%;
+            }
+
+            50% {
+                width: 60%;
+            }
+
+            100% {
+                transform: translateX(350%);
+                width: 30%;
+            }
         }
 
         /* ── Payment Celebration & Bouncy Animations ──────────── */
@@ -1904,9 +1649,19 @@
         }
 
         @keyframes bounce-scale {
-            0% { transform: scale(0.3); opacity: 0; }
-            70% { transform: scale(1.15); }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            70% {
+                transform: scale(1.15);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .success-check-svg {
@@ -1916,7 +1671,9 @@
         }
 
         @keyframes stroke-draw {
-            100% { stroke-dashoffset: 0; }
+            100% {
+                stroke-dashoffset: 0;
+            }
         }
 
         /* ── High-End Thermal Bill Receipt Styling ────────────── */
@@ -1926,7 +1683,7 @@
             font-family: 'JetBrains Mono', 'Courier New', monospace;
             padding: 24px 20px;
             border: 1px dashed #71717a;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.18);
             max-width: 400px;
             width: 100%;
         }
@@ -2003,35 +1760,38 @@
             animation: slide-toast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .toast.show { display: flex; }
-        .toast.ok { border-left: 4px solid var(--brand-green); }
-        .toast.er { border-left: 4px solid var(--danger); }
+        .toast.show {
+            display: flex;
+        }
+
+        .toast.ok {
+            border-left: 4px solid var(--brand-green);
+        }
+
+        .toast.er {
+            border-left: 4px solid var(--danger);
+        }
 
         @keyframes slide-toast {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
-        /* ── Header Cards Toggle & Mobile Controls ────────────── */
-        .header-cards-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-        }
-
-        .header-cards-btn-label {
-            font-size: 0.76rem;
-            font-weight: 700;
-        }
-
+        /* ── Mobile Sidebar Toggle ─────────────────────────────── */
         .mobile-sidebar-toggle {
             display: none;
             position: fixed;
             bottom: 20px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
+            right: 20px;
+            width: 52px;
+            height: 52px;
             background: var(--black);
             color: var(--text-white);
             border: 1px solid var(--brand-green);
@@ -2042,27 +1802,12 @@
             box-shadow: var(--shadow-elevated);
         }
 
-        .mobile-sidebar-toggle svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
-
-        @media (max-width: 1280px) {
-            .sidebar { width: 330px; }
-            .right-sidebar { width: 350px; }
-        }
-
-        @media (max-width: 1100px) {
-            .right-sidebar {
-                position: fixed;
-                right: -100%;
-                top: var(--header-h);
-                width: 100%;
-                max-width: 380px;
-                z-index: 120;
-                transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-                height: calc(100vh - var(--header-h));
-                background: var(--bg-white);
-                box-shadow: var(--shadow-elevated);
-            }
-            .right-sidebar.open { right: 0; }
+        .mobile-sidebar-toggle svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
         }
 
         @media (max-width: 960px) {
@@ -2073,23 +1818,46 @@
                 width: 100%;
                 max-width: 360px;
                 z-index: 120;
-                transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                transition: left 0.25s ease;
                 height: calc(100vh - var(--header-h));
                 background: var(--bg-white);
                 box-shadow: var(--shadow-elevated);
             }
 
-            .sidebar.open { left: 0; }
-            .mobile-sidebar-toggle { display: flex; }
-            .dash-grid { grid-template-columns: 1fr; }
-            .stat-row { grid-template-columns: repeat(2, 1fr); }
+            .sidebar.open {
+                left: 0;
+            }
+
+            .mobile-sidebar-toggle {
+                display: flex;
+            }
+
+            .dash-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 640px) {
-            header { padding: 0 14px; }
-            .logo-tag, .header-clock, .header-cards-btn-label { display: none; }
-            .stat-row { grid-template-columns: 1fr; }
-            .conn-mode-selector { grid-template-columns: 1fr; }
+            header {
+                padding: 0 14px;
+            }
+
+            .logo-tag,
+            .header-clock {
+                display: none;
+            }
+
+            .stat-row {
+                grid-template-columns: 1fr;
+            }
+
+            .conn-mode-selector {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -2100,7 +1868,8 @@
     <header>
         <div class="logo" onclick="switchTab('dash')" title="OffPay Terminal Dashboard">
             <div class="logo-img-wrapper">
-                <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay Logo" class="logo-img">
+                <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay Logo"
+                    class="logo-img">
             </div>
             <div class="logo-title-group">
                 <div class="logo-text">Off<span>Pay</span></div>
@@ -2110,36 +1879,65 @@
 
         <div class="header-right">
             <!-- Mode Pill with SVG Icon -->
-            <div class="mode-pill" id="header-mode-badge" onclick="switchTab('set')" title="Click to configure MQTT / LAN">
+            <div class="mode-pill" id="header-mode-badge" onclick="switchTab('set')"
+                title="Click to configure MQTT / LAN">
                 <span id="header-mode-icon" class="mode-icon-svg">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path
+                            d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
                 </span>
                 <span id="header-mode-label">MQTT Cloud</span>
                 <span class="channel-tag" id="header-channel-tag">op-station-01</span>
             </div>
 
             <!-- Audio Sound FX Toggle -->
-            <button type="button" class="header-btn-tool" id="audio-toggle-btn" onclick="toggleSound()" title="Toggle Sound FX">
-                <svg id="audio-icon-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                <svg id="audio-icon-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-            </button>
-
-            <!-- RFID Cards Hub Sidebar Toggle -->
-            <button type="button" class="header-btn-tool header-cards-btn" id="header-cards-toggle-btn" onclick="toggleRightSidebar()" title="Toggle Registered RFID Cards">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                <span class="header-cards-btn-label">Cards</span>
-                <span class="peer-badge" id="header-card-count">0</span>
+            <button type="button" class="header-btn-tool" id="audio-toggle-btn" onclick="toggleSound()"
+                title="Toggle Sound FX">
+                <svg id="audio-icon-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2.2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                </svg>
+                <svg id="audio-icon-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2.2" style="display:none;">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <line x1="23" y1="9" x2="17" y2="15" />
+                    <line x1="17" y1="9" x2="23" y2="15" />
+                </svg>
             </button>
 
             <!-- Theme Switcher (Swiss White / Cyber Dark) -->
-            <button type="button" class="header-btn-tool" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch Light / Dark Theme">
-                <svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <button type="button" class="header-btn-tool" id="theme-toggle-btn" onclick="toggleTheme()"
+                title="Switch Light / Dark Theme">
+                <svg id="theme-icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2.2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+                <svg id="theme-icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2.2" style="display:none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
             </button>
 
             <!-- Pair Button with SVG Icon -->
             <button class="pair-btn" id="header-pair-btn" onclick="openPairModal()" title="Pair Another Phone / Device">
-                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg>
                 <span>Pair</span>
                 <span class="peer-badge" id="peer-count-badge">1</span>
             </button>
@@ -2177,12 +1975,17 @@
                         <div class="atm-card-header">
                             <div class="atm-brand-group">
                                 <div class="atm-card-logo-box">
-                                    <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay" class="atm-card-logo-img">
+                                    <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';"
+                                        alt="OffPay" class="atm-card-logo-img">
                                 </div>
                                 <span class="atm-card-tier">OFFLINE PLATINUM</span>
                             </div>
                             <div class="atm-contactless" title="EMV Contactless RFID/NFC Active">
-                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19"/></svg>
+                                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                                    stroke-width="2.6">
+                                    <path
+                                        d="M8.5 16.5a5 5 0 0 1 0-9M12 19a8.5 8.5 0 0 0 0-14M15.5 21.5a12 12 0 0 0 0-19" />
+                                </svg>
                             </div>
                         </div>
 
@@ -2207,8 +2010,10 @@
                             </div>
                             <div class="atm-amount-input-box">
                                 <span class="atm-currency-prefix">NPR</span>
-                                <input type="number" id="pay-amount" placeholder="0.00" min="0.01" step="0.01" autocomplete="off" oninput="onAmountInput()">
-                                <button type="button" class="atm-clear-btn" onclick="clearAmount()" title="Clear Amount">&times;</button>
+                                <input type="number" id="pay-amount" placeholder="0.00" min="0.01" step="0.01"
+                                    autocomplete="off" oninput="onAmountInput()">
+                                <button type="button" class="atm-clear-btn" onclick="clearAmount()"
+                                    title="Clear Amount">&times;</button>
                             </div>
                         </div>
 
@@ -2242,7 +2047,11 @@
                 <!-- Cashier Numeric Keypad Toggle -->
                 <div class="keypad-toggle-bar">
                     <button type="button" class="keypad-toggle-btn" onclick="toggleKeypad()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18"/><path d="M7 8h2M11 8h2M15 8h2M7 12h2M11 12h2M15 12h2M7 16h2M11 16h2M15 16h2"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <rect x="3" y="3" width="18" height="18" />
+                            <path d="M7 8h2M11 8h2M15 8h2M7 12h2M11 12h2M15 12h2M7 16h2M11 16h2M15 16h2" />
+                        </svg>
                         <span id="keypad-toggle-text">Show Numeric Keypad</span>
                     </button>
                 </div>
@@ -2264,21 +2073,66 @@
                 </div>
 
                 <button class="pay-btn" onclick="startPayment(event)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <rect x="2" y="5" width="20" height="14" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
                     <span>Initiate Payment & Tap</span>
                 </button>
             </div>
 
-                <!-- Terminal Status Quick Footer -->
-                <div style="margin-top:16px; padding:12px; background:var(--bg-subtle); border:1px solid var(--gray-200); font-size:0.75rem;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <span style="color:var(--gray-500); font-weight:700; font-family:'JetBrains Mono',monospace;">HARDWARE POS</span>
-                        <span class="badge badge-ok" style="font-size:0.62rem; padding:1px 6px;">READY</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; color:var(--gray-600); font-size:0.72rem; font-family:'JetBrains Mono',monospace;">
-                        <span>Target:</span>
-                        <span style="font-weight:700; color:var(--black);" id="terminal-target-display">OFFPAY VAULT POS</span>
-                    </div>
+            <!-- Cards Hub Section -->
+            <div class="sidebar-section">
+                <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Registered RFID Cards (<span id="sidebar-card-count" class="mono">3</span>)</span>
+                    <button type="button" class="btn btn-outline"
+                        style="padding:1px 6px; font-size:0.65rem; color:var(--danger); border-color:var(--danger-border);"
+                        onclick="clearAllCards()" title="Delete all cards at once">Clear All</button>
+                </div>
+
+                <!-- Instant Search Filter -->
+                <div class="card-search-box">
+                    <input type="text" class="form-input" id="card-search-input"
+                        placeholder="Search cardholder or UID..." oninput="filterCards()"
+                        style="padding:7px 10px; font-size:0.78rem;">
+                </div>
+
+                <div id="cards-sidebar-list" class="card-list-wrapper">
+                    <div class="empty-state">No cards registered</div>
+                </div>
+
+                <button class="add-card-toggle" id="add-card-toggle" onclick="toggleAddCard()">+ Register New RFID
+                    Card</button>
+                <div class="add-card-form" id="add-card-form">
+                    <form onsubmit="registerCard(event)">
+                        <div class="form-group">
+                            <label class="form-label">Customer Name</label>
+                            <input type="text" class="form-input" id="reg-name" required
+                                placeholder="e.g. Sakshyam Bastakoti">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">RFID Hardware UID</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" class="form-input mono" id="reg-uid" placeholder="e.g. A3 F8 12 B9"
+                                    style="text-transform:uppercase;">
+                                <button type="button" class="btn btn-outline" onclick="generateFormUID()"
+                                    style="padding:6px 10px; font-size:0.75rem;"
+                                    title="Generate Random UID">Gen</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">User ID / Tag Code</label>
+                            <input type="text" class="form-input" id="reg-userid" required placeholder="e.g. USR-001">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Initial Balance (NPR)</label>
+                            <input type="number" class="form-input" id="reg-balance" required min="0" value="1000"
+                                step="0.01">
+                        </div>
+                        <button type="submit" class="btn btn-black btn-full" style="margin-top:6px;">Register Card (Save
+                            to Supabase)</button>
+                    </form>
                 </div>
             </div>
         </aside>
@@ -2289,19 +2143,27 @@
             <!-- Tab Navigation -->
             <nav class="main-nav" id="main-nav">
                 <button class="active" onclick="switchTab('dash')">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="9" />
+                        <rect x="14" y="3" width="7" height="5" />
+                        <rect x="14" y="12" width="7" height="9" />
+                        <rect x="3" y="16" width="7" height="5" />
+                    </svg>
                     Overview
                 </button>
-                <button onclick="switchTab('cards')">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                    Cards Vault (<span id="cards-tab-count" class="mono">0</span>)
-                </button>
                 <button onclick="switchTab('txn')">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
                     Transactions Ledger
                 </button>
                 <button onclick="switchTab('set')">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
                     Settings & Supabase
                 </button>
             </nav>
@@ -2314,8 +2176,13 @@
                         <p class="panel-subtitle">Offline Cryptographic RFID Ledger & Instant POS Settle</p>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button class="btn btn-outline" onclick="pushAllToSupabase()" title="Sync local records to Supabase Cloud">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                        <button class="btn btn-outline" onclick="pushAllToSupabase()"
+                            title="Sync local records to Supabase Cloud">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <path
+                                    d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                            </svg>
                             <span>Push Cloud</span>
                         </button>
                     </div>
@@ -2335,7 +2202,8 @@
                             <span>Total Vault Reserve</span>
                             <span>NPR</span>
                         </div>
-                        <div class="stat-value mono" id="s-balance" style="color:var(--brand-green-dark);">NPR 0.00</div>
+                        <div class="stat-value mono" id="s-balance" style="color:var(--brand-green-dark);">NPR 0.00
+                        </div>
                     </div>
                     <div class="stat-cell">
                         <div class="stat-label">
@@ -2349,15 +2217,20 @@
                             <span>Supabase Cloud DB</span>
                             <span id="s-db-badge" style="color:#3b82f6;">CONNECTED</span>
                         </div>
-                        <div class="stat-value mono" id="s-volume" style="font-size:1.35rem; color:#2563eb;">LIVE SYNC</div>
+                        <div class="stat-value mono" id="s-volume" style="font-size:1.35rem; color:#2563eb;">LIVE SYNC
+                        </div>
                     </div>
                 </div>
 
                 <!-- Recent Activity & Sync Grid -->
                 <div class="dash-grid">
                     <div>
-                        <div class="form-section-title" style="font-size:0.88rem; font-weight:800; color:var(--black); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <div class="form-section-title"
+                            style="font-size:0.88rem; font-weight:800; color:var(--black); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                            </svg>
                             <span>Live Activity Feed</span>
                         </div>
                         <div class="table-container">
@@ -2374,7 +2247,8 @@
                                 </thead>
                                 <tbody id="recent-list">
                                     <tr>
-                                        <td colspan="6" style="text-align:center;color:var(--gray-500)">No transactions</td>
+                                        <td colspan="6" style="text-align:center;color:var(--gray-500)">No transactions
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2383,95 +2257,19 @@
 
                     <div class="conn-card" style="margin-bottom:0;">
                         <div class="conn-card-title" style="display:flex; align-items:center; gap:8px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-dark)" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-green-dark)"
+                                stroke-width="2.5">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                            </svg>
                             <span>Cloud Ledger Backup</span>
                         </div>
-                        <p style="font-size:0.78rem; color:var(--gray-600); margin-bottom:14px;">Reconcile all offline cryptographic transactions to Supabase PostgreSQL database.</p>
-                        <button class="btn btn-black btn-full" onclick="pushAllToSupabase()" style="margin-bottom:8px;">Push Local to Cloud</button>
-                        <button class="btn btn-outline btn-full" onclick="pullFromSupabase()">Pull Remote from Cloud</button>
+                        <p style="font-size:0.78rem; color:var(--gray-600); margin-bottom:14px;">Reconcile all offline
+                            cryptographic transactions to Supabase PostgreSQL database.</p>
+                        <button class="btn btn-black btn-full" onclick="pushAllToSupabase()"
+                            style="margin-bottom:8px;">Push Local to Cloud</button>
+                        <button class="btn btn-outline btn-full" onclick="pullFromSupabase()">Pull Remote from
+                            Cloud</button>
                     </div>
-                </div>
-            </div>
-
-            <!-- ═══ CARDS VAULT DIRECTORY & ANALYTICS TAB ═══ -->
-            <div id="p-cards" class="panel">
-                <div class="panel-header">
-                    <div>
-                        <h1 class="panel-title">RFID Cards Vault</h1>
-                        <p class="panel-subtitle">Cardholder directory, cryptographic UID registry & vault balances</p>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-outline" onclick="exportCardsCSV()" title="Export registered cards to CSV">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span>Export CSV</span>
-                        </button>
-                        <button class="btn btn-black" onclick="toggleAddCard(); if(window.innerWidth<=1100)toggleRightSidebar();" title="Register a new RFID card">
-                            <span>+ Register Card</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Cards KPI Metric Row -->
-                <div class="stat-row">
-                    <div class="stat-cell">
-                        <div class="stat-label">
-                            <span>Total Registered</span>
-                            <span>CARDS</span>
-                        </div>
-                        <div class="stat-value mono" id="tab-cards-total">0</div>
-                    </div>
-                    <div class="stat-cell" style="border-top-color: var(--brand-green);">
-                        <div class="stat-label">
-                            <span>Total Vault Pool</span>
-                            <span>NPR</span>
-                        </div>
-                        <div class="stat-value mono" id="tab-cards-balance" style="color:var(--brand-green-dark);">NPR 0.00</div>
-                    </div>
-                    <div class="stat-cell">
-                        <div class="stat-label">
-                            <span>Average Balance</span>
-                            <span>NPR</span>
-                        </div>
-                        <div class="stat-value mono" id="tab-cards-avg">NPR 0.00</div>
-                    </div>
-                    <div class="stat-cell" style="border-top-color: #3b82f6;">
-                        <div class="stat-label">
-                            <span>Cloud Sync State</span>
-                            <span style="color:#3b82f6;">POSTGRES</span>
-                        </div>
-                        <div class="stat-value mono" style="font-size:1.35rem; color:#2563eb;">ACTIVE</div>
-                    </div>
-                </div>
-
-                <!-- Cards Table Filter & Directory -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px;">
-                    <div style="flex:1; max-width:400px; position:relative;">
-                        <input type="text" class="form-input" id="tab-cards-search" placeholder="Search by name, UID, or user ID..." oninput="filterCardsTable()" style="padding-left:32px;">
-                        <svg style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; stroke:var(--gray-400); fill:none; stroke-width:2;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger-border);" onclick="clearAllCards()" title="Delete all cards">Clear All</button>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Cardholder</th>
-                                <th>RFID UID</th>
-                                <th>User Tag ID</th>
-                                <th>Vault Balance</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tab-cards-table-body">
-                            <tr>
-                                <td colspan="6" style="text-align:center;color:var(--gray-500);padding:24px;">No registered cards</td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
 
@@ -2480,19 +2278,33 @@
                 <div class="panel-header">
                     <div>
                         <h1 class="panel-title">Audit Ledger</h1>
-                        <p class="panel-subtitle">Cryptographic transaction logs, receipt generator & balance verification</p>
+                        <p class="panel-subtitle">Cryptographic transaction logs, receipt generator & balance
+                            verification</p>
                     </div>
                     <div style="display:flex; gap:8px;">
-                        <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger-border);" onclick="clearAllTransactions()" title="Delete all transactions from local and Supabase DB">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger-border);"
+                            onclick="clearAllTransactions()" title="Delete all transactions from local and Supabase DB">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
                             <span>Clear Ledger</span>
                         </button>
                         <button class="btn btn-outline" onclick="exportCSV()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                            </svg>
                             <span>Export CSV</span>
                         </button>
                         <button class="btn btn-outline" onclick="exportJSON()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
                             <span>Export JSON</span>
                         </button>
                     </div>
@@ -2538,15 +2350,28 @@
 
                 <!-- Connection Mode Selector -->
                 <div class="conn-mode-selector">
-                    <button type="button" class="conn-mode-btn active" id="btn-mode-mqtt" onclick="selectConnMode('mqtt')">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                    <button type="button" class="conn-mode-btn active" id="btn-mode-mqtt"
+                        onclick="selectConnMode('mqtt')">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path
+                                d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
                         <div>
                             <div class="mode-btn-title">Cloud MQTT Multi-Device Sync</div>
-                            <div class="mode-btn-sub">Sync POS terminals and phones across internet via secure WebSocket broker</div>
+                            <div class="mode-btn-sub">Sync POS terminals and phones across internet via secure WebSocket
+                                broker</div>
                         </div>
                     </button>
                     <button type="button" class="conn-mode-btn" id="btn-mode-lan" onclick="selectConnMode('lan')">
-                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8"/><rect x="2" y="14" width="20" height="8"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" />
+                            <rect x="2" y="14" width="20" height="8" />
+                            <line x1="6" y1="6" x2="6.01" y2="6" />
+                            <line x1="6" y1="18" x2="6.01" y2="18" />
+                        </svg>
                         <div>
                             <div class="mode-btn-title">Direct Local ESP32 LAN</div>
                             <div class="mode-btn-sub">Direct HTTP REST connection on local Wi-Fi subnet</div>
@@ -2561,15 +2386,18 @@
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">MQTT Broker Preset</label>
                             <select class="form-input" id="mqtt-broker-select" onchange="onBrokerPresetChange()">
-                                <option value="wss://broker.emqx.io:8084/mqtt">EMQX Public Cloud (WSS 8084 — Global & High Speed)</option>
-                                <option value="wss://broker.hivemq.com:8884/mqtt">HiveMQ Public Cloud (WSS 8884)</option>
+                                <option value="wss://broker.emqx.io:8084/mqtt">EMQX Public Cloud (WSS 8084 — Global &
+                                    High Speed)</option>
+                                <option value="wss://broker.hivemq.com:8884/mqtt">HiveMQ Public Cloud (WSS 8884)
+                                </option>
                                 <option value="wss://test.mosquitto.org:8081/mqtt">Mosquitto Public (WSS 8081)</option>
                                 <option value="custom">Custom Private Broker URL</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Broker WebSocket URL</label>
-                            <input type="text" class="form-input" id="mqtt-broker-url" value="wss://broker.emqx.io:8084/mqtt" placeholder="wss://your-broker:port/mqtt">
+                            <input type="text" class="form-input" id="mqtt-broker-url"
+                                value="wss://broker.emqx.io:8084/mqtt" placeholder="wss://your-broker:port/mqtt">
                         </div>
                     </div>
 
@@ -2577,8 +2405,10 @@
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Station Channel Code</label>
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" class="form-input mono" id="mqtt-channel-input" value="op-station-01" placeholder="e.g. op-station-01">
-                                <button class="btn btn-outline" type="button" onclick="generateRandomChannel()" title="Generate Random ID">
+                                <input type="text" class="form-input mono" id="mqtt-channel-input" value="op-station-01"
+                                    placeholder="e.g. op-station-01">
+                                <button class="btn btn-outline" type="button" onclick="generateRandomChannel()"
+                                    title="Generate Random ID">
                                     <span>Random</span>
                                 </button>
                             </div>
@@ -2590,8 +2420,10 @@
                     </div>
 
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button type="button" class="btn btn-black" onclick="saveAndConnectMQTT()">Save & Connect MQTT</button>
-                        <button type="button" class="btn btn-outline" onclick="openPairModal()">Pair Device (QR)</button>
+                        <button type="button" class="btn btn-black" onclick="saveAndConnectMQTT()">Save & Connect
+                            MQTT</button>
+                        <button type="button" class="btn btn-outline" onclick="openPairModal()">Pair Device
+                            (QR)</button>
                         <button type="button" class="btn btn-outline" onclick="testMQTTPing()">Test Ping</button>
                     </div>
 
@@ -2620,65 +2452,93 @@
 
                 <!-- Supabase Cloud PostgreSQL Database Configuration Section -->
                 <div class="conn-card" style="margin-bottom: 24px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
                         <div>
-                            <div class="conn-card-title" style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                                <svg style="width:18px;height:18px;color:var(--brand-green-dark)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            <div class="conn-card-title"
+                                style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                <svg style="width:18px;height:18px;color:var(--brand-green-dark)" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                                </svg>
                                 Supabase PostgreSQL Cloud Ledger Database
                             </div>
-                            <p style="font-size:0.78rem; color:var(--gray-600); margin:0;">Direct cloud replication for transactions, card balances, and multi-station audit logs.</p>
+                            <p style="font-size:0.78rem; color:var(--gray-600); margin:0;">Direct cloud replication for
+                                transactions, card balances, and multi-station audit logs.</p>
                         </div>
-                        <span id="supabase-status-badge" class="badge" style="background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-300);font-weight:700;">Standby</span>
+                        <span id="supabase-status-badge" class="badge"
+                            style="background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-300);font-weight:700;">Standby</span>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Supabase Project URL</label>
-                            <input type="text" class="form-input mono" id="supabase-url" value="https://xnclccdocbqlucuoiefo.supabase.co" placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
+                            <input type="text" class="form-input mono" id="supabase-url"
+                                value="https://xnclccdocbqlucuoiefo.supabase.co"
+                                placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Supabase Anon Public API Key</label>
-                            <input type="password" class="form-input mono" id="supabase-key" value="sb_publishable_GqLJqJExrEO16T-vt5tBRQ_9p1TH3SF" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
+                            <input type="password" class="form-input mono" id="supabase-key"
+                                value="sb_publishable_GqLJqJExrEO16T-vt5tBRQ_9p1TH3SF"
+                                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
                         </div>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-subtle); border:1px solid var(--gray-200); margin-bottom:14px;">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-subtle); border:1px solid var(--gray-200); margin-bottom:14px;">
                         <div>
-                            <div style="font-size:0.84rem; font-weight:800; color:var(--black);">Auto-Replicate Transactions & Cards</div>
-                            <div style="font-size:0.74rem; color:var(--gray-600);">Instantly upsert every payment and card registration to Supabase tables</div>
+                            <div style="font-size:0.84rem; font-weight:800; color:var(--black);">Auto-Replicate
+                                Transactions & Cards</div>
+                            <div style="font-size:0.74rem; color:var(--gray-600);">Instantly upsert every payment and
+                                card registration to Supabase tables</div>
                         </div>
-                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; font-size:0.82rem;">
-                            <input type="checkbox" id="supabase-autosync" checked style="width:16px;height:16px;accent-color:var(--brand-green-dark);">
+                        <label
+                            style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; font-size:0.82rem;">
+                            <input type="checkbox" id="supabase-autosync" checked
+                                style="width:16px;height:16px;accent-color:var(--brand-green-dark);">
                             <span>Enabled</span>
                         </label>
                     </div>
 
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button type="button" class="btn btn-black" onclick="saveAndConnectSupabase()">Save & Connect Supabase</button>
-                        <button type="button" class="btn btn-outline" onclick="pushAllToSupabase()">Push Local Ledger to Cloud</button>
-                        <button type="button" class="btn btn-outline" onclick="pullFromSupabase()">Pull Remote Data from Cloud</button>
+                        <button type="button" class="btn btn-black" onclick="saveAndConnectSupabase()">Save & Connect
+                            Supabase</button>
+                        <button type="button" class="btn btn-outline" onclick="pushAllToSupabase()">Push Local Ledger to
+                            Cloud</button>
+                        <button type="button" class="btn btn-outline" onclick="pullFromSupabase()">Pull Remote Data from
+                            Cloud</button>
                     </div>
                 </div>
 
                 <!-- Station & Hardware Settings Grid -->
                 <div class="settings-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                     <div class="form-section conn-card" style="margin-bottom:0;">
-                        <div class="form-section-title" style="font-weight:800; font-size:0.95rem; margin-bottom:12px;">Station Configuration</div>
+                        <div class="form-section-title" style="font-weight:800; font-size:0.95rem; margin-bottom:12px;">
+                            Station Configuration</div>
                         <form onsubmit="saveSettings(event)">
                             <div class="form-group">
                                 <label class="form-label">Station Identifier</label>
-                                <input type="text" class="form-input" id="setting-name" required value="OffPay Station 1">
+                                <input type="text" class="form-input" id="setting-name" required
+                                    value="OffPay Station 1">
                             </div>
                             <button type="submit" class="btn btn-black">Save Station</button>
                         </form>
                     </div>
 
                     <div class="form-section conn-card" style="margin-bottom:0;">
-                        <div class="form-section-title" style="font-weight:800; font-size:0.95rem; margin-bottom:12px;">Terminal Diagnostics</div>
+                        <div class="form-section-title" style="font-weight:800; font-size:0.95rem; margin-bottom:12px;">
+                            Terminal Diagnostics</div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.82rem;"><span style="color:var(--gray-600)">ESP32 IP</span><span class="mono" id="info-ip">--</span></div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.82rem;"><span style="color:var(--gray-600)">Free Heap RAM</span><span class="mono" id="info-heap">--</span></div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.82rem;"><span style="color:var(--gray-600)">System Uptime</span><span class="mono" id="info-uptime">--</span></div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.82rem;"><span
+                                    style="color:var(--gray-600)">ESP32 IP</span><span class="mono"
+                                    id="info-ip">--</span></div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.82rem;"><span
+                                    style="color:var(--gray-600)">Free Heap RAM</span><span class="mono"
+                                    id="info-heap">--</span></div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.82rem;"><span
+                                    style="color:var(--gray-600)">System Uptime</span><span class="mono"
+                                    id="info-uptime">--</span></div>
                         </div>
                     </div>
                 </div>
@@ -2689,7 +2549,10 @@
 
     <!-- Mobile Sidebar Toggle -->
     <button class="mobile-sidebar-toggle" id="mobile-toggle" onclick="toggleSidebar()" title="Open Payment Terminal">
-        <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        <svg viewBox="0 0 24 24">
+            <rect x="2" y="5" width="20" height="14" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+        </svg>
     </button>
 
     <!-- ═══ PAIR DEVICE MODAL ═══ -->
@@ -2697,13 +2560,17 @@
         <div class="modal pair-modal-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
                 <div>
-                    <h2 style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px; color:var(--black);">Pair Another Device</h2>
-                    <p style="color: var(--gray-500); font-size: 0.8rem;">Scan QR or copy link to sync across devices in real time</p>
+                    <h2
+                        style="font-size: 1.25rem; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 4px; color:var(--black);">
+                        Pair Another Device</h2>
+                    <p style="color: var(--gray-500); font-size: 0.8rem;">Scan QR or copy link to sync across devices in
+                        real time</p>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closePairModal()">&times;</button>
             </div>
 
-            <div style="text-align:center; padding:16px; background:var(--bg-subtle); border:1px solid var(--gray-200); margin-bottom:14px;">
+            <div
+                style="text-align:center; padding:16px; background:var(--bg-subtle); border:1px solid var(--gray-200); margin-bottom:14px;">
                 <div id="pair-qr-canvas" style="display:flex; justify-content:center;"></div>
                 <p style="font-size: 0.74rem; color: var(--gray-600); margin-top: 10px; font-weight: 700;">
                     Scan with any phone camera to open synced POS terminal
@@ -2727,12 +2594,20 @@
         <div class="modal edit-card-modal-content" style="max-width:440px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:36px; height:36px; border-radius:8px; background:var(--brand-green-soft); color:var(--brand-green-dark); display:flex; align-items:center; justify-content:center;">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    <div
+                        style="width:36px; height:36px; border-radius:8px; background:var(--brand-green-soft); color:var(--brand-green-dark); display:flex; align-items:center; justify-content:center;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                            stroke-width="2.2">
+                            <rect x="2" y="5" width="20" height="14" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                        </svg>
                     </div>
                     <div>
-                        <h2 style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.3px; margin: 0; color:var(--black);">Edit Customer Card</h2>
-                        <p style="color: var(--gray-500); font-size: 0.76rem; margin: 2px 0 0 0;">Update cardholder info, user tag & cryptographic vault balance</p>
+                        <h2
+                            style="font-size: 1.15rem; font-weight: 800; letter-spacing: -0.3px; margin: 0; color:var(--black);">
+                            Edit Customer Card</h2>
+                        <p style="color: var(--gray-500); font-size: 0.76rem; margin: 2px 0 0 0;">Update cardholder
+                            info, user tag & cryptographic vault balance</p>
                     </div>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closeEditCardModal()">&times;</button>
@@ -2743,12 +2618,14 @@
 
                 <div class="form-group">
                     <label class="form-label">RFID Hardware UID</label>
-                    <input type="text" class="form-input mono" id="edit-card-uid" readonly style="background:var(--bg-subtle); font-weight:700; color:var(--brand-green-dark);">
+                    <input type="text" class="form-input mono" id="edit-card-uid" readonly
+                        style="background:var(--bg-subtle); font-weight:700; color:var(--brand-green-dark);">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Customer / Cardholder Name</label>
-                    <input type="text" class="form-input" id="edit-card-name" required placeholder="e.g. Sakshyam Bastakoti" style="font-weight:700;">
+                    <input type="text" class="form-input" id="edit-card-name" required
+                        placeholder="e.g. Sakshyam Bastakoti" style="font-weight:700;">
                 </div>
 
                 <div class="form-group">
@@ -2759,22 +2636,30 @@
                 <div class="form-group" style="margin-bottom:8px;">
                     <label class="form-label">Vault Balance (NPR)</label>
                     <div style="position:relative;">
-                        <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:800; font-size:0.85rem; color:var(--gray-500);">NPR</span>
-                        <input type="number" class="form-input mono" id="edit-card-balance" required min="0" step="0.01" style="padding-left:48px; font-size:1.1rem; font-weight:800; color:var(--black);">
+                        <span
+                            style="position:absolute; left:12px; top:50%; transform:translateY(-50%); font-weight:800; font-size:0.85rem; color:var(--gray-500);">NPR</span>
+                        <input type="number" class="form-input mono" id="edit-card-balance" required min="0" step="0.01"
+                            style="padding-left:48px; font-size:1.1rem; font-weight:800; color:var(--black);">
                     </div>
                 </div>
 
                 <!-- Quick Top-up buttons -->
                 <div style="display:flex; gap:6px; margin-bottom:18px;">
-                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(100)">+100</button>
-                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(500)">+500</button>
-                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(1000)">+1,000</button>
-                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;" onclick="addQuickBalance(2500)">+2,500</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;"
+                        onclick="addQuickBalance(100)">+100</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;"
+                        onclick="addQuickBalance(500)">+500</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;"
+                        onclick="addQuickBalance(1000)">+1,000</button>
+                    <button type="button" class="btn btn-outline" style="flex:1; padding:5px; font-size:0.75rem;"
+                        onclick="addQuickBalance(2500)">+2,500</button>
                 </div>
 
                 <div style="display:flex; gap:10px;">
                     <button type="submit" class="btn btn-black" style="flex:2;">Save Changes</button>
-                    <button type="button" class="btn btn-outline" style="flex:1; color:var(--danger); border-color:var(--danger-border);" onclick="deleteFromEditModal()">Delete</button>
+                    <button type="button" class="btn btn-outline"
+                        style="flex:1; color:var(--danger); border-color:var(--danger-border);"
+                        onclick="deleteFromEditModal()">Delete</button>
                 </div>
             </form>
         </div>
@@ -3672,9 +3557,9 @@
 
         function filterCards() {
             const q = (document.getElementById('card-search-input').value || '').toLowerCase();
-            const filtered = allCards.filter(c => 
-                (c.name || '').toLowerCase().includes(q) || 
-                (c.uid || '').toLowerCase().includes(q) || 
+            const filtered = allCards.filter(c =>
+                (c.name || '').toLowerCase().includes(q) ||
+                (c.uid || '').toLowerCase().includes(q) ||
                 (c.userId || '').toLowerCase().includes(q)
             );
             renderCardsSidebar(filtered);
@@ -3751,7 +3636,7 @@
             if (connMode === 'mqtt') {
                 mqttSendCmd('clear_transactions', {});
             } else if (connMode === 'lan' && API_BASE) {
-                fetch(API_BASE + '/api/transactions/clear', { method: 'POST' }).catch(() => {});
+                fetch(API_BASE + '/api/transactions/clear', { method: 'POST' }).catch(() => { });
             }
             toast('All transaction records deleted from local and Supabase DB', 'ok');
         }
@@ -3778,7 +3663,7 @@
                 mqttPublishCards();
                 mqttSendCmd('clear_cards', {});
             } else if (connMode === 'lan' && API_BASE) {
-                fetch(API_BASE + '/api/cards/clear', { method: 'POST' }).catch(() => {});
+                fetch(API_BASE + '/api/cards/clear', { method: 'POST' }).catch(() => { });
             }
             toast('All registered cards deleted from local and Supabase DB', 'ok');
         }
@@ -3806,9 +3691,9 @@
 
         function filterTransactions() {
             const q = (document.getElementById('txn-search').value || '').toLowerCase();
-            const filtered = allTransactions.filter(t => 
-                (t.name || '').toLowerCase().includes(q) || 
-                (t.uid || '').toLowerCase().includes(q) || 
+            const filtered = allTransactions.filter(t =>
+                (t.name || '').toLowerCase().includes(q) ||
+                (t.uid || '').toLowerCase().includes(q) ||
                 (t.status || '').toLowerCase().includes(q) ||
                 String(t.amount || '').includes(q) ||
                 String(t.id || '').includes(q)
@@ -3855,8 +3740,8 @@
             // Show Real-time Loading Sync state while database replication occurs
             showSyncingModal(ev.amount, cardholderName, ev.uid);
 
-            const existingTxnIdx = allTransactions.findIndex(t => 
-                (ev.id && t.id === ev.id) || 
+            const existingTxnIdx = allTransactions.findIndex(t =>
+                (ev.id && t.id === ev.id) ||
                 (t.timestamp === ev.timestamp && t.uid === ev.uid && Math.abs(t.amount - parseFloat(ev.amount || 0)) < 0.01)
             );
 
@@ -3903,12 +3788,12 @@
 
             // Brief hold so user sees seamless loading confirmation then reveal final receipt
             setTimeout(() => {
-                showResultModal({ 
-                    ...ev, 
-                    id: newTxn.id, 
-                    name: cardholderName, 
-                    prevBal, 
-                    remBal, 
+                showResultModal({
+                    ...ev,
+                    id: newTxn.id,
+                    name: cardholderName,
+                    prevBal,
+                    remBal,
                     status: isSuccess ? 'Success' : 'Declined',
                     cloudSynced: cloudSynced
                 });
@@ -3921,8 +3806,8 @@
             overlay.classList.add('active');
 
             const ok = (ev.status || '').toLowerCase().includes('success');
-            const cloudBadge = ev.cloudSynced ? 
-                `<span class="badge badge-ok" style="display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; padding:4px 9px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="#059669"><circle cx="12" cy="12" r="10"/></svg> Stored in Supabase Cloud DB</span>` : 
+            const cloudBadge = ev.cloudSynced ?
+                `<span class="badge badge-ok" style="display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; padding:4px 9px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="#059669"><circle cx="12" cy="12" r="10"/></svg> Stored in Supabase Cloud DB</span>` :
                 `<span class="badge" style="display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; padding:4px 9px; background:var(--bg-subtle); border:1px solid var(--gray-300); color:var(--gray-700);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Stored in Local Ledger</span>`;
 
             window.lastActiveTxn = ev;
@@ -4020,7 +3905,7 @@
             const modal = document.getElementById('modal-content');
             overlay.classList.add('active');
 
-            const cardOptions = allCards.map(c => 
+            const cardOptions = allCards.map(c =>
                 `<option value="${esc(c.uid)}">${esc(c.name)} (Vault: NPR ${parseFloat(c.balance || 0).toFixed(2)})</option>`
             ).join('');
 
@@ -4149,9 +4034,9 @@
 
         function generateFormUID() {
             const uid = (Math.random().toString(16).substr(2, 2) + ' ' +
-                         Math.random().toString(16).substr(4, 2) + ' ' +
-                         Math.random().toString(16).substr(6, 2) + ' ' +
-                         Math.random().toString(16).substr(8, 2)).toUpperCase();
+                Math.random().toString(16).substr(4, 2) + ' ' +
+                Math.random().toString(16).substr(6, 2) + ' ' +
+                Math.random().toString(16).substr(8, 2)).toUpperCase();
             const input = document.getElementById('reg-uid');
             if (input) input.value = uid;
             playAudioTone('click');
@@ -4167,9 +4052,9 @@
 
             if (!uidInput) {
                 uidInput = (Math.random().toString(16).substr(2, 2) + ' ' +
-                            Math.random().toString(16).substr(4, 2) + ' ' +
-                            Math.random().toString(16).substr(6, 2) + ' ' +
-                            Math.random().toString(16).substr(8, 2)).toUpperCase();
+                    Math.random().toString(16).substr(4, 2) + ' ' +
+                    Math.random().toString(16).substr(6, 2) + ' ' +
+                    Math.random().toString(16).substr(8, 2)).toUpperCase();
             }
 
             const existingIdx = allCards.findIndex(c => c.uid.toLowerCase() === uidInput.toLowerCase());
@@ -4261,7 +4146,7 @@
                 mqttPublishCards();
                 mqttSendCmd('update_balance', { uid: origUid, balance, name, userId });
             } else if (connMode === 'lan' && API_BASE) {
-                fetch(API_BASE + '/api/cards/update-balance?uid=' + encodeURIComponent(origUid) + '&balance=' + balance, { method: 'POST' }).catch(() => {});
+                fetch(API_BASE + '/api/cards/update-balance?uid=' + encodeURIComponent(origUid) + '&balance=' + balance, { method: 'POST' }).catch(() => { });
             }
 
             closeEditCardModal();
@@ -4292,7 +4177,7 @@
                 mqttPublishCards();
                 mqttSendCmd('delete_card', { uid });
             } else if (connMode === 'lan' && API_BASE) {
-                fetch(API_BASE + '/api/cards/delete?uid=' + encodeURIComponent(uid), { method: 'POST' }).catch(() => {});
+                fetch(API_BASE + '/api/cards/delete?uid=' + encodeURIComponent(uid), { method: 'POST' }).catch(() => { });
             }
             toast('Card deleted from local & Supabase DB', 'ok');
         }
@@ -4319,12 +4204,12 @@
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
 
             // Ultra-low latency WebSocket configuration
-            mqttClient = mqtt.connect(mqttBroker, { 
-                clientId, 
-                clean: true, 
-                reconnectPeriod: 2000, 
+            mqttClient = mqtt.connect(mqttBroker, {
+                clientId,
+                clean: true,
+                reconnectPeriod: 2000,
                 keepalive: 15,
-                connectTimeout: 5000 
+                connectTimeout: 5000
             });
 
             mqttClient.on('connect', function () {
@@ -4529,4 +4414,5 @@
         }
     </script>
 </body>
+
 </html>
