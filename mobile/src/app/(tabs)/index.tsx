@@ -1,30 +1,28 @@
 /**
- * OffPay Home Screen — Futuristic Neo-Banking Dashboard
- * Displays:
- * - BrandHeader with official OffPay logo + interactive network badge
- * - Offline mesh readiness banner
- * - Glassmorphic Balance Card
- * - High-impact Send & Receive Action Buttons
- * - Quick Action tiles (Top Up, Load Bond, Sync, Scan QR)
- * - Offline Bond Vault Snapshot
- * - Recent verified transactions ledger
+ * OffPay Home Screen — Mobile Banking Experience (Inspired by Reference Design)
+ * Layout:
+ * 1. BankingHeader (Morning Greeting + Avatar + Red Scan button + Status)
+ * 2. BalanceCard (Primary Account Card + Bond Vault Card + World Card Carousel)
+ * 3. Services Grid (2x3 Grid: Transfer, Payment, Withdraw, Scan Pay, Top Up, Loans)
+ * 4. Recent Counterparties Carousel
+ * 5. Transactions Feed with merchant icon badges
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BrandHeader } from '@/components/BrandHeader';
+import { BankingHeader } from '@/components/BankingHeader';
 import { BalanceCard } from '@/components/BalanceCard';
-import { ActionButton } from '@/components/ActionButton';
-import { QuickActions, type QuickActionItem } from '@/components/QuickActions';
+import { QuickActions, type ServiceItem } from '@/components/QuickActions';
+import { RecentPeersCarousel } from '@/components/RecentPeersCarousel';
 import { TransactionItem } from '@/components/TransactionItem';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
-import { MOCK_TRANSACTIONS, MOCK_BONDS, formatNPR } from '@/constants/mock-data';
+import { MOCK_TRANSACTIONS, MOCK_BONDS } from '@/constants/mock-data';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -32,55 +30,52 @@ export default function HomeScreen() {
   const { onlineBalance, offlineBalance, totalBalance, networkStatus } = useAppStore();
 
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
-
   const isOffline = networkStatus === 'offline';
-  const recentTransactions = MOCK_TRANSACTIONS.slice(0, 5);
-  const activeBonds = MOCK_BONDS.filter((b) => b.status === 'available');
+  const recentTransactions = MOCK_TRANSACTIONS.slice(0, 4);
 
-  const handleSync = () => {
-    setIsSyncing(true);
-    setSyncFeedback('Syncing local ledger with validator...');
-    setTimeout(() => {
-      setIsSyncing(false);
-      setSyncFeedback('All offline transactions settled on-chain!');
-      setTimeout(() => setSyncFeedback(null), 3000);
-    }, 1800);
-  };
-
-  const quickActions: QuickActionItem[] = [
+  const services: ServiceItem[] = [
+    {
+      id: 'transfer',
+      icon: '⇄',
+      label: 'Transfer',
+      onPress: () => router.push('/send'),
+    },
+    {
+      id: 'payment',
+      icon: '🧾',
+      label: 'Payment',
+      onPress: () => router.push('/receive'),
+    },
+    {
+      id: 'withdraw',
+      icon: '⬡',
+      label: 'Withdraw',
+      badge: `${MOCK_BONDS.filter((b) => b.status === 'available').length}`,
+      onPress: () => Alert.alert('Offline Bond Withdrawal', 'Allocate offline bonds to device enclave for zero-network payments.'),
+    },
+    {
+      id: 'scan-pay',
+      icon: '⚲',
+      label: 'Scan Pay',
+      onPress: () => router.push('/scan-qr'),
+    },
     {
       id: 'topup',
       icon: '⊕',
       label: 'Top Up',
-      color: theme.info,
-      onPress: () => {
-        Alert.alert('Top Up', 'Select bank account or payment provider to add NPR balance.');
-      },
-    },
-    {
-      id: 'load-bond',
-      icon: '⬡',
-      label: 'Load Bond',
-      badge: `${activeBonds.length}`,
-      color: theme.accent,
-      onPress: () => {
-        Alert.alert('Load Offline Bond', 'Convert NPR online balance into cryptographically signed offline bonds for zero-network spending.');
-      },
+      onPress: () => Alert.alert('Top Up Account', 'Select linked bank account or mobile wallet to add NPR funds.'),
     },
     {
       id: 'sync',
       icon: isSyncing ? '⏳' : '⟳',
       label: isSyncing ? 'Syncing...' : 'Fast Sync',
-      color: theme.primary,
-      onPress: handleSync,
-    },
-    {
-      id: 'scan-qr',
-      icon: '📷',
-      label: 'Scan QR',
-      color: theme.cyan,
-      onPress: () => router.push('/scan-qr'),
+      onPress: () => {
+        setIsSyncing(true);
+        setTimeout(() => {
+          setIsSyncing(false);
+          Alert.alert('Sync Successful', 'Offline bond ledger synchronized with validator node.');
+        }, 1400);
+      },
     },
   ];
 
@@ -92,165 +87,48 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Top Brand Header with Logo and Network Switcher */}
-          <BrandHeader />
+          {/* Top Banking Header (Avatar, Greeting, Red QR, Status) */}
+          <BankingHeader />
 
-          {/* Offline Mesh Readiness Banner */}
-          <View
-            style={[
-              styles.statusBanner,
-              {
-                backgroundColor: isOffline ? theme.errorBg : theme.primaryGlow,
-                borderColor: isOffline ? theme.error + '40' : theme.primary + '35',
-              },
-            ]}
-          >
-            <ThemedText style={styles.bannerIcon}>
-              {isOffline ? '⚡' : '🛡'}
-            </ThemedText>
-            <View style={styles.bannerTextContainer}>
-              <ThemedText
-                style={[
-                  styles.bannerTitle,
-                  { color: isOffline ? theme.error : theme.primary },
-                ]}
-              >
-                {isOffline ? 'Offline Peer-to-Peer Mode Active' : 'OffPay Network Connected'}
-              </ThemedText>
-              <ThemedText style={[styles.bannerSubtitle, { color: theme.textSecondary }]}>
-                {isOffline
-                  ? `${activeBonds.length} offline bonds ready for zero-network exchange`
-                  : 'Hardware Enclave armed • Ed25519 signatures verified'}
-              </ThemedText>
-            </View>
-          </View>
+          {/* Account Balance Card Carousel (Primary Account, Bond Vault, World Card) */}
+          <BalanceCard
+            totalBalance={totalBalance}
+            onlineBalance={onlineBalance}
+            offlineBalance={offlineBalance}
+          />
 
-          {/* Sync notification toast */}
-          {syncFeedback && (
-            <View style={[styles.syncToast, { backgroundColor: theme.primary, borderColor: theme.accent }]}>
-              <ThemedText style={styles.syncToastText}>✓ {syncFeedback}</ThemedText>
-            </View>
-          )}
+          {/* Services 2x3 Grid */}
+          <QuickActions services={services} />
 
-          {/* Balance Card */}
-          <View style={styles.section}>
-            <BalanceCard
-              totalBalance={totalBalance}
-              onlineBalance={onlineBalance}
-              offlineBalance={offlineBalance}
-            />
-          </View>
+          {/* Recent Counterparties Avatar Row */}
+          <RecentPeersCarousel />
 
-          {/* Primary Action Buttons (Send & Receive) */}
-          <View style={styles.actionRow}>
-            <ActionButton
-              title="Send"
-              icon="↗"
-              variant="primary"
-              size="large"
-              onPress={() => router.push('/send')}
-            />
-            <ActionButton
-              title="Receive"
-              icon="↙"
-              variant="secondary"
-              size="large"
-              onPress={() => router.push('/receive')}
-            />
-          </View>
-
-          {/* Quick Actions Grid */}
-          <View style={styles.section}>
-            <ThemedText style={[styles.sectionTitle, { color: theme.text, marginBottom: Spacing.two }]}>
-              QUICK COMMANDS
-            </ThemedText>
-            <QuickActions actions={quickActions} />
-          </View>
-
-          {/* Offline Bond Vault Snapshot */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.vaultTitleGroup}>
-                <ThemedText style={[styles.vaultIcon, { color: theme.accent }]}>⬡</ThemedText>
-                <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
-                  Offline Bond Vault
-                </ThemedText>
-              </View>
-              <Pressable onPress={() => router.push('/(tabs)/account')}>
-                <ThemedText style={[styles.seeAll, { color: theme.primary }]}>
-                  Manage
-                </ThemedText>
-              </Pressable>
-            </View>
-
-            <View style={[styles.bondVaultCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-              <View style={styles.bondVaultHeader}>
-                <View>
-                  <ThemedText style={[styles.bondVaultCount, { color: theme.text }]}>
-                    {activeBonds.length} Active Bonds
-                  </ThemedText>
-                  <ThemedText style={[styles.bondVaultLimit, { color: theme.textMuted }]}>
-                    Total Offline Spending Capacity: {formatNPR(offlineBalance)}
-                  </ThemedText>
-                </View>
-                <View style={[styles.activePill, { backgroundColor: theme.accent + '20', borderColor: theme.accent }]}>
-                  <ThemedText style={[styles.activePillText, { color: theme.accent }]}>
-                    READY
-                  </ThemedText>
-                </View>
-              </View>
-
-              {/* Bond Chips */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bondsScroll}>
-                {activeBonds.map((bond) => (
-                  <View
-                    key={bond.bondId}
-                    style={[
-                      styles.bondChip,
-                      {
-                        backgroundColor: theme.cardElevated,
-                        borderColor: theme.border,
-                      },
-                    ]}
-                  >
-                    <ThemedText style={[styles.bondChipValue, { color: theme.accent }]}>
-                      NPR {bond.value}
-                    </ThemedText>
-                    <ThemedText style={[styles.bondChipId, { color: theme.textMuted }]}>
-                      {bond.bondId}
-                    </ThemedText>
-                  </View>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-
-          {/* Recent Transactions */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
-                Recent Transactions
+          {/* Recent Transactions Feed */}
+          <View style={styles.transactionSection}>
+            <View style={styles.transactionHeader}>
+              <ThemedText style={[styles.transactionTitle, { color: theme.text }]}>
+                Transaction
               </ThemedText>
               <Pressable onPress={() => router.push('/(tabs)/history')}>
-                <ThemedText style={[styles.seeAll, { color: theme.primary }]}>
-                  View Ledger ›
+                <ThemedText style={[styles.seeAllText, { color: theme.primary }]}>
+                  See All ›
                 </ThemedText>
               </Pressable>
             </View>
 
-            <View style={[styles.transactionsList, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
-              {recentTransactions.map((tx, index) => (
+            <View style={[styles.transactionCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
+              {recentTransactions.map((tx, idx) => (
                 <React.Fragment key={tx.id}>
                   <TransactionItem transaction={tx} />
-                  {index < recentTransactions.length - 1 && (
-                    <View style={[styles.txDivider, { backgroundColor: theme.borderLight }]} />
+                  {idx < recentTransactions.length - 1 && (
+                    <View style={[styles.divider, { backgroundColor: theme.borderLight }]} />
                   )}
                 </React.Fragment>
               ))}
             </View>
           </View>
 
-          {/* Bottom spacing for floating tab bar */}
+          {/* Bottom padding for tab bar */}
           <View style={{ height: 110 }} />
         </ScrollView>
       </SafeAreaView>
@@ -272,133 +150,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.one,
   },
-  statusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    gap: Spacing.two + 2,
-    marginTop: Spacing.two,
-    marginBottom: Spacing.two,
-  },
-  bannerIcon: {
-    fontSize: FontSize.lg,
-  },
-  bannerTextContainer: {
-    flex: 1,
-  },
-  bannerTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  bannerSubtitle: {
-    fontSize: FontSize.xs,
-    marginTop: 2,
-  },
-  syncToast: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
+  transactionSection: {
     marginVertical: Spacing.two,
-    alignItems: 'center',
   },
-  syncToastText: {
-    color: '#07090E',
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extrabold,
-  },
-  section: {
-    marginTop: Spacing.four,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: Spacing.three,
-    marginTop: Spacing.four,
-  },
-  sectionHeader: {
+  transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.two + 2,
+    paddingHorizontal: Spacing.one,
   },
-  vaultTitleGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one + 2,
-  },
-  vaultIcon: {
+  transactionTitle: {
     fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.black,
+    letterSpacing: -0.3,
   },
-  sectionTitle: {
-    fontSize: FontSize.xs,
-    fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-  },
-  seeAll: {
+  seeAllText: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.bold,
   },
-  bondVaultCard: {
-    padding: Spacing.three,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    gap: Spacing.three,
-  },
-  bondVaultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  bondVaultCount: {
-    fontSize: FontSize.md,
-    fontWeight: FontWeight.bold,
-  },
-  bondVaultLimit: {
-    fontSize: FontSize.xs,
-    marginTop: 2,
-  },
-  activePill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-  },
-  activePillText: {
-    fontSize: 9,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: 0.8,
-  },
-  bondsScroll: {
-    gap: Spacing.two,
-  },
-  bondChip: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  bondChipValue: {
-    fontSize: FontSize.sm,
-    fontWeight: FontWeight.bold,
-  },
-  bondChipId: {
-    fontSize: 10,
-    fontFamily: 'monospace',
-  },
-  transactionsList: {
+  transactionCard: {
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
     overflow: 'hidden',
   },
-  txDivider: {
+  divider: {
     height: 1,
     marginHorizontal: Spacing.three,
   },
