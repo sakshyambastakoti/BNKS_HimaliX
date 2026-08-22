@@ -18,3 +18,4 @@
 [2026-08-22 11:48:31] Commit #18: feat(history): add transaction category tabs for sent, received, and offline
 [2026-08-22 11:50:40] Commit #19: feat(settings): implement Appearance theme mode selector with light/dark/system
 [2026-08-22 11:52:49] Commit #20: feat(settings): add peer mesh discovery and auto-sync toggles
+[2026-08-22 11:54:57] Commit #21: feat(settings): configure biometric FaceID/Fingerprint authorization switch
