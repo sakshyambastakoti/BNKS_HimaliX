@@ -2637,7 +2637,7 @@
         // ══════════════════════════════════════════════════════════════
         // ── MQTT CLOUD SYNCHRONIZATION ENGINE ────────────────────────
         // ══════════════════════════════════════════════════════════════
-        function connectMQTT(silent) {
+        function connectMQTT(silent = true) {
             if (typeof mqtt === 'undefined') {
                 console.error('[MQTT] mqtt.js library not loaded!');
                 if (!silent) toast('MQTT library loading...', 'er');
@@ -2649,14 +2649,16 @@
                 try { mqttClient.end(true); } catch (e) { }
             }
 
-            showSyncOverlay();
-            setSyncStep('step-connect', 'active');
-            setSyncStatus('Connecting to MQTT Broker', 'Establishing secure WebSocket tunnel (' + mqttBroker + ')');
-            document.getElementById('step-connect-label').innerText = 'Connecting to MQTT Broker';
-            document.getElementById('step-time-label').innerText = 'Joining Station Channel: ' + mqttChannel;
-            document.getElementById('step-data-label').innerText = 'Synchronizing Cards & Ledger';
+            if (!silent) {
+                showSyncOverlay();
+                setSyncStep('step-connect', 'active');
+                setSyncStatus('Connecting to MQTT Broker', 'Establishing secure WebSocket tunnel (' + mqttBroker + ')');
+                document.getElementById('step-connect-label').innerText = 'Connecting to MQTT Broker';
+                document.getElementById('step-time-label').innerText = 'Joining Station Channel: ' + mqttChannel;
+                document.getElementById('step-data-label').innerText = 'Synchronizing Cards & Ledger';
+            }
 
-            document.getElementById('conn-text').innerText = 'Connecting';
+            document.getElementById('conn-text').innerText = 'Connecting...';
             document.getElementById('conn-text').style.color = 'var(--gray-500)';
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
 
@@ -2687,9 +2689,11 @@
                 document.getElementById('diag-mqtt-status').innerText = 'Connected (WSS)';
                 document.getElementById('diag-mqtt-status').style.color = 'var(--brand-green-dark)';
 
-                setSyncStep('step-connect', 'done');
-                setSyncStep('step-time', 'active');
-                setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
+                if (!silent) {
+                    setSyncStep('step-connect', 'done');
+                    setSyncStep('step-time', 'active');
+                    setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
+                }
 
                 const topics = [
                     `offpay/${mqttChannel}/status`,
@@ -2709,27 +2713,32 @@
                     }
                     console.log('[MQTT] Successfully subscribed to channel topics:', topics);
 
-                    setSyncStep('step-time', 'done');
-                    setSyncStep('step-data', 'active');
-                    setSyncStatus('Syncing Data', 'Broadcasting presence and syncing peer state');
+                    if (!silent) {
+                        setSyncStep('step-time', 'done');
+                        setSyncStep('step-data', 'active');
+                        setSyncStatus('Syncing Data', 'Broadcasting presence and syncing peer state');
+                    }
 
                     mqttAnnouncePresence();
                     mqttSendCmd('request_sync', {});
                     testMQTTPing();
 
                     setTimeout(function () {
-                        setSyncStep('step-data', 'done');
-                        setSyncStep('step-ready', 'done');
-                        setSyncStatus('Terminal Ready', 'Multi-device internet sync active');
-                        document.getElementById('sync-spinner').style.display = 'none';
-
-                        setTimeout(hideSyncOverlay, 600);
-                        if (!silent) toast('Connected to MQTT Cloud (' + mqttChannel + ')', 'ok');
+                        if (!silent) {
+                            setSyncStep('step-data', 'done');
+                            setSyncStep('step-ready', 'done');
+                            setSyncStatus('Terminal Ready', 'Multi-device internet sync active');
+                            document.getElementById('sync-spinner').style.display = 'none';
+                            setTimeout(hideSyncOverlay, 400);
+                            toast('Connected to MQTT Cloud (' + mqttChannel + ')', 'ok');
+                        } else {
+                            hideSyncOverlay();
+                        }
 
                         mqttPublishStatus();
                         mqttPublishCards();
                         mqttPublishTransactions();
-                    }, 800);
+                    }, 400);
                 });
 
                 if (presenceTimer) clearInterval(presenceTimer);
@@ -2878,12 +2887,61 @@
             } catch (e) { }
         }
 
+        function formatCurrentTime() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+
         function handleRemoteEvent(ev) {
             if (!ev) return;
-            console.log('[OffPay] Received Remote Tap Event:', ev);
+            console.log('[OffPay] Received Event:', ev);
             
             const isSuccess = (ev.status || '').toLowerCase().includes('success');
             playChime(isSuccess ? 'ok' : 'err');
+
+            // Find matching card if available
+            const matchingCard = allCards.find(c => (c.uid || '').toLowerCase() === (ev.uid || '').toLowerCase());
+            const cardholderName = ev.name && ev.name !== 'Unknown' && ev.name !== 'Unknown Cardholder' ? ev.name : (matchingCard ? matchingCard.name : 'Unknown Cardholder');
+            const prevBal = ev.prevBal !== undefined ? parseFloat(ev.prevBal) : (matchingCard ? matchingCard.balance : 0);
+            const remBal = isSuccess ? (ev.remBal !== undefined ? parseFloat(ev.remBal) : (matchingCard ? matchingCard.balance - parseFloat(ev.amount || 0) : 0)) : prevBal;
+
+            // Ensure this event is recorded into transaction history
+            const existingTxnIdx = allTransactions.findIndex(t => 
+                (ev.id && t.id === ev.id) || 
+                (t.timestamp === ev.timestamp && t.uid === ev.uid && Math.abs(t.amount - parseFloat(ev.amount || 0)) < 0.01)
+            );
+
+            const statusText = isSuccess ? 'Success' : (ev.message ? (ev.message.toLowerCase().includes('insufficient') ? 'Declined: Insufficient Balance' : 'Declined: ' + ev.message) : 'Declined');
+
+            if (existingTxnIdx === -1 && (parseFloat(ev.amount || 0) > 0 || ev.uid)) {
+                const nextId = allTransactions.length > 0 ? (Math.max(...allTransactions.map(t => t.id || 0)) + 1) : 101;
+                const newTxn = {
+                    id: ev.id || nextId,
+                    timestamp: ev.timestamp || formatCurrentTime(),
+                    uid: ev.uid || '--',
+                    name: cardholderName,
+                    amount: parseFloat(ev.amount || 0),
+                    prevBal: prevBal,
+                    remBal: remBal,
+                    status: statusText,
+                    synced: true
+                };
+                allTransactions.push(newTxn);
+                localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+            }
+
+            // If payment was successful, update card balance in memory and storage
+            if (isSuccess && matchingCard) {
+                matchingCard.balance = remBal;
+                localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+                renderCardsSidebar(allCards);
+            }
+
+            // Immediately refresh all views
+            renderTransactions(allTransactions);
+            renderRecent(allTransactions);
+            updateStatsCounters();
 
             currentModalState = 'PROCESSING';
             const overlay = document.getElementById('overlay');
@@ -2896,19 +2954,28 @@
             const visual = document.getElementById('scanner-visual');
             const cancelBtn = document.getElementById('payment-cancel-btn');
 
+            const enrichedEvent = {
+                ...ev,
+                name: cardholderName,
+                prevBal: prevBal,
+                remBal: remBal,
+                status: ev.status,
+                message: ev.message || (isSuccess ? 'Payment Successful' : 'Payment Declined')
+            };
+
             if (s1 && s2 && s3) {
                 s1.className = 'p-step done';
                 s2.className = 'p-step done';
                 s3.className = 'p-step done';
-                if (s4) s4.className = 'p-step active';
+                if (s4) s4.className = isSuccess ? 'p-step active' : 'p-step done';
                 if (visual) visual.style.display = 'none';
                 if (cancelBtn) cancelBtn.style.display = 'none';
 
                 setTimeout(() => {
-                    showResult(ev);
+                    showResult(enrichedEvent);
                 }, 180);
             } else {
-                showResult(ev);
+                showResult(enrichedEvent);
             }
         }
 
@@ -3269,119 +3336,27 @@
                                 }).catch(function () { });
 
                             return Promise.all([p1, p2]);
-                        })
-                        .then(function () {
-                            setSyncStep('step-data', 'done');
-                            setSyncStep('step-ready', 'done');
-                            setSyncStatus('Terminal Ready', 'All systems operational');
-                            document.getElementById('sync-spinner').style.display = 'none';
-
-                            setTimeout(hideSyncOverlay, 600);
-                            if (!silent) toast('Connected to OffPay Terminal (LAN)', 'ok');
-
-                            startPolling();
-                        });
-                })
-                .catch(err => {
-                    connected = false;
-                    document.getElementById('conn-dot').classList.remove('ok');
-                    document.getElementById('conn-text').innerText = 'Offline';
-                    document.getElementById('conn-text').style.color = 'var(--gray-500)';
-
-                    if (showingSyncOverlay) {
-                        setSyncStep('step-connect', 'error');
-                        setSyncStatus('LAN Connection Failed', 'Could not reach ESP IP — verify Wi-Fi subnet');
-                        document.getElementById('sync-spinner').style.display = 'none';
-                        document.getElementById('sync-fail-actions').style.display = 'flex';
-                    }
-
-                    if (!silent) toast('LAN Connection failed: ' + err.message, 'er');
-                });
-        }
-
-        function connectESP() {
-            autoConnectAttempts = 0;
-            attemptConnectLAN(false);
-        }
-
-        function api(path, method) {
-            if (connMode === 'mqtt') {
-                return Promise.resolve({ ok: true });
-            }
-            if (!connected) { toast('Not connected to ESP', 'er'); return Promise.reject('Not connected'); }
-            return fetchWithTimeout(API_BASE + path, {
-                method: method || 'GET'
-            }, 20000);
-        }
-
-        function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
-            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
-                options.signal = AbortSignal.timeout(timeoutMs);
-                return fetch(url, options);
-            }
-            const controller = new AbortController();
-            const id = setTimeout(() => controller.abort(), timeoutMs);
-            options.signal = controller.signal;
-            return fetch(url, options).finally(() => clearTimeout(id));
-        }
-
-        // ══════════════════════════════════════════════════════════════
-        // ── UI RENDERING & DATA MANAGEMENT ───────────────────────────
-        // ══════════════════════════════════════════════════════════════
-        function updateStatsCounters() {
-            document.getElementById('s-cards').innerText = allCards.length;
-            document.getElementById('s-txn-count').innerText = allTransactions.length;
-            let total = 0;
-            allCards.forEach(c => total += parseFloat(c.balance || 0));
-            document.getElementById('s-balance').innerText = 'NPR ' + total.toFixed(2);
-        }
-
-        function renderCardsSidebar(cards) {
-            const el = document.getElementById('cards-sidebar-list');
-            if (!cards || !cards.length) {
-                el.innerHTML = '<div class="empty-state">No cards registered</div>';
-                return;
-            }
-            el.innerHTML = cards.map(c => `
-                <div class="card-item">
-                    <div class="card-item-left">
-                        <div class="mini-card-chip" title="EMV Smart RFID Tag"></div>
-                        <div class="card-info">
-                            <div class="card-name">${esc(c.name)}</div>
-                            <div class="card-uid">${esc(c.uid)} &bull; ${esc(c.userId)}</div>
-                            <div class="card-actions">
-                                <button class="card-action-btn" onclick="editBalance('${esc(c.uid)}', ${c.balance})">Edit</button>
-                                <button class="card-action-btn del" onclick="deleteCard('${esc(c.uid)}')">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="card-balance">NPR ${parseFloat(c.balance).toFixed(2)}</div>
-                        <div class="card-balance-label">BALANCE</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderTransactions(txns) {
+                function renderTransactions(txns) {
             const el = document.getElementById('txn-list');
             if (!txns || !txns.length) {
-                el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-500)">No records</td></tr>';
+                el.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:24px;">No transaction records found in ledger</td></tr>';
                 return;
             }
             const sorted = [...txns].reverse();
             el.innerHTML = sorted.map(t => {
-                const cls = (t.status || '').toLowerCase().includes('success') ? 'badge-ok' : 'badge-err';
+                const isOk = (t.status || '').toLowerCase().includes('success');
+                const cls = isOk ? 'badge-ok' : 'badge-err';
+                const statusText = t.status || (isOk ? 'Success' : 'Declined');
                 return `
                     <tr>
-                        <td class="mono" style="color:var(--black);font-weight:700;">#${t.id}</td>
-                        <td style="color:var(--gray-600)">${esc(t.timestamp)}</td>
-                        <td class="mono">${esc(t.uid)}</td>
-                        <td><strong>${esc(t.name)}</strong></td>
-                        <td style="font-weight:800;color:var(--black);">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
-                        <td class="mono" style="color:var(--gray-500)">${parseFloat(t.prevBal || 0).toFixed(2)}</td>
-                        <td class="mono" style="color:var(--brand-green-dark);font-weight:800;">${parseFloat(t.remBal || 0).toFixed(2)}</td>
-                        <td><span class="badge ${cls}">${esc(t.status)}</span></td>
+                        <td class="mono" style="color:var(--black);font-weight:700;">#${t.id || '--'}</td>
+                        <td style="color:var(--gray-600);white-space:nowrap;">${esc(t.timestamp || '--')}</td>
+                        <td class="mono" style="font-weight:600;">${esc(t.uid || '--')}</td>
+                        <td><strong>${esc(t.name || 'Cardholder')}</strong></td>
+                        <td style="font-weight:800;color:var(--black);white-space:nowrap;">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
+                        <td class="mono" style="color:var(--gray-500);white-space:nowrap;">NPR ${parseFloat(t.prevBal || 0).toFixed(2)}</td>
+                        <td class="mono" style="color:${isOk ? 'var(--brand-green-dark)' : 'var(--danger)'};font-weight:800;white-space:nowrap;">NPR ${parseFloat(t.remBal !== undefined ? t.remBal : t.prevBal || 0).toFixed(2)}</td>
+                        <td><span class="badge ${cls}">${esc(statusText)}</span></td>
                     </tr>
                 `;
             }).join('');
@@ -3390,20 +3365,21 @@
         function renderRecent(txns) {
             const el = document.getElementById('recent-list');
             if (!txns || !txns.length) {
-                el.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500)">No transactions</td></tr>';
+                el.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:20px;">No recent transactions</td></tr>';
                 return;
             }
-            const recent = [...txns].reverse().slice(0, 5);
+            const recent = [...txns].reverse().slice(0, 7);
             el.innerHTML = recent.map(t => {
-                const cls = (t.status || '').toLowerCase().includes('success') ? 'badge-ok' : 'badge-err';
-                const time = t.timestamp ? (t.timestamp.split(' ')[1] || t.timestamp) : '';
+                const isOk = (t.status || '').toLowerCase().includes('success');
+                const cls = isOk ? 'badge-ok' : 'badge-err';
+                const time = t.timestamp ? (t.timestamp.split(' ')[1] || t.timestamp) : '--';
                 return `
                     <tr>
-                        <td style="color:var(--gray-600);font-family:'JetBrains Mono',monospace;">${esc(time)}</td>
-                        <td><strong>${esc(t.name)}</strong></td>
-                        <td style="font-weight:800;color:var(--black);">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
-                        <td class="mono" style="color:var(--brand-green-dark);font-weight:700;">${parseFloat(t.remBal || 0).toFixed(2)}</td>
-                        <td><span class="badge ${cls}">${esc(t.status)}</span></td>
+                        <td style="color:var(--gray-600);font-family:'JetBrains Mono',monospace;white-space:nowrap;">${esc(time)}</td>
+                        <td><strong>${esc(t.name || 'Cardholder')}</strong></td>
+                        <td style="font-weight:800;color:var(--black);white-space:nowrap;">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
+                        <td class="mono" style="color:${isOk ? 'var(--brand-green-dark)' : 'var(--danger)'};font-weight:700;white-space:nowrap;">NPR ${parseFloat(t.remBal !== undefined ? t.remBal : t.prevBal || 0).toFixed(2)}</td>
+                        <td><span class="badge ${cls}">${esc(t.status || (isOk ? 'Success' : 'Declined'))}</span></td>
                     </tr>
                 `;
             }).join('');
@@ -3526,19 +3502,32 @@
                         
                         <div style="border:1px solid var(--gray-200);padding:16px;text-align:left;margin-bottom:18px;background:var(--bg-subtle);">
                             <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.88rem"><span style="color:var(--gray-600)">Charged Amount</span><strong style="font-size:1.05rem;color:var(--black);font-family:'JetBrains Mono',monospace;">NPR ${parseFloat(ev.amount || 0).toFixed(2)}</strong></div>
-                            <div style="display:flex;justify-content:space-between;font-size:0.88rem"><span style="color:var(--gray-600)">Remaining Vault</span><strong style="color:var(--brand-green-dark);font-family:'JetBrains Mono',monospace;font-size:1.05rem;">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.88rem"><span style="color:var(--gray-600)">Previous Vault</span><span class="mono" style="color:var(--gray-700);">NPR ${parseFloat(ev.prevBal || 0).toFixed(2)}</span></div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.88rem;padding-top:6px;border-top:1px dashed var(--gray-300);"><span style="color:var(--gray-600)">Remaining Vault</span><strong style="color:var(--brand-green-dark);font-family:'JetBrains Mono',monospace;font-size:1.05rem;">NPR ${parseFloat(ev.remBal || 0).toFixed(2)}</strong></div>
                         </div>
                         <p style="color:var(--gray-500);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px">Auto-closing in 2.5s</p>
                     </div>
                 `;
             } else {
+                const reqAmt = parseFloat(ev.amount || 0);
+                const curBal = parseFloat(ev.prevBal || 0);
+                const deficit = (reqAmt > curBal) ? (reqAmt - curBal).toFixed(2) : '0.00';
+
                 modal.innerHTML = `
                     <div class="result-screen">
                         <div class="result-icon fail">
                             <svg style="width:32px;height:32px" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </div>
-                        <h2 style="font-size:1.3rem;margin:8px;font-weight:800;letter-spacing:-0.3px;color:var(--danger);">Payment Declined</h2>
-                        <p style="font-weight:600;font-size:0.95rem;margin-bottom:22px;color:var(--gray-700)">${esc(ev.message || 'Transaction Declined')}</p>
+                        <h2 style="font-size:1.3rem;margin-bottom:4px;font-weight:800;letter-spacing:-0.3px;color:var(--danger);">Payment Declined</h2>
+                        <p style="font-weight:800;font-size:0.95rem;margin-bottom:2px;color:var(--black);">${esc(ev.name || 'Cardholder')}</p>
+                        <p style="color:var(--gray-500);font-size:0.76rem;margin-bottom:14px;font-family:'JetBrains Mono',monospace;">${esc(ev.uid || '--')}</p>
+                        
+                        <div style="border:1px solid var(--danger-border);padding:14px;text-align:left;margin-bottom:18px;background:var(--danger-bg);">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-700)">Decline Reason</span><strong style="color:var(--danger);">${esc(ev.message || 'Insufficient Balance')}</strong></div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-700)">Requested Amount</span><strong class="mono" style="color:var(--black);">NPR ${reqAmt.toFixed(2)}</strong></div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.84rem;"><span style="color:var(--gray-700)">Available Balance</span><strong class="mono" style="color:var(--gray-800);">NPR ${curBal.toFixed(2)}</strong></div>
+                            ${parseFloat(deficit) > 0 ? `<div style="display:flex;justify-content:space-between;font-size:0.84rem;padding-top:6px;border-top:1px dashed rgba(239,68,68,0.3);"><span style="color:var(--danger)">Balance Deficit</span><strong class="mono" style="color:var(--danger);">- NPR ${deficit}</strong></div>` : ''}
+                        </div>
                         <button class="btn btn-black btn-full" onclick="closeOverlay()">Close</button>
                     </div>
                 `;
@@ -3547,7 +3536,7 @@
             if (connMode === 'lan') {
                 api('/api/status/acknowledge-event', 'POST').catch(function () { });
             }
-            setTimeout(closeOverlay, 2800);
+            setTimeout(closeOverlay, 3200);
         }
 
         function closeOverlay() {
@@ -3582,77 +3571,6 @@
                     toast('Payment mode activated — tap card on terminal', 'ok');
                 }).catch(function () { });
             }
-        }
-
-        function simulateCardTap(uid) {
-            const card = allCards.find(c => c.uid.toLowerCase() === uid.toLowerCase());
-            if (!card) return toast('Card not found', 'er');
-
-            const amt = terminalStatus.activeAmount || 100;
-            const prevBal = card.balance;
-
-            if (prevBal < amt) {
-                const failEvent = {
-                    status: "Failed",
-                    uid: card.uid,
-                    name: card.name,
-                    amount: amt,
-                    prevBal: prevBal,
-                    remBal: prevBal,
-                    message: "Insufficient Balance",
-                    processed: false
-                };
-                if (connMode === 'mqtt') {
-                    mqttPublish('events', failEvent);
-                    mqttPublishStatus();
-                }
-                handleRemoteEvent(failEvent);
-                return;
-            }
-
-            card.balance = prevBal - amt;
-            const newTxn = {
-                id: allTransactions.length > 0 ? allTransactions[allTransactions.length - 1].id + 1 : 1,
-                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                uid: card.uid,
-                name: card.name,
-                amount: amt,
-                prevBal: prevBal,
-                remBal: card.balance,
-                status: "Success",
-                synced: true
-            };
-
-            allTransactions.push(newTxn);
-            localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
-            localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
-
-            renderCardsSidebar(allCards);
-            renderTransactions(allTransactions);
-            renderRecent(allTransactions);
-            updateStatsCounters();
-
-            const successEvent = {
-                status: "Success",
-                uid: card.uid,
-                name: card.name,
-                amount: amt,
-                prevBal: prevBal,
-                remBal: card.balance,
-                message: "Payment Successful",
-                processed: false
-            };
-
-            if (connMode === 'mqtt') {
-                mqttPublish('events', successEvent);
-                mqttPublishCards();
-                mqttPublishTransactions();
-                terminalStatus.mode = 'READY';
-                terminalStatus.activeAmount = 0;
-                mqttPublishStatus();
-            }
-
-            handleRemoteEvent(successEvent);
         }
 
         function registerCard(e) {
@@ -3810,11 +3728,17 @@
         }
 
         function filterTransactions() {
-            const q = document.getElementById('txn-search').value.toLowerCase();
+            const q = document.getElementById('txn-search').value.toLowerCase().trim();
+            if (!q) {
+                renderTransactions(allTransactions);
+                return;
+            }
             const filtered = allTransactions.filter(t =>
+                String(t.id || '').toLowerCase().includes(q) ||
                 (t.uid || '').toLowerCase().includes(q) ||
                 (t.name || '').toLowerCase().includes(q) ||
                 (t.status || '').toLowerCase().includes(q) ||
+                String(t.amount || '').toLowerCase().includes(q) ||
                 (t.timestamp || '').toLowerCase().includes(q)
             );
             renderTransactions(filtered);

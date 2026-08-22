@@ -632,18 +632,27 @@ void loop() {
       lastEvent.status = "Failed";
       lastEvent.message = errorMsg;
 
+      std::vector<Card> cards;
+      loadCards(cards);
+      int cardIdx = findCardIndex(cards, uid);
+      String cName = (cardIdx != -1) ? cards[cardIdx].name : "Unknown Cardholder";
+      float cPrevBal = (cardIdx != -1) ? cards[cardIdx].balance : 0.0f;
+      lastEvent.name = cName;
+      lastEvent.prevBal = cPrevBal;
+      lastEvent.remBal = cPrevBal;
+
       lcd.clear();
-      if (errorMsg.equalsIgnoreCase("Insufficient Bal")) {
+      if (errorMsg.indexOf("Insufficient") != -1) {
         lcd.setCursor(0, 0); lcd.print("Insufficient");
-        lcd.setCursor(0, 1); lcd.print("Balance");
+        lcd.setCursor(0, 1); lcd.print("Balance!");
       } else {
-        lcd.setCursor(0, 0); lcd.print("Payment Failed");
+        lcd.setCursor(0, 0); lcd.print("Payment Declined");
         lcd.setCursor(0, 1); lcd.print(errorMsg);
       }
       triggerFailureFeedback();
 
-      // Publish failure to MQTT cloud
-      mqttPublishEvent("Failed", uid, "Unknown", activeAmount, 0.0f, 0.0f, errorMsg);
+      // Publish failure event to MQTT cloud
+      mqttPublishEvent("Failed", uid, cName, activeAmount, cPrevBal, cPrevBal, errorMsg);
       mqttPublishTransactions();
     }
 

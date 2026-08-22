@@ -147,8 +147,8 @@ inline bool processPayment(const String &uid, float amount, String &errorMessage
   float prevBal = cards[index].balance;
 
   if (prevBal < amount) {
-    errorMessage = "Insufficient Bal";
-    logTransaction(uid, cardholderName, amount, prevBal, prevBal, "Failed (Insufficient)");
+    errorMessage = "Insufficient Balance";
+    logTransaction(uid, cardholderName, amount, prevBal, prevBal, "Declined (Insufficient Balance)");
     return false;
   }
 
