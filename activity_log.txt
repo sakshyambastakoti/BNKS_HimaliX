@@ -67,3 +67,4 @@
 [2026-08-22 13:33:31] Commit #67: style(hud): polish reticle corner brackets and aim crosshairs
 [2026-08-22 13:35:40] Commit #68: style(cards): add golden EMV chip gradient lines and world logo
 [2026-08-22 13:37:49] Commit #69: perf(render): memoize transaction item list and filter calculations
+[2026-08-22 13:39:57] Commit #70: feat(release): final polish and release prep for OffPay v1.0.0
