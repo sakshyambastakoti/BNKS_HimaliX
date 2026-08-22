@@ -1819,6 +1819,13 @@
                             <input type="text" class="form-input" id="reg-name" required placeholder="e.g. Sakshyam Bastakoti">
                         </div>
                         <div class="form-group">
+                            <label class="form-label">RFID Hardware UID</label>
+                            <div style="display:flex; gap:6px;">
+                                <input type="text" class="form-input mono" id="reg-uid" placeholder="e.g. A3 F8 12 B9" style="text-transform:uppercase;">
+                                <button type="button" class="btn btn-outline" onclick="generateFormUID()" style="padding:6px 10px; font-size:0.75rem;" title="Generate Random UID">Gen</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">User ID / Tag Code</label>
                             <input type="text" class="form-input" id="reg-userid" required placeholder="e.g. USR-001">
                         </div>
@@ -1826,7 +1833,7 @@
                             <label class="form-label">Initial Balance (NPR)</label>
                             <input type="number" class="form-input" id="reg-balance" required min="0" value="1000" step="0.01">
                         </div>
-                        <button type="submit" class="btn btn-black btn-full" style="margin-top:6px;">Register Card</button>
+                        <button type="submit" class="btn btn-black btn-full" style="margin-top:6px;">Register Card (Save to Supabase)</button>
                     </form>
                 </div>
             </div>
@@ -2530,6 +2537,7 @@
                         badge.style.color = 'var(--brand-green-dark)';
                     }
                     if (showAlert) toast('Supabase Cloud Database Connected!', 'ok');
+                    fetchCardsFromSupabase();
                 }
             } catch (err) {
                 if (badge) {
@@ -2537,6 +2545,26 @@
                     badge.style.background = 'var(--danger-bg)';
                     badge.style.color = 'var(--danger)';
                 }
+            }
+        }
+
+        async function fetchCardsFromSupabase() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient.from('cards').select('*').order('name', { ascending: true });
+                if (data && data.length > 0) {
+                    allCards = data.map(c => ({
+                        uid: c.uid,
+                        name: c.name,
+                        userId: c.user_id || 'USR',
+                        balance: parseFloat(c.balance || 0)
+                    }));
+                    localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+                    renderCardsSidebar(allCards);
+                    updateStatsCounters();
+                }
+            } catch (e) {
+                console.warn('[Supabase] fetchCards error:', e);
             }
         }
 
@@ -3194,39 +3222,64 @@
             toast('Payment cancelled', 'ok');
         }
 
-        function registerCard(e) {
+        function generateFormUID() {
+            const uid = (Math.random().toString(16).substr(2, 2) + ' ' +
+                         Math.random().toString(16).substr(4, 2) + ' ' +
+                         Math.random().toString(16).substr(6, 2) + ' ' +
+                         Math.random().toString(16).substr(8, 2)).toUpperCase();
+            const input = document.getElementById('reg-uid');
+            if (input) input.value = uid;
+            playAudioTone('click');
+        }
+
+        async function registerCard(e) {
             e.preventDefault();
             playAudioTone('click');
             const n = document.getElementById('reg-name').value.trim();
             const u = document.getElementById('reg-userid').value.trim();
             const b = parseFloat(document.getElementById('reg-balance').value) || 1000;
+            let uidInput = (document.getElementById('reg-uid').value || '').trim().toUpperCase();
 
-            const randomUid = (Math.random().toString(16).substr(2, 2) + ' ' +
-                               Math.random().toString(16).substr(4, 2) + ' ' +
-                               Math.random().toString(16).substr(6, 2) + ' ' +
-                               Math.random().toString(16).substr(8, 2)).toUpperCase();
+            if (!uidInput) {
+                uidInput = (Math.random().toString(16).substr(2, 2) + ' ' +
+                            Math.random().toString(16).substr(4, 2) + ' ' +
+                            Math.random().toString(16).substr(6, 2) + ' ' +
+                            Math.random().toString(16).substr(8, 2)).toUpperCase();
+            }
 
-            const newCard = { uid: randomUid, name: n, userId: u, balance: b };
-            allCards.push(newCard);
+            const existingIdx = allCards.findIndex(c => c.uid.toLowerCase() === uidInput.toLowerCase());
+            const newCard = { uid: uidInput, name: n, userId: u, balance: b };
+
+            if (existingIdx !== -1) {
+                allCards[existingIdx] = newCard;
+            } else {
+                allCards.push(newCard);
+            }
+
             localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
-
             renderCardsSidebar(allCards);
             updateStatsCounters();
-            syncCardToSupabase(newCard);
+
+            // Save directly to Supabase
+            let suOk = false;
+            if (supabaseClient) {
+                suOk = await syncCardToSupabase(newCard);
+            }
 
             if (connMode === 'mqtt') {
                 mqttPublishCards();
-                mqttSendCmd('add_card', { name: n, userId: u, balance: b, uid: randomUid });
+                mqttSendCmd('add_card', { name: n, userId: u, balance: b, uid: uidInput });
             }
 
             document.getElementById('reg-name').value = '';
+            document.getElementById('reg-uid').value = '';
             document.getElementById('reg-userid').value = '';
             document.getElementById('reg-balance').value = '1000';
             toggleAddCard();
-            toast(`Card registered for ${n}!`, 'ok');
+            toast(`Card registered for ${n} ${suOk ? '(Saved to Supabase DB)' : ''}!`, 'ok');
         }
 
-        function editBalance(uid, current) {
+        async function editBalance(uid, current) {
             const val = prompt('New balance (NPR) for card ' + uid + ':', current);
             if (val === null) return;
             const num = parseFloat(val);
@@ -3238,35 +3291,49 @@
                 localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
-                syncCardToSupabase(allCards[idx]);
+
+                // Directly update in Supabase
+                let suOk = false;
+                if (supabaseClient) {
+                    suOk = await syncCardToSupabase(allCards[idx]);
+                }
+
                 if (connMode === 'mqtt') {
                     mqttPublishCards();
                     mqttSendCmd('update_balance', { uid, balance: num });
                 }
-                toast('Balance updated to NPR ' + num.toFixed(2), 'ok');
+                toast(`Balance updated to NPR ${num.toFixed(2)} ${suOk ? '(Supabase Synced)' : ''}`, 'ok');
             }
         }
 
-        function deleteCard(uid) {
-            if (!confirm('Delete card ' + uid + '?')) return;
+        async function deleteCard(uid) {
+            if (!confirm('Delete card ' + uid + ' from system and Supabase Cloud DB?')) return;
             allCards = allCards.filter(c => c.uid.toLowerCase() !== uid.toLowerCase());
             localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
             renderCardsSidebar(allCards);
             updateStatsCounters();
+
+            // Delete in Supabase
             if (supabaseClient) {
-                supabaseClient.from('cards').delete().eq('uid', uid).then(() => {}).catch(() => {});
+                try {
+                    await supabaseClient.from('cards').delete().eq('uid', uid);
+                } catch (e) { }
             }
+
             if (connMode === 'mqtt') {
                 mqttPublishCards();
                 mqttSendCmd('delete_card', { uid });
             }
-            toast('Card deleted', 'ok');
+            toast('Card deleted from local & Supabase DB', 'ok');
         }
 
         function toggleAddCard() {
             playAudioTone('click');
             const form = document.getElementById('add-card-form');
             form.classList.toggle('active');
+            if (form.classList.contains('active')) {
+                generateFormUID();
+            }
         }
 
         // ══════════════════════════════════════════════════════════════
