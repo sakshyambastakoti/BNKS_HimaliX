@@ -1,7 +1,7 @@
 #ifndef WEB_H
 #define WEB_H
 
-// ── BondPay API-Only Mode ───────────────────────────────────────────
+// ── OffPay API-Only Mode ───────────────────────────────────────────
 // No HTML served from ESP8266. Web UI runs locally on user's browser.
 // ESP8266 only serves JSON API endpoints over WiFi STA connection.
 //

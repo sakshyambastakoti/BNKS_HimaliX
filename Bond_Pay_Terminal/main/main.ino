@@ -154,7 +154,7 @@ void setupRoutes() {
   // ── Root — just returns device info ───────────────────────────────
   server.on("/", HTTP_GET, []() {
     sendCORS(server);
-    server.send(200, "application/json", "{\"device\":\"BondPay Terminal\",\"version\":\"2.0\",\"status\":\"online\"}");
+    server.send(200, "application/json", "{\"device\":\"OffPay Terminal\",\"version\":\"2.0\",\"status\":\"online\"}");
   });
 
   // ── CORS preflight for all /api/* routes ──────────────────────────
@@ -401,7 +401,7 @@ void setup() {
   Serial.begin(115200);
   delay(100);
   Serial.println("\n\n==============================");
-  Serial.println("  BondPay Terminal v2.0");
+  Serial.println("  OffPay Terminal v2.0");
   Serial.println("  API-Only Mode (WiFi STA)");
   Serial.println("==============================");
 
@@ -422,7 +422,7 @@ void setup() {
   lcd.clear();
 
   // Boot splash
-  lcd.setCursor(0, 0); lcd.print("BondPay Station");
+  lcd.setCursor(0, 0); lcd.print("OffPay Station");
   lcd.setCursor(0, 1); lcd.print("v2.0 Starting...");
   delay(1000);
 
@@ -471,7 +471,7 @@ void setup() {
   Serial.println(ESP.getFreeHeap());
 
   lcd.clear();
-  lcd.setCursor(0, 0); lcd.print("BondPay Ready");
+  lcd.setCursor(0, 0); lcd.print("OffPay Ready");
   lcd.setCursor(0, 1); lcd.print(deviceIP);
 
   Serial.println("Setup complete.");

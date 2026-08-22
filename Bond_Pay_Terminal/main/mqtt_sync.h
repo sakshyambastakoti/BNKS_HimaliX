@@ -23,7 +23,7 @@
 #define MQTT_PORT     1883                // Standard TCP MQTT port
 #endif
 #ifndef MQTT_CHANNEL
-#define MQTT_CHANNEL  "bp-station-01"     // Channel ID (synced with Web UI)
+#define MQTT_CHANNEL  "op-station-01"     // Channel ID (synced with Web UI)
 #endif
 
 // Forward declarations from main.ino
@@ -46,12 +46,12 @@ inline unsigned long lastMqttReconnectAttempt = 0;
 inline unsigned long lastStatusPublishTime = 0;
 
 // Topic generators
-inline String getTopicStatus() { return String("bondpay/") + MQTT_CHANNEL + "/status"; }
-inline String getTopicEvents() { return String("bondpay/") + MQTT_CHANNEL + "/events"; }
-inline String getTopicCards()  { return String("bondpay/") + MQTT_CHANNEL + "/cards"; }
-inline String getTopicTxns()   { return String("bondpay/") + MQTT_CHANNEL + "/txns"; }
-inline String getTopicCmd()    { return String("bondpay/") + MQTT_CHANNEL + "/cmd"; }
-inline String getTopicPresence(){ return String("bondpay/") + MQTT_CHANNEL + "/presence"; }
+inline String getTopicStatus() { return String("offpay/") + MQTT_CHANNEL + "/status"; }
+inline String getTopicEvents() { return String("offpay/") + MQTT_CHANNEL + "/events"; }
+inline String getTopicCards()  { return String("offpay/") + MQTT_CHANNEL + "/cards"; }
+inline String getTopicTxns()   { return String("offpay/") + MQTT_CHANNEL + "/txns"; }
+inline String getTopicCmd()    { return String("offpay/") + MQTT_CHANNEL + "/cmd"; }
+inline String getTopicPresence(){ return String("offpay/") + MQTT_CHANNEL + "/presence"; }
 
 // ── Publish Device Status ────────────────────────────────────────────
 inline void mqttPublishStatus() {
@@ -201,7 +201,7 @@ inline void mqttCallback(char* topic, byte* payload, unsigned int length) {
 inline bool mqttReconnect() {
   if (WiFi.status() != WL_CONNECTED) return false;
 
-  String clientId = "BondPay-Terminal-";
+  String clientId = "OffPay-Terminal-";
   #ifdef ESP32
   clientId += String((uint32_t)ESP.getEfuseMac(), HEX);
   #else

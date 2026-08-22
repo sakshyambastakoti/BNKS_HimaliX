@@ -168,7 +168,7 @@ inline bool initStorage() {
   if (!LittleFS.exists("/settings.json")) {
     File f = LittleFS.open("/settings.json", "w");
     if (f) {
-      f.print("{\"stationName\":\"BondPay Station 1\"}");
+      f.print("{\"stationName\":\"OffPay Station 1\"}");
       f.close();
     }
   }
@@ -181,13 +181,13 @@ inline bool initStorage() {
   if (f) {
     ALLOCATE_JSON_DOCUMENT(doc, 256);
     if (deserializeJson(doc, f) == DeserializationError::Ok) {
-      ramSettings.stationName = doc["stationName"] | "BondPay Station 1";
+      ramSettings.stationName = doc["stationName"] | "OffPay Station 1";
     } else {
-      ramSettings.stationName = "BondPay Station 1";
+      ramSettings.stationName = "OffPay Station 1";
     }
     f.close();
   } else {
-    ramSettings.stationName = "BondPay Station 1";
+    ramSettings.stationName = "OffPay Station 1";
   }
   
   return true;
@@ -276,7 +276,7 @@ inline void clearStorage() {
   LittleFS.remove("/settings.json");
   ramCards.clear();
   ramTransactions.clear();
-  ramSettings.stationName = "BondPay Station 1";
+  ramSettings.stationName = "OffPay Station 1";
   updateCachedCardsJson();
   updateCachedTransactionsJson();
   initStorage();
