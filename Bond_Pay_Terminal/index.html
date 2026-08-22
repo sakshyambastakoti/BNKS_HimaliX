@@ -9,8 +9,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- MQTT over WebSockets & QR Code Library -->
+    <!-- MQTT over WebSockets, Supabase Cloud DB & QR Code Library -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════════════
@@ -2168,15 +2169,45 @@
                     </div>
                 </div>
 
-                <!-- Local LAN Connection Section -->
-                <div id="sec-lan-config" class="conn-card" style="display: none;">
-                    <div class="conn-card-title">ESP32 Local Direct LAN Connection</div>
-                    <div style="display: flex; gap: 12px; align-items: flex-end;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label class="form-label">ESP32 IP Address</label>
-                            <input type="text" class="form-input mono" id="esp-ip" value="" placeholder="192.168.x.x">
+                <!-- Supabase Cloud PostgreSQL Database Configuration Section -->
+                <div class="conn-card" style="margin-bottom: 24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+                        <div>
+                            <div class="conn-card-title" style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                <svg style="width:18px;height:18px;color:var(--brand-green-dark)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                Supabase PostgreSQL Cloud Ledger Database
+                            </div>
+                            <p style="font-size:0.78rem; color:var(--gray-600); margin:0;">Direct cloud replication for transactions, card balances, and multi-station audit logs.</p>
                         </div>
-                        <button class="btn btn-black" onclick="connectESP()" style="margin-bottom:0;height:42px;">Connect IP</button>
+                        <span id="supabase-status-badge" class="badge" style="background:var(--gray-100);color:var(--gray-700);border:1px solid var(--gray-300);font-weight:700;">Standby</span>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Supabase Project URL</label>
+                            <input type="text" class="form-input mono" id="supabase-url" placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Supabase Anon Public API Key</label>
+                            <input type="password" class="form-input mono" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--bg-subtle); border:1px solid var(--gray-200); margin-bottom:14px;">
+                        <div>
+                            <div style="font-size:0.84rem; font-weight:800; color:var(--black);">Auto-Replicate Transactions & Cards</div>
+                            <div style="font-size:0.74rem; color:var(--gray-600);">Instantly upsert every payment and card registration to Supabase tables</div>
+                        </div>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; font-size:0.82rem;">
+                            <input type="checkbox" id="supabase-autosync" checked style="width:16px;height:16px;accent-color:var(--brand-green-dark);">
+                            <span>Enabled</span>
+                        </label>
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-black" onclick="saveAndConnectSupabase()">Save & Connect Supabase</button>
+                        <button type="button" class="btn btn-outline" onclick="pushAllToSupabase()">Push Local Ledger to Cloud</button>
+                        <button type="button" class="btn btn-outline" onclick="pullFromSupabase()">Pull Remote Data from Cloud</button>
                     </div>
                 </div>
 
@@ -2331,6 +2362,12 @@
         let lastPingTimestamp = 0;
         let knownPeers = new Map(); // clientId -> { name, lastSeen, isCurrent }
 
+        // Supabase PostgreSQL Cloud Database Configuration
+        let supabaseUrl = localStorage.getItem('offpay_supabase_url') || '';
+        let supabaseKey = localStorage.getItem('offpay_supabase_key') || '';
+        let supabaseAutoSync = localStorage.getItem('offpay_supabase_autosync') !== 'false';
+        let supabaseClient = null;
+
         // Local State / Cache
         let allCards = [
             { uid: "A3 F8 12 B9", name: "Sakshyam Bastakoti", userId: "USR-001", balance: 2500.00 },
@@ -2395,6 +2432,18 @@
 
             // Update UI fields
             updateSettingsUI();
+
+            // Load Supabase UI inputs and initialize
+            const suUrlInput = document.getElementById('supabase-url');
+            const suKeyInput = document.getElementById('supabase-key');
+            const suSyncInput = document.getElementById('supabase-autosync');
+            if (suUrlInput) suUrlInput.value = supabaseUrl;
+            if (suKeyInput) suKeyInput.value = supabaseKey;
+            if (suSyncInput) suSyncInput.checked = supabaseAutoSync;
+
+            if (supabaseUrl && supabaseKey) {
+                initSupabase(false);
+            }
 
             // Self-register current peer
             knownPeers.set(clientId, { name: deviceRole + ' (This Device)', lastSeen: Date.now(), isCurrent: true });
@@ -2726,6 +2775,9 @@
                 };
                 allTransactions.push(newTxn);
                 localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+                
+                // Replicate to Supabase Cloud Database
+                syncTxnToSupabase(newTxn);
             }
 
             // If payment was successful, update card balance in memory and storage
@@ -2733,6 +2785,9 @@
                 matchingCard.balance = remBal;
                 localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
+                
+                // Replicate updated card balance to Supabase
+                syncCardToSupabase(matchingCard);
             }
 
             // Immediately refresh all views
@@ -3171,6 +3226,246 @@
         }
 
         // ══════════════════════════════════════════════════════════════
+        // ── SUPABASE CLOUD DATABASE SYNC ENGINE ───────────────────────
+        // ══════════════════════════════════════════════════════════════
+        function initSupabase(showAlert = false) {
+            const badge = document.getElementById('supabase-status-badge');
+            if (!supabaseUrl || !supabaseKey) {
+                if (badge) {
+                    badge.innerText = 'Standby';
+                    badge.style.background = 'var(--gray-100)';
+                    badge.style.color = 'var(--gray-700)';
+                    badge.style.borderColor = 'var(--gray-300)';
+                }
+                return;
+            }
+
+            try {
+                if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+                    console.log('[Supabase] Client initialized for:', supabaseUrl);
+                    testSupabaseConnection(showAlert);
+                } else {
+                    console.warn('[Supabase] Supabase JS SDK not yet loaded');
+                    if (badge) badge.innerText = 'SDK Loading...';
+                }
+            } catch (err) {
+                console.error('[Supabase] Client creation failed:', err);
+                if (badge) {
+                    badge.innerText = 'Config Error';
+                    badge.style.background = 'var(--danger-bg)';
+                    badge.style.color = 'var(--danger)';
+                    badge.style.borderColor = 'var(--danger-border)';
+                }
+                if (showAlert) toast('Supabase config error: ' + err.message, 'er');
+            }
+        }
+
+        async function testSupabaseConnection(showAlert = false) {
+            if (!supabaseClient) return;
+            const badge = document.getElementById('supabase-status-badge');
+            try {
+                const { data, error } = await supabaseClient.from('transactions').select('id').limit(1);
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('[Supabase] Table check warning:', error);
+                    if (badge) {
+                        badge.innerText = 'RLS / Table Check Needed';
+                        badge.style.background = 'rgba(245, 158, 11, 0.1)';
+                        badge.style.color = '#b45309';
+                        badge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                    }
+                    if (showAlert) toast('Connected to Supabase (Check tables/RLS: ' + error.message + ')', 'er');
+                } else {
+                    if (badge) {
+                        badge.innerText = 'Online (Supabase DB)';
+                        badge.style.background = 'var(--brand-green-soft)';
+                        badge.style.color = 'var(--brand-green-dark)';
+                        badge.style.borderColor = 'var(--brand-green-border)';
+                    }
+                    if (showAlert) toast('Connected to Supabase PostgreSQL Cloud!', 'ok');
+                }
+            } catch (err) {
+                console.error('[Supabase] Connection test failed:', err);
+                if (badge) {
+                    badge.innerText = 'Disconnected';
+                    badge.style.background = 'var(--danger-bg)';
+                    badge.style.color = 'var(--danger)';
+                }
+                if (showAlert) toast('Supabase connection failed: ' + err.message, 'er');
+            }
+        }
+
+        function saveAndConnectSupabase() {
+            const url = (document.getElementById('supabase-url').value || '').trim();
+            const key = (document.getElementById('supabase-key').value || '').trim();
+            const autoSync = document.getElementById('supabase-autosync').checked;
+
+            if (!url || !key) {
+                return toast('Enter Supabase URL and Anon API Key', 'er');
+            }
+
+            supabaseUrl = url;
+            supabaseKey = key;
+            supabaseAutoSync = autoSync;
+
+            localStorage.setItem('offpay_supabase_url', supabaseUrl);
+            localStorage.setItem('offpay_supabase_key', supabaseKey);
+            localStorage.setItem('offpay_supabase_autosync', supabaseAutoSync);
+
+            initSupabase(true);
+        }
+
+        async function syncTxnToSupabase(txn) {
+            if (!supabaseClient || !supabaseAutoSync) return;
+            try {
+                const payload = {
+                    transaction_id: txn.id || null,
+                    timestamp: txn.timestamp || new Date().toISOString(),
+                    card_uid: txn.uid || '--',
+                    cardholder_name: txn.name || 'Cardholder',
+                    amount: parseFloat(txn.amount || 0),
+                    prev_balance: parseFloat(txn.prevBal || 0),
+                    remaining_balance: parseFloat(txn.remBal !== undefined ? txn.remBal : txn.prevBal || 0),
+                    status: txn.status || 'Success',
+                    station_name: localStorage.getItem('offpay_station_name') || 'OffPay Station 1',
+                    synced: true
+                };
+
+                const { data, error } = await supabaseClient.from('transactions').insert([payload]);
+                if (error) {
+                    console.error('[Supabase] Failed inserting transaction:', error);
+                } else {
+                    console.log('[Supabase] Transaction synced to Cloud DB successfully');
+                    txn.synced = true;
+                    localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+                }
+            } catch (err) {
+                console.error('[Supabase] Sync error:', err);
+            }
+        }
+
+        async function syncCardToSupabase(card) {
+            if (!supabaseClient || !supabaseAutoSync) return;
+            try {
+                const payload = {
+                    uid: card.uid,
+                    name: card.name,
+                    user_id: card.userId || '',
+                    balance: parseFloat(card.balance || 0),
+                    updated_at: new Date().toISOString()
+                };
+                const { error } = await supabaseClient.from('cards').upsert([payload], { onConflict: 'uid' });
+                if (error) console.error('[Supabase] Failed upserting card:', error);
+            } catch (err) {
+                console.error('[Supabase] Card sync error:', err);
+            }
+        }
+
+        async function pushAllToSupabase() {
+            if (!supabaseClient) return toast('Connect Supabase first', 'er');
+            toast('Pushing local ledger to Supabase...', 'ok');
+
+            let txnSuccess = 0;
+            let cardSuccess = 0;
+
+            try {
+                // Upsert all cards
+                for (const card of allCards) {
+                    const { error } = await supabaseClient.from('cards').upsert([{
+                        uid: card.uid,
+                        name: card.name,
+                        user_id: card.userId || '',
+                        balance: parseFloat(card.balance || 0),
+                        updated_at: new Date().toISOString()
+                    }], { onConflict: 'uid' });
+                    if (!error) cardSuccess++;
+                }
+
+                // Insert/Upsert transactions
+                for (const txn of allTransactions) {
+                    const { error } = await supabaseClient.from('transactions').upsert([{
+                        transaction_id: txn.id || null,
+                        timestamp: txn.timestamp || new Date().toISOString(),
+                        card_uid: txn.uid || '--',
+                        cardholder_name: txn.name || 'Cardholder',
+                        amount: parseFloat(txn.amount || 0),
+                        prev_balance: parseFloat(txn.prevBal || 0),
+                        remaining_balance: parseFloat(txn.remBal !== undefined ? txn.remBal : txn.prevBal || 0),
+                        status: txn.status || 'Success',
+                        station_name: localStorage.getItem('offpay_station_name') || 'OffPay Station 1',
+                        synced: true
+                    }], { onConflict: 'transaction_id' });
+                    if (!error) {
+                        txn.synced = true;
+                        txnSuccess++;
+                    }
+                }
+
+                localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+                renderTransactions(allTransactions);
+                toast(`Synced ${cardSuccess} cards & ${txnSuccess} transactions to Supabase!`, 'ok');
+            } catch (err) {
+                console.error('[Supabase] Push all error:', err);
+                toast('Error pushing to Supabase: ' + err.message, 'er');
+            }
+        }
+
+        async function pullFromSupabase() {
+            if (!supabaseClient) return toast('Connect Supabase first', 'er');
+            toast('Fetching remote data from Supabase...', 'ok');
+
+            try {
+                const { data: remoteCards, error: cErr } = await supabaseClient.from('cards').select('*');
+                if (cErr) throw cErr;
+
+                const { data: remoteTxns, error: tErr } = await supabaseClient.from('transactions').select('*').order('created_at', { ascending: true });
+                if (tErr) throw tErr;
+
+                if (remoteCards && remoteCards.length) {
+                    remoteCards.forEach(rc => {
+                        const idx = allCards.findIndex(c => (c.uid || '').toLowerCase() === (rc.uid || '').toLowerCase());
+                        if (idx !== -1) {
+                            allCards[idx].balance = parseFloat(rc.balance || allCards[idx].balance);
+                            allCards[idx].name = rc.name || allCards[idx].name;
+                        } else {
+                            allCards.push({ uid: rc.uid, name: rc.name, userId: rc.user_id, balance: parseFloat(rc.balance || 0) });
+                        }
+                    });
+                    localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+                    renderCardsSidebar(allCards);
+                }
+
+                if (remoteTxns && remoteTxns.length) {
+                    remoteTxns.forEach(rt => {
+                        const exists = allTransactions.some(t => t.id === rt.transaction_id || (t.timestamp === rt.timestamp && t.uid === rt.card_uid));
+                        if (!exists) {
+                            allTransactions.push({
+                                id: rt.transaction_id || (allTransactions.length + 1),
+                                timestamp: rt.timestamp || rt.created_at,
+                                uid: rt.card_uid,
+                                name: rt.cardholder_name,
+                                amount: parseFloat(rt.amount || 0),
+                                prevBal: parseFloat(rt.prev_balance || 0),
+                                remBal: parseFloat(rt.remaining_balance || 0),
+                                status: rt.status || 'Success',
+                                synced: true
+                            });
+                        }
+                    });
+                    localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+                    renderTransactions(allTransactions);
+                    renderRecent(allTransactions);
+                }
+
+                updateStatsCounters();
+                toast('Successfully pulled data from Supabase!', 'ok');
+            } catch (err) {
+                console.error('[Supabase] Pull error:', err);
+                toast('Failed to pull from Supabase: ' + err.message, 'er');
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════
         // ── UI RENDERING & DATA MANAGEMENT ───────────────────────────
         // ══════════════════════════════════════════════════════════════
         function updateStatsCounters() {
@@ -3464,6 +3759,9 @@
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
 
+                // Replicate to Supabase Cloud
+                syncCardToSupabase(newCard);
+
                 mqttPublishCards();
                 mqttSendCmd('add_card', { name: n, userId: u, balance: b, uid: randomUid });
                 
@@ -3507,6 +3805,10 @@
                     localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                     renderCardsSidebar(allCards);
                     updateStatsCounters();
+                    
+                    // Replicate to Supabase Cloud
+                    syncCardToSupabase(allCards[idx]);
+
                     mqttPublishCards();
                     mqttSendCmd('update_balance', { uid, balance: num });
                     toast('Balance updated to NPR ' + num.toFixed(2), 'ok');
@@ -3528,6 +3830,11 @@
                 localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
                 renderCardsSidebar(allCards);
                 updateStatsCounters();
+
+                if (supabaseClient) {
+                    supabaseClient.from('cards').delete().eq('uid', uid).then(function () { }).catch(function () { });
+                }
+
                 mqttPublishCards();
                 mqttSendCmd('delete_card', { uid });
                 toast('Card deleted', 'ok');
