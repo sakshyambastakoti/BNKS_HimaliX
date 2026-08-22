@@ -15,3 +15,4 @@
 [2026-08-22 11:42:06] Commit #15: feat(account): add dual overlapping card visual graphic and balance metrics
 [2026-08-22 11:44:14] Commit #16: feat(account): add primary Create Account / Load Bond action trigger
 [2026-08-22 11:46:23] Commit #17: feat(history): implement transaction search and filter pills
+[2026-08-22 11:48:31] Commit #18: feat(history): add transaction category tabs for sent, received, and offline
