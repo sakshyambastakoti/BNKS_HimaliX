@@ -42,3 +42,4 @@
 [2026-08-22 12:39:57] Commit #42: feat(crypto): configure Ed25519 keypair generation in device keystore
 [2026-08-22 12:42:06] Commit #43: feat(crypto): implement SHA-256 voucher hashing and nonces
 [2026-08-22 12:44:14] Commit #44: feat(crypto): add zero-knowledge proof verification pipeline
+[2026-08-22 12:46:23] Commit #45: feat(mesh): configure BLE and Wi-Fi Direct peer-to-peer discovery
