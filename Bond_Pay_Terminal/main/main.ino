@@ -315,6 +315,56 @@ void setupRoutes() {
     }
   });
 
+  // Clear all cards
+  server.on("/api/cards/clear", HTTP_POST, []() {
+    sendCORS(server);
+    std::vector<Card> emptyCards;
+    saveCards(emptyCards);
+    mqttPublishCards();
+    mqttPublishStatus();
+    server.send(200, "application/json", "{\"ok\":true,\"message\":\"All cards cleared\"}");
+  });
+
+  // Bulk sync cards directly via JSON body
+  server.on("/api/cards/sync", HTTP_POST, []() {
+    sendCORS(server);
+    if (!server.hasArg("plain")) {
+      server.send(400, "application/json", "{\"error\":\"Missing JSON body\"}");
+      return;
+    }
+    String body = server.arg("plain");
+    ALLOCATE_JSON_DOCUMENT(doc, 4096);
+    DeserializationError err = deserializeJson(doc, body);
+    if (err || !doc.is<JsonArray>()) {
+      server.send(400, "application/json", "{\"error\":\"Invalid cards array JSON\"}");
+      return;
+    }
+    std::vector<Card> newCards;
+    JsonArray arr = doc.as<JsonArray>();
+    for (JsonObject obj : arr) {
+      Card c;
+      c.uid = obj["uid"] | "";
+      c.name = obj["name"] | "Cardholder";
+      c.userId = obj["userId"] | "USR";
+      c.balance = obj["balance"] | 0.0f;
+      if (c.uid.length() > 0) newCards.push_back(c);
+    }
+    saveCards(newCards);
+    mqttPublishCards();
+    mqttPublishStatus();
+    server.send(200, "application/json", "{\"ok\":true,\"count\":" + String(newCards.size()) + "}");
+  });
+
+  // Clear all transactions
+  server.on("/api/transactions/clear", HTTP_POST, []() {
+    sendCORS(server);
+    std::vector<Transaction> emptyTxns;
+    saveTransactions(emptyTxns);
+    mqttPublishTransactions();
+    mqttPublishStatus();
+    server.send(200, "application/json", "{\"ok\":true,\"message\":\"All transactions cleared\"}");
+  });
+
   // Update card balance
   server.on("/api/cards/update-balance", HTTP_POST, []() {
     sendCORS(server);

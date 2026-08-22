@@ -2925,6 +2925,12 @@
                     console.warn('[Supabase] Clear txns error:', e);
                 }
             }
+
+            if (connMode === 'mqtt') {
+                mqttSendCmd('clear_transactions', {});
+            } else if (connMode === 'lan' && API_BASE) {
+                fetch(API_BASE + '/api/transactions/clear', { method: 'POST' }).catch(() => {});
+            }
             toast('All transaction records deleted from local and Supabase DB', 'ok');
         }
 
@@ -2948,6 +2954,9 @@
 
             if (connMode === 'mqtt') {
                 mqttPublishCards();
+                mqttSendCmd('clear_cards', {});
+            } else if (connMode === 'lan' && API_BASE) {
+                fetch(API_BASE + '/api/cards/clear', { method: 'POST' }).catch(() => {});
             }
             toast('All registered cards deleted from local and Supabase DB', 'ok');
         }
@@ -3397,6 +3406,8 @@
             if (connMode === 'mqtt') {
                 mqttPublishCards();
                 mqttSendCmd('delete_card', { uid });
+            } else if (connMode === 'lan' && API_BASE) {
+                fetch(API_BASE + '/api/cards/delete?uid=' + encodeURIComponent(uid), { method: 'POST' }).catch(() => {});
             }
             toast('Card deleted from local & Supabase DB', 'ok');
         }
@@ -3476,14 +3487,17 @@
             mqttClient.publish('offpay/' + mqttChannel + '/presence', JSON.stringify({ clientId, name: deviceRole, type, timestamp: Date.now() }));
         }
 
-        function mqttSendCmd(cmd, params) {
+        function mqttSendCmd(cmd, params = {}) {
             if (!mqttClient || !connected) return;
-            mqttClient.publish('offpay/' + mqttChannel + '/commands', JSON.stringify({ cmd, ...params, from: clientId, timestamp: Date.now() }));
+            const payload = JSON.stringify({ cmd, action: cmd, ...params, from: clientId, timestamp: Date.now() });
+            mqttClient.publish('offpay/' + mqttChannel + '/commands', payload);
+            mqttClient.publish('offpay/' + mqttChannel + '/cmd', payload);
         }
 
         function mqttPublishCards() {
             if (!mqttClient || !connected) return;
-            mqttClient.publish('offpay/' + mqttChannel + '/cards', JSON.stringify(allCards), { retain: true });
+            const payload = JSON.stringify(allCards);
+            mqttClient.publish('offpay/' + mqttChannel + '/cards', payload, { retain: true });
         }
 
         function handlePeerPresence(data) {

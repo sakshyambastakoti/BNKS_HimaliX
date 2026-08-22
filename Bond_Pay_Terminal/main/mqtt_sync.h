@@ -122,8 +122,34 @@ inline void mqttCallback(char* topic, byte* payload, unsigned int length) {
     message += (char)payload[i];
   }
 
-  Serial.println("[MQTT] Received on " + String(topic) + ": " + message);
+  String topicStr = String(topic);
+  Serial.println("[MQTT] Received on " + topicStr + ": " + message);
 
+  // 1. Direct Cards Array Synchronization
+  if (topicStr.endsWith("/cards") && message.startsWith("[")) {
+    ALLOCATE_JSON_DOCUMENT(cardsDoc, 4096);
+    DeserializationError err = deserializeJson(cardsDoc, message);
+    if (!err && cardsDoc.is<JsonArray>()) {
+      std::vector<Card> newCards;
+      JsonArray arr = cardsDoc.as<JsonArray>();
+      for (JsonObject obj : arr) {
+        Card c;
+        c.uid = obj["uid"] | "";
+        c.name = obj["name"] | "Cardholder";
+        c.userId = obj["userId"] | "USR";
+        c.balance = obj["balance"] | 0.0f;
+        if (c.uid.length() > 0) {
+          newCards.push_back(c);
+        }
+      }
+      saveCards(newCards);
+      Serial.println("[MQTT] Direct Cards Sync: " + String(newCards.size()) + " cards updated in LittleFS!");
+      mqttPublishStatus();
+    }
+    return;
+  }
+
+  // 2. Command Processing
   ALLOCATE_JSON_DOCUMENT(doc, 1024);
   DeserializationError err = deserializeJson(doc, message);
   if (err) {
@@ -131,7 +157,7 @@ inline void mqttCallback(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-  String action = doc["action"] | "";
+  String action = doc["action"] | (doc["cmd"] | "");
 
   if (action == "start_payment") {
     float amt = doc["amount"] | 0.0f;
@@ -148,13 +174,37 @@ inline void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.println("[MQTT] Remote action cancelled");
     mqttPublishStatus();
   } else if (action == "add_card") {
+    String uid = doc["uid"] | "";
     activeRegName = doc["name"] | "";
     activeRegUserId = doc["userId"] | "";
     activeRegBalance = doc["balance"] | 1000.0f;
-    currentMode = MODE_ADD_CARD;
-    readyDisplayed = false;
-    Serial.println("[MQTT] Remote card registration mode: " + activeRegName);
-    mqttPublishStatus();
+
+    if (uid.length() > 0) {
+      std::vector<Card> cards;
+      loadCards(cards);
+      int idx = findCardIndex(cards, uid);
+      if (idx != -1) {
+        cards[idx].name = activeRegName;
+        cards[idx].userId = activeRegUserId;
+        cards[idx].balance = activeRegBalance;
+      } else {
+        Card nc;
+        nc.uid = uid;
+        nc.name = activeRegName;
+        nc.userId = activeRegUserId;
+        nc.balance = activeRegBalance;
+        cards.push_back(nc);
+      }
+      saveCards(cards);
+      Serial.println("[MQTT] Remote card saved to LittleFS: " + activeRegName + " (" + uid + ")");
+      mqttPublishCards();
+      mqttPublishStatus();
+    } else {
+      currentMode = MODE_ADD_CARD;
+      readyDisplayed = false;
+      Serial.println("[MQTT] Remote card enrollment mode: " + activeRegName);
+      mqttPublishStatus();
+    }
   } else if (action == "update_balance") {
     String uid = doc["uid"] | "";
     float bal = doc["balance"] | 0.0f;
@@ -164,7 +214,7 @@ inline void mqttCallback(char* topic, byte* payload, unsigned int length) {
       if (idx != -1) {
         cards[idx].balance = bal;
         saveCards(cards);
-        Serial.println("[MQTT] Balance updated for UID: " + uid);
+        Serial.println("[MQTT] Balance updated for UID: " + uid + " -> " + String(bal));
         mqttPublishCards();
         mqttPublishStatus();
       }
@@ -177,11 +227,23 @@ inline void mqttCallback(char* topic, byte* payload, unsigned int length) {
       if (idx != -1) {
         cards.erase(cards.begin() + idx);
         saveCards(cards);
-        Serial.println("[MQTT] Card deleted UID: " + uid);
+        Serial.println("[MQTT] Card deleted from LittleFS UID: " + uid);
         mqttPublishCards();
         mqttPublishStatus();
       }
     }
+  } else if (action == "clear_cards" || action == "delete_all_cards") {
+    std::vector<Card> emptyCards;
+    saveCards(emptyCards);
+    Serial.println("[MQTT] ALL Cards cleared from LittleFS!");
+    mqttPublishCards();
+    mqttPublishStatus();
+  } else if (action == "clear_transactions" || action == "clear_ledger") {
+    std::vector<Transaction> emptyTxns;
+    saveTransactions(emptyTxns);
+    Serial.println("[MQTT] ALL Transactions cleared from LittleFS!");
+    mqttPublishTransactions();
+    mqttPublishStatus();
   } else if (action == "request_sync") {
     Serial.println("[MQTT] Sync requested");
     mqttPublishStatus();
@@ -221,9 +283,11 @@ inline bool mqttReconnect() {
     String onlineMsg = "{\"client\":\"" + clientId + "\",\"device\":\"hardware\",\"status\":\"online\"}";
     mqttClient.publish(willTopic.c_str(), onlineMsg.c_str(), false);
 
-    // Subscribe to commands topic
+    // Subscribe to commands and cards topics
     mqttClient.subscribe(getTopicCmd().c_str(), 1);
-    Serial.println("[MQTT] Subscribed to " + getTopicCmd());
+    mqttClient.subscribe((String("offpay/") + MQTT_CHANNEL + "/commands").c_str(), 1);
+    mqttClient.subscribe(getTopicCards().c_str(), 1);
+    Serial.println("[MQTT] Subscribed to commands and cards channels for " + String(MQTT_CHANNEL));
 
     // Publish initial state
     mqttPublishStatus();
