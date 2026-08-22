@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { NetworkStatusBadge } from '@/components/NetworkStatusBadge';
+import { SvgIcon } from '@/components/SvgIcons';
 import { useTheme } from '@/hooks/use-theme';
 import { useAppStore } from '@/store/useAppStore';
 import { Spacing, FontSize, FontWeight, BorderRadius, Shadows } from '@/constants/theme';
@@ -82,30 +83,30 @@ export default function SendScreen() {
               style={({ pressed }) => [
                 styles.scanCard,
                 {
-                  backgroundColor: theme.cardGlass,
-                  borderColor: theme.accent,
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
                   opacity: pressed ? 0.85 : 1,
-                  ...Shadows.glowAccent,
+                  ...Shadows.card,
                 },
               ]}
             >
-              <View style={[styles.scanIconBubble, { backgroundColor: theme.accent + '20' }]}>
-                <ThemedText style={[styles.scanIcon, { color: theme.accent }]}>📷</ThemedText>
+              <View style={[styles.scanIconBubble, { backgroundColor: theme.primaryGlow }]}>
+                <SvgIcon name="scan-pay" size={20} color={theme.primary} />
               </View>
               <View style={styles.scanDetails}>
                 <ThemedText style={[styles.scanTitle, { color: theme.text }]}>
                   Scan Receiver's Request QR
                 </ThemedText>
-                <ThemedText style={[styles.scanSubtitle, { color: theme.textMuted }]}>
+                <ThemedText style={[styles.scanSubtitle, { color: theme.textSecondary }]}>
                   Auto-fills receiver key and requested amount
                 </ThemedText>
               </View>
-              <ThemedText style={[styles.scanChevron, { color: theme.accent }]}>›</ThemedText>
+              <SvgIcon name="chevron-right" size={14} color={theme.primary} />
             </Pressable>
           )}
 
           {/* Transfer Form Card */}
-          <View style={[styles.formCard, { backgroundColor: theme.cardGlass, borderColor: theme.border }]}>
+          <View style={[styles.formCard, { backgroundColor: theme.card, borderColor: theme.border, ...Shadows.card }]}>
             {/* Receiver Field (Online Mode) */}
             {!isOffline && (
               <View style={styles.inputGroup}>
@@ -116,7 +117,7 @@ export default function SendScreen() {
                   value={receiverId}
                   onChangeText={setReceiverId}
                   placeholder="Enter receiver public key or +977-..."
-                  placeholderTextColor={theme.textMuted}
+                  placeholderTextColor={theme.textSecondary}
                   style={[
                     styles.input,
                     {
@@ -135,7 +136,7 @@ export default function SendScreen() {
                 <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>
                   AMOUNT (NPR)
                 </ThemedText>
-                <ThemedText style={[styles.balanceHint, { color: theme.textMuted }]}>
+                <ThemedText style={[styles.balanceHint, { color: theme.textSecondary }]}>
                   Available: <ThemedText style={{ color: theme.primary, fontWeight: FontWeight.bold }}>{formatNPR(availableBalance)}</ThemedText>
                 </ThemedText>
               </View>
@@ -148,7 +149,7 @@ export default function SendScreen() {
                   value={amount}
                   onChangeText={setAmount}
                   placeholder="0"
-                  placeholderTextColor={theme.textMuted}
+                  placeholderTextColor={theme.textSecondary}
                   keyboardType="numeric"
                   style={[styles.amountInput, { color: theme.text }]}
                   autoFocus
@@ -173,7 +174,7 @@ export default function SendScreen() {
                     <ThemedText
                       style={[
                         styles.quickAmountText,
-                        { color: parsedAmount === val ? '#07090E' : theme.text },
+                        { color: parsedAmount === val ? '#FFFFFF' : theme.text },
                       ]}
                     >
                       +{val}
@@ -185,13 +186,13 @@ export default function SendScreen() {
                   style={({ pressed }) => [
                     styles.quickAmountChip,
                     {
-                      backgroundColor: theme.accent + '20',
-                      borderColor: theme.accent,
+                      backgroundColor: theme.successBg,
+                      borderColor: theme.primary,
                       opacity: pressed ? 0.75 : 1,
                     },
                   ]}
                 >
-                  <ThemedText style={[styles.quickAmountText, { color: theme.accent }]}>
+                  <ThemedText style={[styles.quickAmountText, { color: theme.primary }]}>
                     MAX
                   </ThemedText>
                 </Pressable>
@@ -205,18 +206,21 @@ export default function SendScreen() {
                   <ThemedText style={[styles.bondAllocTitle, { color: theme.textSecondary }]}>
                     ALLOCATED OFFLINE BONDS
                   </ThemedText>
-                  <ThemedText style={[styles.bondAllocStatus, { color: theme.accent }]}>
-                    ✓ Signed by Secure Enclave
-                  </ThemedText>
+                  <View style={styles.signedBadge}>
+                    <SvgIcon name="check" size={12} color="#00A859" />
+                    <ThemedText style={[styles.bondAllocStatus, { color: theme.primary }]}>
+                      Signed by Enclave
+                    </ThemedText>
+                  </View>
                 </View>
                 {MOCK_BONDS.filter((b) => b.status === 'available')
                   .slice(0, 2)
                   .map((bond) => (
                     <View key={bond.bondId} style={styles.bondAllocRow}>
-                      <ThemedText style={[styles.bondAllocId, { color: theme.textMuted }]}>
+                      <ThemedText style={[styles.bondAllocId, { color: theme.textSecondary }]}>
                         {bond.bondId} • SHA-256
                       </ThemedText>
-                      <ThemedText style={[styles.bondAllocVal, { color: theme.accent }]}>
+                      <ThemedText style={[styles.bondAllocVal, { color: theme.primary }]}>
                         NPR {bond.value}
                       </ThemedText>
                     </View>
@@ -232,17 +236,16 @@ export default function SendScreen() {
             style={({ pressed }) => [
               styles.submitButton,
               {
-                backgroundColor: isValid ? theme.primary : theme.border,
+                backgroundColor: isValid ? theme.primaryDark : theme.border,
                 opacity: pressed && isValid ? 0.88 : 1,
                 transform: [{ scale: pressed && isValid ? 0.98 : 1 }],
-                ...(isValid ? Shadows.glowGreen : {}),
               },
             ]}
           >
             <ThemedText
               style={[
                 styles.submitButtonText,
-                { color: isValid ? '#07090E' : theme.textMuted },
+                { color: isValid ? '#FFFFFF' : theme.textSecondary },
               ]}
             >
               {isOffline ? 'Sign & Generate Payment QR' : 'Send Instant Transfer'}
@@ -258,106 +261,102 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    padding: Spacing.four,
+    gap: Spacing.four,
     paddingBottom: Spacing.six,
   },
   modeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.three,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    gap: Spacing.two + 2,
-    marginBottom: Spacing.four,
+    gap: Spacing.three,
   },
-  modeTextWrapper: { flex: 1 },
+  modeTextWrapper: {
+    flex: 1,
+    gap: 2,
+  },
   modeTitle: {
     fontSize: FontSize.xs,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
   },
   modeSubtitle: {
-    fontSize: FontSize.xxs + 1,
-    marginTop: 2,
+    fontSize: FontSize.xxs,
   },
   scanCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.three,
+    padding: Spacing.three + 2,
     borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
+    borderWidth: 1,
     gap: Spacing.three,
-    marginBottom: Spacing.four,
   },
   scanIconBubble: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scanIcon: { fontSize: FontSize.xl },
-  scanDetails: { flex: 1 },
+  scanDetails: {
+    flex: 1,
+    gap: 2,
+  },
   scanTitle: {
     fontSize: FontSize.sm,
     fontWeight: FontWeight.bold,
   },
   scanSubtitle: {
-    fontSize: FontSize.xs,
-    marginTop: 2,
-  },
-  scanChevron: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.bold,
+    fontSize: FontSize.xxs,
   },
   formCard: {
-    padding: Spacing.four,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
+    padding: Spacing.four,
     gap: Spacing.four,
   },
   inputGroup: {
-    gap: Spacing.one + 2,
+    gap: Spacing.two,
+  },
+  inputLabel: {
+    fontSize: FontSize.xxs,
+    fontWeight: FontWeight.extrabold,
+    letterSpacing: 0.5,
+  },
+  input: {
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    fontSize: FontSize.sm,
   },
   amountLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  inputLabel: {
-    fontSize: FontSize.xxs + 1,
-    fontWeight: FontWeight.extrabold,
-    letterSpacing: 1,
-  },
   balanceHint: {
-    fontSize: FontSize.xs,
-  },
-  input: {
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: FontSize.md,
+    fontSize: FontSize.xxs,
   },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.two,
   },
   currencyPrefix: {
-    fontSize: FontSize.xxl,
-    fontWeight: FontWeight.black,
+    fontSize: FontSize.md,
+    fontWeight: FontWeight.extrabold,
     marginRight: Spacing.two,
   },
   amountInput: {
     flex: 1,
-    fontSize: FontSize.xxxl,
+    fontSize: FontSize.xxl,
     fontWeight: FontWeight.black,
-    textAlign: 'center',
   },
   quickAmountsRow: {
     flexDirection: 'row',
@@ -370,15 +369,16 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   quickAmountText: {
     fontSize: FontSize.xs,
-    fontWeight: FontWeight.bold,
+    fontWeight: FontWeight.extrabold,
   },
   bondAllocationBox: {
-    padding: Spacing.three,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
+    padding: Spacing.three,
     gap: Spacing.two,
   },
   bondAllocHeader: {
@@ -387,12 +387,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bondAllocTitle: {
-    fontSize: FontSize.xxs + 1,
+    fontSize: 10,
     fontWeight: FontWeight.extrabold,
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
+  },
+  signedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   bondAllocStatus: {
-    fontSize: FontSize.xxs,
+    fontSize: 10,
     fontWeight: FontWeight.bold,
   },
   bondAllocRow: {
@@ -401,7 +406,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bondAllocId: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.xxs,
     fontFamily: 'monospace',
   },
   bondAllocVal: {
@@ -409,15 +414,14 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
   },
   submitButton: {
-    marginTop: Spacing.five,
-    paddingVertical: Spacing.three + 4,
     borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.four,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   submitButtonText: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     fontWeight: FontWeight.extrabold,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
 });
