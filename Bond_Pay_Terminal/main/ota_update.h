@@ -17,8 +17,12 @@
 
 // External hardware references
 extern LiquidCrystal_I2C lcd;
-extern int BUZZER;
-extern int LED;
+#ifndef BUZZER
+#define BUZZER 16
+#endif
+#ifndef LED
+#define LED 15
+#endif
 
 // Forward declaration of server
 #ifdef ESP32
