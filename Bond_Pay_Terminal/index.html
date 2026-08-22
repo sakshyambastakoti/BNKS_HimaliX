@@ -1797,9 +1797,9 @@
 
             <!-- Cards Hub Section -->
             <div class="sidebar-section">
-                <div class="section-label">
-                    <span>Registered RFID Cards</span>
-                    <span id="sidebar-card-count" class="mono">3</span>
+                <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Registered RFID Cards (<span id="sidebar-card-count" class="mono">3</span>)</span>
+                    <button type="button" class="btn btn-outline" style="padding:1px 6px; font-size:0.65rem; color:var(--danger); border-color:var(--danger-border);" onclick="clearAllCards()" title="Delete all cards at once">Clear All</button>
                 </div>
 
                 <!-- Instant Search Filter -->
@@ -1953,6 +1953,10 @@
                         <p class="panel-subtitle">Cryptographic transaction logs, receipt generator & balance verification</p>
                     </div>
                     <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline" style="color:var(--danger); border-color:var(--danger-border);" onclick="clearAllTransactions()" title="Delete all transactions from local and Supabase DB">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span>Clear Ledger</span>
+                        </button>
                         <button class="btn btn-outline" onclick="exportCSV()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                             <span>Export CSV</span>
@@ -1981,7 +1985,7 @@
                                 <th>Previous</th>
                                 <th>Remaining</th>
                                 <th>Status</th>
-                                <th>Receipt</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="txn-list">
@@ -2100,11 +2104,11 @@
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:14px;">
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Supabase Project URL</label>
-                            <input type="text" class="form-input mono" id="supabase-url" value="https://hlglhhfzpwqivikraesy.supabase.co" placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
+                            <input type="text" class="form-input mono" id="supabase-url" value="https://xnclccdocbqlucuoiefo.supabase.co" placeholder="https://xyzcompany.supabase.co" style="font-size:0.82rem;">
                         </div>
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Supabase Anon Public API Key</label>
-                            <input type="password" class="form-input mono" id="supabase-key" value="sb_publishable_wOvKzI9TgbOmpHBBfiQY0A_lqqgOGeu" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
+                            <input type="password" class="form-input mono" id="supabase-key" value="sb_publishable_GqLJqJExrEO16T-vt5tBRQ_9p1TH3SF" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." style="font-size:0.82rem;">
                         </div>
                     </div>
 
@@ -2227,8 +2231,8 @@
         let mqttClient = null;
 
         // Supabase PostgreSQL Cloud Database Configuration (Pre-configured Live Database)
-        const DEFAULT_SUPABASE_URL = "https://hlglhhfzpwqivikraesy.supabase.co";
-        const DEFAULT_SUPABASE_KEY = "sb_publishable_wOvKzI9TgbOmpHBBfiQY0A_lqqgOGeu";
+        const DEFAULT_SUPABASE_URL = "https://xnclccdocbqlucuoiefo.supabase.co";
+        const DEFAULT_SUPABASE_KEY = "sb_publishable_GqLJqJExrEO16T-vt5tBRQ_9p1TH3SF";
 
         let supabaseUrl = localStorage.getItem('offpay_supabase_url') || DEFAULT_SUPABASE_URL;
         let supabaseKey = localStorage.getItem('offpay_supabase_key') || DEFAULT_SUPABASE_KEY;
@@ -2873,9 +2877,79 @@
                     <td class="mono" style="color:var(--gray-500);">NPR ${parseFloat(t.prevBal || 0).toFixed(2)}</td>
                     <td class="mono" style="font-weight:700;color:var(--brand-green-dark);">NPR ${parseFloat(t.remBal !== undefined ? t.remBal : t.prevBal).toFixed(2)}</td>
                     <td><span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${esc(t.status)}</span></td>
-                    <td><button class="btn btn-outline" style="padding:3px 8px;font-size:0.68rem;" onclick="openReceiptModal(${t.id})">Receipt</button></td>
+                    <td>
+                        <div style="display:flex; gap:4px; align-items:center;">
+                            <button class="btn btn-outline" style="padding:2px 7px;font-size:0.68rem;" onclick="openReceiptModal(${t.id})" title="Print Thermal Receipt">Receipt</button>
+                            <button class="btn btn-outline" style="padding:2px 6px;font-size:0.68rem;color:var(--danger);border-color:var(--danger-border);" onclick="deleteTransaction(${t.id})" title="Delete Transaction">&times;</button>
+                        </div>
+                    </td>
                 </tr>
             `}).join('');
+        }
+
+        async function deleteTransaction(txnId) {
+            playAudioTone('click');
+            if (!confirm(`Delete transaction #${txnId} from ledger and Supabase DB?`)) return;
+
+            allTransactions = allTransactions.filter(t => t.id !== txnId);
+            localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+            renderTransactions(allTransactions);
+            renderRecent(allTransactions);
+            updateStatsCounters();
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('transactions').delete().eq('transaction_id', txnId);
+                } catch (e) {
+                    console.warn('[Supabase] Txn delete error:', e);
+                }
+            }
+            toast(`Transaction #${txnId} deleted`, 'ok');
+        }
+
+        async function clearAllTransactions() {
+            playAudioTone('click');
+            if (!allTransactions.length) return toast('No transactions to clear', 'er');
+            if (!confirm('Are you sure you want to DELETE ALL transaction records from local storage and Supabase Cloud DB?')) return;
+
+            allTransactions = [];
+            localStorage.setItem('offpay_db_txns', JSON.stringify(allTransactions));
+            renderTransactions(allTransactions);
+            renderRecent(allTransactions);
+            updateStatsCounters();
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('transactions').delete().neq('id', 0);
+                } catch (e) {
+                    console.warn('[Supabase] Clear txns error:', e);
+                }
+            }
+            toast('All transaction records deleted from local and Supabase DB', 'ok');
+        }
+
+        async function clearAllCards() {
+            playAudioTone('click');
+            if (!allCards.length) return toast('No registered cards to clear', 'er');
+            if (!confirm('Are you sure you want to DELETE ALL registered RFID cards from local storage and Supabase Cloud DB?')) return;
+
+            allCards = [];
+            localStorage.setItem('offpay_db_cards', JSON.stringify(allCards));
+            renderCardsSidebar(allCards);
+            updateStatsCounters();
+
+            if (supabaseClient) {
+                try {
+                    await supabaseClient.from('cards').delete().neq('uid', '____');
+                } catch (e) {
+                    console.warn('[Supabase] Clear cards error:', e);
+                }
+            }
+
+            if (connMode === 'mqtt') {
+                mqttPublishCards();
+            }
+            toast('All registered cards deleted from local and Supabase DB', 'ok');
         }
 
         function renderRecent(txns) {
