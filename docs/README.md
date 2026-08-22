@@ -15,6 +15,7 @@ Welcome to the official documentation hub for **OffPay**, the offline, off-grid 
 | [05. Screen Catalog & Features](file:///d:/BNKS_HimaliX/docs/05-screen-catalog-and-features.md) | User interface and feature catalog | Screen walkthroughs (Home, Send, Receive, Scan QR, Logs, Settings, History) |
 | [06. Developer & Run Guide](file:///d:/BNKS_HimaliX/docs/06-developer-setup-and-run-guide.md) | Setup, development, and execution | Prerequisites, Expo local execution, Testing on Android/iOS/Web, Troubleshooting |
 | [07. Pitch Deck & FAQ](file:///d:/BNKS_HimaliX/docs/07-pitch-deck-and-hackathon-qa.md) | Presentation blueprint and hackathon Q&A | 3-minute pitch script, Slide walkthrough, Judge questions and defense answers |
+| [08. Offline Hardware Terminal](file:///d:/BNKS_HimaliX/docs/08-offline-hardware-terminal.md) | Standalone RFID POS & MQTT terminal | ESP32/ESP8266 circuit wiring, LittleFS RAM cache, REST API, MQTT cloud sync |
 
 ---
 
