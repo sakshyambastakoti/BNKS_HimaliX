@@ -600,15 +600,15 @@ void loop() {
   if (!readyDisplayed) {
     lcd.clear();
     if (currentMode == MODE_READY) {
-      lcd.setCursor(0, 0); lcd.print("Tap Card");
-      lcd.setCursor(0, 1); lcd.print(deviceIP);
+      lcd.setCursor(0, 0); lcd.print("OffPay Terminal");
+      lcd.setCursor(0, 1); lcd.print("Tap to Check/Pay");
     } else if (currentMode == MODE_PAYMENT) {
-      lcd.setCursor(0, 0); lcd.print("Waiting Card...");
       char amtStr[17];
-      snprintf(amtStr, sizeof(amtStr), "Amt: NPR %.2f", activeAmount);
-      lcd.setCursor(0, 1); lcd.print(amtStr);
+      snprintf(amtStr, sizeof(amtStr), "Pay: NPR %.2f", activeAmount);
+      lcd.setCursor(0, 0); lcd.print(amtStr);
+      lcd.setCursor(0, 1); lcd.print("Tap RFID Card...");
     } else if (currentMode == MODE_ADD_CARD) {
-      lcd.setCursor(0, 0); lcd.print("Scan New Card...");
+      lcd.setCursor(0, 0); lcd.print("Enroll New Card");
       lcd.setCursor(0, 1); lcd.print("ID: " + activeRegUserId);
     }
     readyDisplayed = true;
@@ -634,7 +634,9 @@ void loop() {
       int idx = findCardIndex(cards, uid);
       if (idx != -1) {
         lcd.clear();
-        lcd.setCursor(0, 0); lcd.print(cards[idx].name);
+        String cName = cards[idx].name;
+        if (cName.length() > 16) cName = cName.substring(0, 16);
+        lcd.setCursor(0, 0); lcd.print(cName);
         char balStr[17];
         snprintf(balStr, sizeof(balStr), "Bal: NPR %.2f", cards[idx].balance);
         lcd.setCursor(0, 1); lcd.print(balStr);
@@ -646,7 +648,7 @@ void loop() {
         triggerFailureFeedback();
       }
     }
-    delay(2000);
+    delay(2500);
     readyDisplayed = false;
     lastScanTime = millis();
 
@@ -667,17 +669,48 @@ void loop() {
       lastEvent.prevBal = newBal + activeAmount;
       lastEvent.message = "Payment Successful";
 
+      // Step 1: Payment Success screen
       lcd.clear();
-      lcd.setCursor(0, 0); lcd.print("Payment Success");
+      lcd.setCursor(0, 0); lcd.print("Payment Success!");
       char sLine[17];
-      snprintf(sLine, sizeof(sLine), "Amt:%.0f Bal:%.0f", activeAmount, newBal);
+      snprintf(sLine, sizeof(sLine), "Paid: NPR %.2f", activeAmount);
       lcd.setCursor(0, 1); lcd.print(sLine);
       triggerSuccessFeedback();
+      delay(1200);
 
-      // Publish to MQTT cloud
-      mqttPublishEvent("Success", uid, name, activeAmount, lastEvent.prevBal, newBal, "Payment Successful");
-      mqttPublishCards();
-      mqttPublishTransactions();
+      // Step 2: 2-second blinking Cloud Sync feedback
+      lcd.clear();
+      lcd.setCursor(0, 0); lcd.print("Syncing Cloud...");
+      char remLine[17];
+      snprintf(remLine, sizeof(remLine), "Rem: NPR %.2f", newBal);
+      lcd.setCursor(0, 1); lcd.print(remLine);
+
+      // Publish to MQTT cloud & server
+      bool isCloudConnected = mqttClient.connected();
+      if (isCloudConnected) {
+        mqttPublishEvent("Success", uid, name, activeAmount, lastEvent.prevBal, newBal, "Payment Successful");
+        mqttPublishCards();
+        mqttPublishTransactions();
+      }
+
+      // 2-second blink animation on LCD & LED
+      for (int b = 0; b < 2; b++) {
+        digitalWrite(LED, HIGH);
+        delay(250);
+        digitalWrite(LED, LOW);
+        delay(250);
+      }
+
+      // Step 3: Confirmation screen
+      lcd.clear();
+      if (isCloudConnected) {
+        lcd.setCursor(0, 0); lcd.print("Cloud Synced OK!");
+      } else {
+        lcd.setCursor(0, 0); lcd.print("Saved Offline!");
+      }
+      lcd.setCursor(0, 1); lcd.print(remLine);
+      delay(2000);
+
     } else {
       lastEvent.status = "Failed";
       lastEvent.message = errorMsg;
@@ -692,11 +725,12 @@ void loop() {
       lastEvent.remBal = cPrevBal;
 
       lcd.clear();
+      lcd.setCursor(0, 0); lcd.print("Payment Declined");
       if (errorMsg.indexOf("Insufficient") != -1) {
-        lcd.setCursor(0, 0); lcd.print("Insufficient");
-        lcd.setCursor(0, 1); lcd.print("Balance!");
+        char lowBal[17];
+        snprintf(lowBal, sizeof(lowBal), "Bal: NPR %.2f", cPrevBal);
+        lcd.setCursor(0, 1); lcd.print(lowBal);
       } else {
-        lcd.setCursor(0, 0); lcd.print("Payment Declined");
         lcd.setCursor(0, 1); lcd.print(errorMsg);
       }
       triggerFailureFeedback();
@@ -704,11 +738,11 @@ void loop() {
       // Publish failure event to MQTT cloud
       mqttPublishEvent("Failed", uid, cName, activeAmount, cPrevBal, cPrevBal, errorMsg);
       mqttPublishTransactions();
+      delay(2500);
     }
 
     mqttPublishStatus();
 
-    delay(2000);
     currentMode = MODE_READY;
     readyDisplayed = false;
     lastScanTime = millis();
