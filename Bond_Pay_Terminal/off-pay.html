@@ -1524,130 +1524,6 @@
             background: var(--danger-bg);
             border-color: var(--danger);
         }
-
-        /* ── Sync Overlay ──────────────────────────────────────── */
-        .sync-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-white);
-            z-index: 500;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            transition: opacity 0.3s ease;
-        }
-
-        .sync-overlay.active {
-            display: flex;
-        }
-
-        .sync-overlay.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .sync-overlay.hidden {
-            display: none;
-        }
-
-        .sync-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 32px;
-        }
-
-        .sync-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--gray-200);
-            border-top-color: var(--black);
-            border-right-color: var(--brand-green);
-            animation: spin 0.8s linear infinite;
-            margin-bottom: 24px;
-        }
-
-        .sync-status-text {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: var(--black);
-            margin-bottom: 6px;
-            letter-spacing: -0.3px;
-        }
-
-        .sync-sub-text {
-            font-size: 0.82rem;
-            color: var(--gray-500);
-            margin-bottom: 30px;
-            max-width: 320px;
-            text-align: center;
-        }
-
-        .sync-steps {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-width: 280px;
-        }
-
-        .sync-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.82rem;
-            color: var(--gray-500);
-            font-weight: 700;
-        }
-
-        .sync-step.active {
-            color: var(--black);
-        }
-
-        .sync-step.done {
-            color: var(--brand-green-dark);
-        }
-
-        .sync-step-icon {
-            width: 20px;
-            height: 20px;
-            border: 1px solid var(--gray-300);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            background: var(--bg-subtle);
-        }
-
-        .sync-step.active .sync-step-icon {
-            border-color: var(--black);
-            background: var(--black);
-        }
-
-        .sync-step.active .sync-step-icon::after {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--brand-green);
-        }
-
-        .sync-step.done .sync-step-icon {
-            border-color: var(--brand-green);
-            background: var(--brand-green);
-        }
-
-        .sync-step.done .sync-step-icon::after {
-            content: '';
-            width: 10px;
-            height: 10px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-            background-size: contain;
-            background-repeat: no-repeat;
-        }
-
         /* ── Pair Modal ─────────────────────────────────────────── */
         .pair-modal-content {
             max-width: 460px;
@@ -2363,55 +2239,6 @@
         </svg>
     </button>
 
-    <!-- ═══ SYNC OVERLAY ═══ -->
-    <div class="sync-overlay hidden" id="sync-overlay">
-        <div class="sync-logo">
-            <div class="logo-img-wrapper" style="height:42px;padding:4px 8px;">
-                <img src="desgin.png" onerror="this.onerror=null;this.src='../desgin.png';" alt="OffPay" class="logo-img" style="height:30px;">
-            </div>
-            <div class="logo-text" style="font-size:1.35rem;">Off<span>Pay</span></div>
-            <span class="logo-tag">TERMINAL</span>
-        </div>
-
-        <div class="sync-spinner" id="sync-spinner"></div>
-        <div class="sync-status-text" id="sync-status">Connecting to OffPay Terminal</div>
-        <div class="sync-sub-text" id="sync-sub">Please wait while we establish secure sync channel</div>
-        
-        <div class="sync-steps" id="sync-steps-list">
-            <div class="sync-step" id="step-connect">
-                <div class="sync-step-icon"></div>
-                <span id="step-connect-label">Connecting to MQTT Broker</span>
-            </div>
-            <div class="sync-step" id="step-time">
-                <div class="sync-step-icon"></div>
-                <span id="step-time-label">Joining Station Channel</span>
-            </div>
-            <div class="sync-step" id="step-data">
-                <div class="sync-step-icon"></div>
-                <span id="step-data-label">Syncing Cards & Ledger</span>
-            </div>
-            <div class="sync-step" id="step-ready">
-                <div class="sync-step-icon"></div>
-                <span>Terminal Ready & In Sync</span>
-            </div>
-        </div>
-
-        <!-- IP Entry State -->
-        <div id="sync-ip-form-container" style="display:none; flex-direction:column; align-items:center; width:100%; max-width:320px; text-align:center;">
-            <p class="sync-sub-text" style="margin-bottom:20px; font-size:0.85rem; padding:0 16px;">Enter the IP address of your OffPay Terminal to connect. Make sure both devices are on the same WiFi network.</p>
-            <div class="form-group" style="width:100%; margin-bottom:16px; padding:0 16px;">
-                <input type="text" class="form-input mono" id="sync-esp-ip" placeholder="e.g. 192.168.1.100" style="text-align:center; font-size:1.1rem; height:42px; width:100%;">
-            </div>
-            <button class="btn btn-black btn-full" onclick="connectFromSyncOverlay()" style="height:42px; font-weight:800; width:calc(100% - 32px);">Connect Terminal</button>
-        </div>
-
-        <!-- Connection Fail Actions -->
-        <div id="sync-fail-actions" style="display:none; flex-direction:column; align-items:center; gap:10px; margin-top:24px; width:100%; max-width:320px;">
-            <button class="btn btn-black btn-full" onclick="showSyncIPConfig()" style="height:42px; font-weight:800; width:calc(100% - 32px);">Change IP / Channel</button>
-            <button class="btn btn-outline btn-full" onclick="hideSyncOverlay()" style="height:42px; font-weight:800; width:calc(100% - 32px);">Use Dashboard Offline</button>
-        </div>
-    </div>
-
     <!-- ═══ PAIR DEVICE MODAL ═══ -->
     <div id="pair-modal" class="overlay">
         <div class="modal pair-modal-content">
@@ -2588,14 +2415,12 @@
             } else {
                 selectConnMode(connMode, false);
                 if (connMode === 'mqtt') {
-                    connectMQTT(false);
+                    connectMQTT(true);
                 } else {
                     const savedIP = localStorage.getItem('offpay_esp_ip') || localStorage.getItem('bondpay_esp_ip');
                     if (savedIP) {
                         document.getElementById('esp-ip').value = savedIP;
-                        attemptConnectLAN(false);
-                    } else {
-                        showSyncIPConfig();
+                        attemptConnectLAN(true);
                     }
                 }
             }
@@ -2653,15 +2478,6 @@
                 try { mqttClient.end(true); } catch (e) { }
             }
 
-            if (!silent) {
-                showSyncOverlay();
-                setSyncStep('step-connect', 'active');
-                setSyncStatus('Connecting to MQTT Broker', 'Establishing secure WebSocket tunnel (' + mqttBroker + ')');
-                document.getElementById('step-connect-label').innerText = 'Connecting to MQTT Broker';
-                document.getElementById('step-time-label').innerText = 'Joining Station Channel: ' + mqttChannel;
-                document.getElementById('step-data-label').innerText = 'Synchronizing Cards & Ledger';
-            }
-
             document.getElementById('conn-text').innerText = 'Connecting...';
             document.getElementById('conn-text').style.color = 'var(--gray-500)';
             document.getElementById('diag-mqtt-status').innerText = 'Connecting...';
@@ -2693,12 +2509,6 @@
                 document.getElementById('diag-mqtt-status').innerText = 'Connected (WSS)';
                 document.getElementById('diag-mqtt-status').style.color = 'var(--brand-green-dark)';
 
-                if (!silent) {
-                    setSyncStep('step-connect', 'done');
-                    setSyncStep('step-time', 'active');
-                    setSyncStatus('Joining Channel', 'Subscribing to topics on ' + mqttChannel);
-                }
-
                 const topics = [
                     `offpay/${mqttChannel}/status`,
                     `offpay/${mqttChannel}/events`,
@@ -2717,32 +2527,15 @@
                     }
                     console.log('[MQTT] Successfully subscribed to channel topics:', topics);
 
-                    if (!silent) {
-                        setSyncStep('step-time', 'done');
-                        setSyncStep('step-data', 'active');
-                        setSyncStatus('Syncing Data', 'Broadcasting presence and syncing peer state');
-                    }
-
                     mqttAnnouncePresence();
                     mqttSendCmd('request_sync', {});
                     testMQTTPing();
 
-                    setTimeout(function () {
-                        if (!silent) {
-                            setSyncStep('step-data', 'done');
-                            setSyncStep('step-ready', 'done');
-                            setSyncStatus('Terminal Ready', 'Multi-device internet sync active');
-                            document.getElementById('sync-spinner').style.display = 'none';
-                            setTimeout(hideSyncOverlay, 400);
-                            toast('Connected to MQTT Cloud (' + mqttChannel + ')', 'ok');
-                        } else {
-                            hideSyncOverlay();
-                        }
+                    if (!silent) toast('Connected to channel ' + mqttChannel, 'ok');
 
-                        mqttPublishStatus();
-                        mqttPublishCards();
-                        mqttPublishTransactions();
-                    }, 400);
+                    mqttPublishStatus();
+                    mqttPublishCards();
+                    mqttPublishTransactions();
                 });
 
                 if (presenceTimer) clearInterval(presenceTimer);
@@ -3312,22 +3105,10 @@
                     document.getElementById('conn-text').innerText = 'Online (LAN)';
                     document.getElementById('conn-text').style.color = 'var(--brand-green-dark)';
 
-                    if (!silent) {
-                        setSyncStep('step-connect', 'done');
-                        setSyncStep('step-time', 'active');
-                        setSyncStatus('Syncing Time', 'Synchronizing clock with terminal');
-                    }
-
                     const epoch = Math.floor(Date.now() / 1000);
                     return fetchWithTimeout(API_BASE + '/api/time?epoch=' + epoch, { method: 'POST' }, 5000)
                         .catch(function () { })
                         .then(function () {
-                            if (!silent) {
-                                setSyncStep('step-time', 'done');
-                                setSyncStep('step-data', 'active');
-                                setSyncStatus('Loading Data', 'Fetching cards, transactions and status');
-                            }
-
                             const p1 = fetchWithTimeout(API_BASE + '/api/cards', {}, 10000)
                                 .then(r => r.json())
                                 .then(cards => {
@@ -3350,17 +3131,7 @@
                             return Promise.all([p1, p2]);
                         })
                         .then(function () {
-                            if (!silent) {
-                                setSyncStep('step-data', 'done');
-                                setSyncStep('step-ready', 'done');
-                                setSyncStatus('Terminal Ready', 'All systems operational');
-                                document.getElementById('sync-spinner').style.display = 'none';
-                                setTimeout(hideSyncOverlay, 400);
-                                toast('Connected to OffPay Terminal (LAN)', 'ok');
-                            } else {
-                                hideSyncOverlay();
-                            }
-
+                            if (!silent) toast('Connected to OffPay Terminal (LAN)', 'ok');
                             startPolling();
                         });
                 })
@@ -3369,14 +3140,6 @@
                     document.getElementById('conn-dot').classList.remove('ok');
                     document.getElementById('conn-text').innerText = 'Offline';
                     document.getElementById('conn-text').style.color = 'var(--gray-500)';
-
-                    if (!silent && showingSyncOverlay) {
-                        setSyncStep('step-connect', 'error');
-                        setSyncStatus('LAN Connection Failed', 'Could not reach ESP IP — verify Wi-Fi subnet');
-                        document.getElementById('sync-spinner').style.display = 'none';
-                        document.getElementById('sync-fail-actions').style.display = 'flex';
-                    }
-
                     if (!silent) toast('LAN Connection failed: ' + err.message, 'er');
                 });
         }
@@ -3917,69 +3680,13 @@
             setTimeout(() => { el.classList.remove('show'); }, 3000);
         }
 
-        // Overlay helpers for LAN
-        function showSyncOverlay() {
-            const el = document.getElementById('sync-overlay');
-            el.classList.remove('hidden', 'fade-out');
-            el.classList.add('active');
-            el.style.display = 'flex';
-            showingSyncOverlay = true;
-            ['step-connect','step-time','step-data','step-ready'].forEach(id => {
-                const s = document.getElementById(id);
-                if (s) s.className = 'sync-step';
-            });
-            document.getElementById('sync-spinner').style.display = '';
-            document.getElementById('sync-ip-form-container').style.display = 'none';
-            document.getElementById('sync-fail-actions').style.display = 'none';
-            document.getElementById('sync-steps-list').style.display = '';
-        }
-
-        function setSyncStep(stepId, state) {
-            const el = document.getElementById(stepId);
-            if (el) el.className = 'sync-step ' + state;
-        }
-
-        function setSyncStatus(text, sub) {
-            const el1 = document.getElementById('sync-status');
-            const el2 = document.getElementById('sync-sub');
-            if (el1) el1.innerText = text;
-            if (el2 && sub) el2.innerText = sub;
-        }
-
-        function hideSyncOverlay() {
-            const el = document.getElementById('sync-overlay');
-            if (el) {
-                el.classList.add('fade-out');
-                el.classList.remove('active');
-                setTimeout(() => { 
-                    el.classList.add('hidden'); 
-                    el.style.display = 'none'; 
-                    showingSyncOverlay = false; 
-                }, 200);
-            }
-        }
-
-        function showSyncIPConfig() {
-            showSyncOverlay();
-            document.getElementById('sync-spinner').style.display = 'none';
-            document.getElementById('sync-status').style.display = 'none';
-            document.getElementById('sync-sub').style.display = 'none';
-            document.getElementById('sync-steps-list').style.display = 'none';
-            document.getElementById('sync-fail-actions').style.display = 'none';
-            document.getElementById('sync-ip-form-container').style.display = 'flex';
-            setTimeout(() => {
-                const input = document.getElementById('sync-esp-ip');
-                if (input) input.focus();
-            }, 100);
-        }
-
-        function connectFromSyncOverlay() {
-            const ip = document.getElementById('sync-esp-ip').value.trim();
-            if (!ip) return toast('Enter ESP IP address', 'er');
-            document.getElementById('esp-ip').value = ip;
-            selectConnMode('lan', false);
-            attemptConnectLAN(false);
-        }
+        // Overlay helpers
+        function showSyncOverlay() { }
+        function setSyncStep() { }
+        function setSyncStatus() { }
+        function hideSyncOverlay() { }
+        function showSyncIPConfig() { }
+        function connectFromSyncOverlay() { }
     </script>
 </body>
 
