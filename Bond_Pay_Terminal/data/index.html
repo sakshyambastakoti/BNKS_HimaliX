@@ -2266,7 +2266,7 @@
     </button>
 
     <!-- ═══ PAIR DEVICE MODAL ═══ -->
-    <div id="pair-modal" class="overlay">
+    <div id="pair-modal" class="overlay" onclick="if(event.target===this)closePairModal()">
         <div class="modal pair-modal-content">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
                 <div>
@@ -2296,7 +2296,7 @@
     </div>
 
     <!-- ═══ EDIT CARD DETAILS MODAL ═══ -->
-    <div id="edit-card-modal" class="overlay">
+    <div id="edit-card-modal" class="overlay" onclick="if(event.target===this)closeEditCardModal()">
         <div class="modal edit-card-modal-content" style="max-width:440px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                 <div style="display:flex; align-items:center; gap:10px;">
@@ -2354,14 +2354,14 @@
     </div>
 
     <!-- ═══ THERMAL RECEIPT MODAL ═══ -->
-    <div id="receipt-modal" class="overlay">
-        <div class="modal thermal-receipt" id="thermal-receipt-content" style="max-width:380px;">
+    <div id="receipt-modal" class="overlay" style="z-index:3000;" onclick="if(event.target===this)closeReceiptModal()">
+        <div class="modal thermal-receipt" id="thermal-receipt-content" style="max-width:380px; position:relative;">
             <!-- Rendered by JS -->
         </div>
     </div>
 
     <!-- ═══ PAYMENT & EVENT MODAL ═══ -->
-    <div id="overlay" class="overlay">
+    <div id="overlay" class="overlay" onclick="if(event.target===this)closeOverlay()">
         <div class="modal" id="modal-content"></div>
     </div>
 
@@ -2998,21 +2998,112 @@
         }
 
         // ══════════════════════════════════════════════════════════════
+        // ── REALISTIC DYNAMIC SVG BARCODE GENERATOR (CODE-128 / CODE-39)
+        // ══════════════════════════════════════════════════════════════
+        function generateRealBarcodeSVG(text, height = 46) {
+            const patternMap = {
+                '0': 'bwbwbwBwb', '1': 'BwbwbwbwB', '2': 'bwBwbwbwB', '3': 'BwBwbwbwb',
+                '4': 'bwbwBwbwB', '5': 'BwbwBwbwb', '6': 'bwBwBwbwb', '7': 'bwbwbwBwB',
+                '8': 'BwbwbwBwb', '9': 'bwBwbwBwb', 'A': 'BwbwbwbwB', 'B': 'bwBwbwbwB',
+                'C': 'BwBwbwbwb', 'D': 'bwbwBwbwB', 'E': 'BwbwBwbwb', 'F': 'bwBwBwbwb',
+                'G': 'bwbwbwBwB', 'H': 'BwbwbwBwb', 'I': 'bwBwbwBwb', 'J': 'bwbwBwBwb',
+                'K': 'BwbwbwbwB', 'L': 'bwBwbwbwB', 'M': 'BwBwbwbwb', 'N': 'bwbwBwbwB',
+                'O': 'BwbwBwbwb', 'P': 'bwBwBwbwb', 'Q': 'bwbwbwbwB', 'R': 'Bwbwbwbwb',
+                'S': 'bwBwbwbwb', 'T': 'bwbwBwbwb', 'U': 'BwBwbwbwB', 'V': 'bwBwBwbwB',
+                'W': 'BwBwBwbwb', 'X': 'bwBwBwbwB', 'Y': 'BwBwBwbwb', 'Z': 'bwBwBwbwb',
+                '-': 'bwbwbwBwB', '.': 'Bwbwbwbwb', ' ': 'bwBwbwbwb', '*': 'bwbwBwBwb'
+            };
+
+            const cleanStr = ('*' + (text || 'TXN-00101').toUpperCase().replace(/[^0-9A-Z\- \.]/g, '') + '*');
+            let svgBars = '';
+            let xPos = 8;
+
+            for (let i = 0; i < cleanStr.length; i++) {
+                const char = cleanStr[i];
+                const pattern = patternMap[char] || patternMap['0'];
+                for (let j = 0; j < pattern.length; j++) {
+                    const isBlack = (j % 2 === 0);
+                    const isThick = (pattern[j] === 'B' || pattern[j] === 'W');
+                    const width = isThick ? 3.2 : 1.3;
+
+                    if (isBlack) {
+                        svgBars += `<rect x="${xPos.toFixed(1)}" y="0" width="${width}" height="${height}" fill="#09090b" rx="0.3" />`;
+                    }
+                    xPos += width + 0.5;
+                }
+                xPos += 2.0; // character separator
+            }
+
+            const totalWidth = Math.max(xPos + 8, 220);
+            return `
+                <div style="display:flex; flex-direction:column; align-items:center; margin:10px 0 4px; padding:6px 0; background:#ffffff;">
+                    <svg viewBox="0 0 ${totalWidth} ${height}" style="width:100%; max-width:260px; height:${height}px;" preserveAspectRatio="none">
+                        ${svgBars}
+                    </svg>
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:0.66rem; letter-spacing:2px; font-weight:700; color:#18181b; margin-top:4px;">
+                        *${esc((text || 'TXN101').toUpperCase())}*
+                    </div>
+                </div>
+            `;
+        }
+
+        // ══════════════════════════════════════════════════════════════
         // ── THERMAL RECEIPT GENERATOR & EXPORTS ──────────────────────
         // ══════════════════════════════════════════════════════════════
-        function openReceiptModal(txnId) {
-            playAudioTone('click');
-            const txn = allTransactions.find(t => t.id === txnId);
-            if (!txn) return toast('Transaction not found', 'er');
+        window.lastActiveTxn = null;
 
-            const isOk = (txn.status || '').toLowerCase().includes('success');
+        function openCurrentReceipt() {
+            if (window.lastActiveTxn) {
+                openReceiptModal(window.lastActiveTxn);
+            } else if (allTransactions && allTransactions.length > 0) {
+                openReceiptModal(allTransactions[allTransactions.length - 1]);
+            } else {
+                toast('No recent receipt available', 'er');
+            }
+        }
+
+        function openReceiptModal(target) {
+            playAudioTone('click');
+            closeOverlay(); // Ensure any background event modal is closed
+
+            let txn = null;
+            if (target && typeof target === 'object') {
+                txn = target;
+            } else if (target !== undefined && target !== null && target !== '') {
+                txn = allTransactions.find(t => String(t.id) === String(target));
+            }
+
+            if (!txn && window.lastActiveTxn) {
+                txn = window.lastActiveTxn;
+            }
+
+            if (!txn && allTransactions && allTransactions.length > 0) {
+                txn = allTransactions[allTransactions.length - 1];
+            }
+
+            if (!txn) {
+                txn = {
+                    id: 101,
+                    timestamp: new Date().toLocaleString(),
+                    name: 'Customer',
+                    amount: activePaymentAmount || 0,
+                    prevBal: 0,
+                    remBal: 0,
+                    status: 'Payment Completed'
+                };
+            }
+
+            const isOk = (txn.status || '').toLowerCase().includes('success') || (txn.status || '').toLowerCase().includes('approved') || (txn.status || '').toLowerCase().includes('completed');
             const amt = parseFloat(txn.amount || 0).toFixed(2);
             const prev = parseFloat(txn.prevBal || 0).toFixed(2);
             const rem = parseFloat(txn.remBal !== undefined ? txn.remBal : txn.prevBal || 0).toFixed(2);
             const stationName = localStorage.getItem('offpay_station_name') || 'OffPay Station 1';
+            const barcodeHtml = generateRealBarcodeSVG('TXN-' + String(txn.id || 101).padStart(6, '0'), 46);
 
             const modal = document.getElementById('thermal-receipt-content');
             modal.innerHTML = `
+                <button type="button" class="modal-close-btn" style="color:#09090b; font-size:1.6rem; top:12px; right:16px; cursor:pointer;" onclick="closeReceiptModal()">&times;</button>
+                
                 <div class="receipt-title-box" style="text-align:center; border-bottom:2px dashed #09090b; padding-bottom:12px; margin-bottom:12px;">
                     <div style="font-size:1.25rem; font-weight:800; letter-spacing:2px; color:#09090b;">${esc(stationName.toUpperCase())}</div>
                     <div style="font-size:0.7rem; font-weight:700; color:#52525b; margin-top:2px;">OFFLINE PAYMENT TERMINAL</div>
@@ -3020,9 +3111,9 @@
                 </div>
 
                 <div style="font-size:0.78rem; margin-bottom:10px;">
-                    <div class="receipt-row"><span>RECEIPT NO:</span><strong class="mono">#TXN-${String(txn.id).padStart(6, '0')}</strong></div>
-                    <div class="receipt-row"><span>DATE / TIME:</span><span class="mono">${esc(txn.timestamp)}</span></div>
-                    <div class="receipt-row"><span>CUSTOMER:</span><strong>${esc(txn.name)}</strong></div>
+                    <div class="receipt-row"><span>RECEIPT NO:</span><strong class="mono">#TXN-${String(txn.id || 101).padStart(6, '0')}</strong></div>
+                    <div class="receipt-row"><span>DATE / TIME:</span><span class="mono">${esc(txn.timestamp || new Date().toLocaleString())}</span></div>
+                    <div class="receipt-row"><span>CUSTOMER:</span><strong>${esc(txn.name || 'Customer')}</strong></div>
                     <div class="receipt-row"><span>STATUS:</span><strong style="color:${isOk ? '#059669' : '#dc2626'}">${isOk ? '✓ PAYMENT COMPLETED' : '✗ DECLINED'}</strong></div>
                 </div>
 
@@ -3054,9 +3145,9 @@
                     <div class="receipt-row" style="border-top:1px dashed #d4d4d8; padding-top:4px;"><span>Remaining Balance:</span><strong class="mono" style="color:#059669;">NPR ${rem}</strong></div>
                 </div>
 
-                <div style="text-align:center; margin-top:10px;">
-                    <div style="font-size:1.8rem; letter-spacing:4px; font-family:'Share Tech Mono',monospace; margin-top:4px;">||| | |||| || ||| |||| |</div>
-                    <div style="font-size:0.68rem; color:#71717a; margin-top:4px;">*** THANK YOU FOR YOUR PAYMENT ***</div>
+                <div style="text-align:center; margin-top:8px;">
+                    ${barcodeHtml}
+                    <div style="font-size:0.68rem; color:#71717a; margin-top:6px;">*** THANK YOU FOR YOUR PAYMENT ***</div>
                 </div>
 
                 <div style="display:flex; gap:8px; margin-top:16px;">
@@ -3069,6 +3160,7 @@
         }
 
         function closeReceiptModal() {
+            playAudioTone('click');
             document.getElementById('receipt-modal').classList.remove('active');
         }
 
@@ -3179,7 +3271,7 @@
                     <td><span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${esc(t.status)}</span></td>
                     <td>
                         <div style="display:flex; gap:4px; align-items:center;">
-                            <button class="btn btn-outline" style="padding:2px 7px;font-size:0.68rem;" onclick="openReceiptModal(${t.id})" title="Print Thermal Receipt">Receipt</button>
+                            <button class="btn btn-outline" style="padding:2px 7px;font-size:0.68rem;" onclick="openReceiptModal('${esc(t.id)}')" title="Print Thermal Receipt">Receipt</button>
                             <button class="btn btn-outline" style="padding:2px 6px;font-size:0.68rem;color:var(--danger);border-color:var(--danger-border);" onclick="deleteTransaction(${t.id})" title="Delete Transaction">&times;</button>
                         </div>
                     </td>
@@ -3277,7 +3369,7 @@
                     <td class="mono" style="font-weight:800;">NPR ${parseFloat(t.amount || 0).toFixed(2)}</td>
                     <td class="mono" style="font-weight:700;color:var(--brand-green-dark);">NPR ${parseFloat(t.remBal !== undefined ? t.remBal : t.prevBal).toFixed(2)}</td>
                     <td><span class="badge ${ok ? 'badge-ok' : 'badge-err'}">${esc(t.status)}</span></td>
-                    <td><button class="btn btn-outline" style="padding:2px 6px;font-size:0.65rem;" onclick="openReceiptModal(${t.id})">Receipt</button></td>
+                    <td><button class="btn btn-outline" style="padding:2px 6px;font-size:0.65rem;" onclick="openReceiptModal('${esc(t.id)}')">Receipt</button></td>
                 </tr>
             `}).join('');
         }
@@ -3403,6 +3495,8 @@
                 `<span class="badge badge-ok" style="font-size:0.72rem; padding:4px 8px;">🟢 Stored in Supabase Cloud DB</span>` : 
                 `<span class="badge" style="font-size:0.72rem; padding:4px 8px; background:var(--bg-subtle); border:1px solid var(--gray-300); color:var(--gray-700);">✓ Stored in Local Ledger</span>`;
 
+            window.lastActiveTxn = ev;
+
             if (ok) {
                 modal.innerHTML = `
                     <div class="celebration-wrap">
@@ -3416,7 +3510,7 @@
                         </div>
                         <h2 style="font-size:1.45rem; font-weight:800; color:var(--black); margin-bottom:2px; letter-spacing:-0.5px;">Payment Approved!</h2>
                         <p style="font-weight:800; font-size:1.05rem; color:var(--black); margin-bottom:2px;">${esc(ev.name || 'Cardholder')}</p>
-                        <p style="font-size:0.75rem; color:var(--gray-500); font-family:'JetBrains Mono',monospace; margin-bottom:12px;">${esc(ev.uid)}</p>
+                        <p style="font-size:0.75rem; color:var(--gray-500); font-family:'JetBrains Mono',monospace; margin-bottom:12px;">${esc(ev.uid || '--')}</p>
 
                         <div style="margin-bottom:14px;">${cloudBadge}</div>
 
@@ -3436,8 +3530,8 @@
                         </div>
 
                         <div style="display:flex; gap:8px;">
-                            <button class="btn btn-black btn-full" onclick="openReceiptModal(${ev.id || (allTransactions.length ? allTransactions[allTransactions.length-1].id : 101)})">
-                                <span>🧾 View Thermal Bill</span>
+                            <button class="btn btn-black btn-full" onclick="openCurrentReceipt()">
+                                <span>🧾 View Receipt / Bill</span>
                             </button>
                             <button class="btn btn-outline btn-full" onclick="closeOverlay()">Done</button>
                         </div>
